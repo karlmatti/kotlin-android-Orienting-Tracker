@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">NotificationDemo2020</string>
+    <string name="app_name">SportMapDemo2020</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="starts_or_stops_flow">Starts or Stops flow</string>
 </resources>
