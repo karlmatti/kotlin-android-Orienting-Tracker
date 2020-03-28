@@ -1,27 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    tools:context=".MainActivity">
 
     <include
-        android:id="@+id/include1"
-        layout="@layout/activity_maps"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <include
-        android:id="@+id/include2"
-        layout="@layout/notification_workout"
+        android:id="@+id/include3"
+        layout="@layout/track_control"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
@@ -29,36 +21,81 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0" />
 
-    <ImageButton
-        android:id="@+id/buttonStartStop"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="8dp"
-        android:backgroundTint="#a1f792"
-        android:contentDescription="@string/starts_or_stops_flow"
-        android:onClick="buttonStartStopOnClick"
-        android:src="@drawable/round_play_arrow_24"
-        app:layout_constraintBottom_toBottomOf="@+id/include2"
-        app:layout_constraintDimensionRatio="h,1:1"
-        app:layout_constraintEnd_toStartOf="@+id/include2"
-        app:layout_constraintHorizontal_chainStyle="packed"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/include2"
-        app:layout_constraintVertical_bias="1.0"
-        app:srcCompat="@drawable/round_play_arrow_24" />
-
-    <include
-        android:id="@+id/include3"
-        layout="@layout/activity_menu_buttons"
+    <TextView
+        android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Latitude"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:text="Longitude"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+    <TextView
+        android:id="@+id/textViewLatitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="-"
+        app:layout_constraintStart_toEndOf="@+id/textView2"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/textViewLongitude"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:text="-"
+        app:layout_constraintStart_toEndOf="@+id/textView2"
+        app:layout_constraintTop_toBottomOf="@+id/textViewLatitude" />
+
+    <ImageButton
+        android:id="@+id/buttonStartStop"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginStart="16dp"
+        android:backgroundTint="#FFA000"
+        android:contentDescription="starts_or_stops_flow"
+        android:onClick="buttonStartStopOnClick"
+        android:src="@drawable/round_play_arrow_24"
+        app:layout_constraintBottom_toBottomOf="@+id/include3"
+        app:layout_constraintEnd_toStartOf="@+id/include3"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/include3"
+        app:srcCompat="@drawable/round_play_arrow_24" />
+
+
+    <Button
+        android:id="@+id/buttonWP"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="buttonWPOnClick"
+        android:text="WP"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0" />
+        tools:layout_editor_absoluteY="307dp" />
 
+    <Button
+        android:id="@+id/buttonCP"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:onClick="buttonCPOnClick"
+        android:text="CP"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonWP" />
 </androidx.constraintlayout.widget.ConstraintLayout>
