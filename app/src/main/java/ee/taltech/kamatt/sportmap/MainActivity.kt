@@ -20,12 +20,18 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.track_control.*
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     companion object {
         private val TAG = this::class.java.declaringClass!!.simpleName
     }
@@ -33,7 +39,7 @@ class MainActivity : AppCompatActivity() {
 
     private val broadcastReceiver = InnerBroadcastReceiver()
     private val broadcastReceiverIntentFilter: IntentFilter = IntentFilter()
-
+    private lateinit var mMap: GoogleMap
 
     private var foregroundServiceActive = false
 
@@ -43,6 +49,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        val mapFragment = supportFragmentManager
+            .findFragmentById(R.id.map) as SupportMapFragment
+
+        mapFragment.getMapAsync(this)
+
 
         // safe to call every time
         createNotificationChannel()
@@ -243,10 +255,14 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, intent!!.action)
             when (intent!!.action) {
                 C.LOCATION_UPDATE_ACTION -> {
-                    textViewLatitude.text =
-                        intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0).toString()
-                    textViewLongitude.text =
-                        intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0).toString()
+                    val lat = intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0)
+                    val lng = intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
+                    val position = LatLng(lat, lng)
+                    textViewLatitude.text = lat.toString()
+                    textViewLongitude.text = lng.toString()
+                    //mMap.addMarker(MarkerOptions().position(position).title("Marker in current location"))
+                    //mMap.moveCamera(CameraUpdateFactory.newLatLng(position))
+
 
                     textViewOverallDirect.text =
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_OVERALLDIRECT, 0.0F).toInt()
@@ -273,4 +289,17 @@ class MainActivity : AppCompatActivity() {
 
         }
     }
+
+    // ============================================== MANAGE GOOGLE MAPS =============================================
+    override fun onMapReady(googleMap: GoogleMap) {
+        mMap = googleMap
+
+        Log.d(TAG, "im in onMapReady")
+        // Add a marker in Sydney and move the camera
+        val sydney = LatLng(-34.0, 151.0)
+        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+
+    }
+
 }

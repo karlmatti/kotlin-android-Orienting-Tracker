@@ -7,8 +7,16 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <fragment xmlns:map="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/map"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MapsActivity" />
+
+
     <include
-        android:id="@+id/include3"
+        android:id="@+id/includeTrackControl"
         layout="@layout/track_control"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -70,32 +78,10 @@
         android:contentDescription="starts_or_stops_flow"
         android:onClick="buttonStartStopOnClick"
         android:src="@drawable/round_play_arrow_24"
-        app:layout_constraintBottom_toBottomOf="@+id/include3"
-        app:layout_constraintEnd_toStartOf="@+id/include3"
+        app:layout_constraintBottom_toBottomOf="@+id/includeTrackControl"
+        app:layout_constraintEnd_toStartOf="@+id/includeTrackControl"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/include3"
+        app:layout_constraintTop_toTopOf="@+id/includeTrackControl"
         app:srcCompat="@drawable/round_play_arrow_24" />
-
-
-    <Button
-        android:id="@+id/buttonWP"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:onClick="buttonWPOnClick"
-        android:text="WP"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="307dp" />
-
-    <Button
-        android:id="@+id/buttonCP"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:onClick="buttonCPOnClick"
-        android:text="CP"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonWP" />
 </androidx.constraintlayout.widget.ConstraintLayout>
