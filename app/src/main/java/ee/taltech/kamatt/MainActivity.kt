@@ -20,10 +20,12 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.track_control.*
@@ -258,8 +260,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     val position = LatLng(lat, lng)
                     textViewLatitude.text = lat.toString()
                     textViewLongitude.text = lng.toString()
-                    //mMap.addMarker(MarkerOptions().position(position).title("Marker in current location"))
-                    //mMap.moveCamera(CameraUpdateFactory.newLatLng(position))
+                    mMap.clear()
+                    mMap.addMarker(
+                        MarkerOptions().position(position).title("Marker in current location")
+                    )
+                    mMap.moveCamera(CameraUpdateFactory.newLatLng(position))
 
 
                     textViewOverallDirect.text =
@@ -292,7 +297,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        Log.d(TAG, "im in onMapReady")
+        val lat = intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0)
+        val lng = intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
+        val position = LatLng(lat, lng)
+        mMap.clear()
+        mMap.addMarker(MarkerOptions().position(position).title("Marker in current location"))
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(position))
+
         // Add a marker in Sydney and move the camera
         /*
         val sydney = LatLng(-34.0, 151.0)
