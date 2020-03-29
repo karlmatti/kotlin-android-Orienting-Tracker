@@ -1,8 +1,8 @@
-package ee.taltech.kamatt.sportmap
+package ee.taltech.kamatt
 
-import android.Manifest
 // do not import this! never! If this get inserted automatically when pasting java code, remove it
 //import android.R
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.BroadcastReceiver

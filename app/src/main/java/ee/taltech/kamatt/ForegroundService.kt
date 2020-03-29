@@ -1,4 +1,4 @@
-package ee.taltech.kamatt.sportmap
+package ee.taltech.kamatt
 
 import android.app.PendingIntent
 import android.app.Service
@@ -15,6 +15,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
+import ee.taltech.kamatt.R
 
 
 class ForegroundService : Service() {
@@ -232,7 +233,10 @@ class ForegroundService : Service() {
         val pendingIntentCp = PendingIntent.getBroadcast(this, 0, intentCp, 0)
         val pendingIntentWp = PendingIntent.getBroadcast(this, 0, intentWp, 0)
 
-        val notifyview = RemoteViews(packageName, R.layout.track_control)
+        val notifyview = RemoteViews(
+            packageName,
+            R.layout.track_control
+        )
 
         notifyview.setOnClickPendingIntent(R.id.imageButtonCP, pendingIntentCp)
         notifyview.setOnClickPendingIntent(R.id.imageButtonWP, pendingIntentWp)
@@ -248,7 +252,10 @@ class ForegroundService : Service() {
         notifyview.setTextViewText(R.id.textViewCPTotal, "%.2f".format(distanceCPTotal))
 
         // construct and show notification
-        var builder = NotificationCompat.Builder(applicationContext, C.NOTIFICATION_CHANNEL)
+        var builder = NotificationCompat.Builder(
+            applicationContext,
+            C.NOTIFICATION_CHANNEL
+        )
             .setSmallIcon(R.drawable.baseline_gps_fixed_24)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)

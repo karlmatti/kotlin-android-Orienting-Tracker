@@ -1,4 +1,4 @@
-package ee.taltech.kamatt.sportmap
+package ee.taltech.kamatt
 
 class C {
     companion object {
