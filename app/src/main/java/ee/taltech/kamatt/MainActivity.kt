@@ -258,8 +258,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     val lat = intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0)
                     val lng = intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
                     val position = LatLng(lat, lng)
-                    textViewLatitude.text = lat.toString()
-                    textViewLongitude.text = lng.toString()
+                    //textViewLatitude.text = lat.toString()
+                    //textViewLongitude.text = lng.toString()
                     mMap.clear()
                     mMap.addMarker(
                         MarkerOptions().position(position).title("Marker in current location")
