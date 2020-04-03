@@ -15,7 +15,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
-import ee.taltech.kamatt.R
+
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class ForegroundService : Service() {
@@ -38,16 +40,25 @@ class ForegroundService : Service() {
     // last received location
     private var currentLocation: Location? = null
 
+    // Stopper
+    private lateinit var startTimeOverall: Date
+    private lateinit var currentTime: Date
+
     private var distanceOverallDirect = 0f
     private var distanceOverallTotal = 0f
+    private var speedOverall = 0
     private var locationStart: Location? = null
 
     private var distanceCPDirect = 0f
     private var distanceCPTotal = 0f
+    private lateinit var startTimeCP: Date
+    private var speedCP = 0
     private var locationCP: Location? = null
 
     private var distanceWPDirect = 0f
     private var distanceWPTotal = 0f
+    private lateinit var startTimeWP: Date
+    private var speedWP = 0
     private var locationWP: Location? = null
 
 
@@ -97,6 +108,19 @@ class ForegroundService : Service() {
 
     private fun onNewLocation(location: Location) {
         Log.i(TAG, "New location: $location")
+        currentTime = getCurrentDateTime()
+        val durationStart: Long = currentTime.time - startTimeOverall.time
+        val durationCP: Long = currentTime.time - startTimeCP.time
+        val durationWP: Long = currentTime.time - startTimeWP.time
+
+        val durationStartString = longToDateString(durationStart)
+        val durationCPString = longToDateString(durationCP)
+        val durationWPString = longToDateString(durationWP)
+
+        Log.d("durationStart hh:mm:ss", durationStartString)
+        Log.d("durationCP hh:mm:ss", durationCPString)
+        Log.d("durationWP hh:mm:ss", durationWPString)
+
         if (currentLocation == null) {
             locationStart = location
             locationCP = location
@@ -104,6 +128,8 @@ class ForegroundService : Service() {
         } else {
             distanceOverallDirect = location.distanceTo(locationStart)
             distanceOverallTotal += location.distanceTo(currentLocation)
+
+
 
             distanceCPDirect = location.distanceTo(locationCP)
             distanceCPTotal += location.distanceTo(currentLocation)
@@ -195,9 +221,16 @@ class ForegroundService : Service() {
         locationStart = null
         locationCP = null
         locationWP = null
+        startTimeOverall = getCurrentDateTime()
+        startTimeCP = startTimeOverall
+        startTimeWP = startTimeOverall
 
+        //Distance covered (meters)
+        //Session duration hh:mm:sec
+        //Average speed (minutes per 1 kilometer)
         distanceOverallDirect = 0f
         distanceOverallTotal = 0f
+        speedOverall = 0
         distanceCPDirect = 0f
         distanceCPTotal = 0f
         distanceWPDirect = 0f
@@ -278,12 +311,14 @@ class ForegroundService : Service() {
                     locationWP = currentLocation
                     distanceWPDirect = 0f
                     distanceWPTotal = 0f
+                    startTimeWP = getCurrentDateTime()
                     showNotification()
                 }
                 C.NOTIFICATION_ACTION_CP -> {
                     locationCP = currentLocation
                     distanceCPDirect = 0f
                     distanceCPTotal = 0f
+                    startTimeCP = getCurrentDateTime()
                     showNotification()
                 }
             }
@@ -291,4 +326,30 @@ class ForegroundService : Service() {
 
     }
 
+}
+
+fun Date.toString(format: String, locale: Locale = Locale.getDefault()): String {
+    val format = "HH:mm:ss"
+    val formatter = SimpleDateFormat(format, locale)
+    return formatter.format(this)
+}
+
+private fun longToDateString(milliseconds: Long): String {
+    return if (milliseconds > 0) {
+        val seconds: Long = milliseconds / 1000
+        val minutes = seconds / 60
+        val hours = minutes / 60
+        if (seconds > 99) {
+            "$hours:$minutes:" + seconds.toString().get(0) + seconds.toString().get(1)
+        } else {
+            "$hours:$minutes:$seconds"
+        }
+
+    } else {
+        "00:00:00"
+    }
+}
+
+private fun getCurrentDateTime(): Date {
+    return Calendar.getInstance().time
 }
