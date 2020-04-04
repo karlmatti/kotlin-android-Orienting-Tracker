@@ -1,4 +1,4 @@
-package ee.taltech.kamatt
+package ee.taltech.kamatt.sportsmap
 
 import android.app.PendingIntent
 import android.app.Service
@@ -15,12 +15,11 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
-
-import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.floor
 
 
-class ForegroundService : Service() {
+class LocationService : Service() {
     companion object {
         private val TAG = this::class.java.declaringClass!!.simpleName
     }
@@ -40,27 +39,30 @@ class ForegroundService : Service() {
     // last received location
     private var currentLocation: Location? = null
 
-    // Stopper
-    private lateinit var startTimeOverall: Date
-    private lateinit var currentTime: Date
-
     private var distanceOverallDirect = 0f
     private var distanceOverallTotal = 0f
-    private var speedOverall = 0
+    private var tempoOverall = 0
     private var locationStart: Location? = null
 
     private var distanceCPDirect = 0f
     private var distanceCPTotal = 0f
-    private lateinit var startTimeCP: Date
-    private var speedCP = 0
+    private var tempoCP = 0
     private var locationCP: Location? = null
 
     private var distanceWPDirect = 0f
     private var distanceWPTotal = 0f
-    private lateinit var startTimeWP: Date
-    private var speedWP = 0
+    private var tempoWP = 0
     private var locationWP: Location? = null
 
+    private var startTimeOverall: Long = getCurrentDateTime()
+    private var startTimeCP: Long = startTimeOverall
+    private var startTimeWP: Long = startTimeOverall
+    private var currentTime: Long = startTimeOverall
+
+
+    private var durationOverall: Long = 0
+    private var durationCP: Long = 0
+    private var durationWP: Long = 0
 
     override fun onCreate() {
         Log.d(TAG, "onCreate")
@@ -109,27 +111,20 @@ class ForegroundService : Service() {
     private fun onNewLocation(location: Location) {
         Log.i(TAG, "New location: $location")
         currentTime = getCurrentDateTime()
-        val durationStart: Long = currentTime.time - startTimeOverall.time
-        val durationCP: Long = currentTime.time - startTimeCP.time
-        val durationWP: Long = currentTime.time - startTimeWP.time
+        durationOverall = currentTime - startTimeOverall
+        durationCP = currentTime - startTimeCP
+        durationWP = currentTime - startTimeWP
+        tempoOverall = calculateTempo(durationOverall, distanceOverallTotal)
+        tempoCP = calculateTempo(durationCP, distanceCPTotal)
+        tempoWP = calculateTempo(durationWP, distanceWPTotal)
 
-        val durationStartString = longToDateString(durationStart)
-        val durationCPString = longToDateString(durationCP)
-        val durationWPString = longToDateString(durationWP)
-
-        Log.d("durationStart hh:mm:ss", durationStartString)
-        Log.d("durationCP hh:mm:ss", durationCPString)
-        Log.d("durationWP hh:mm:ss", durationWPString)
-
-        if (currentLocation == null) {
+        if (currentLocation == null){
             locationStart = location
             locationCP = location
             locationWP = location
         } else {
             distanceOverallDirect = location.distanceTo(locationStart)
             distanceOverallTotal += location.distanceTo(currentLocation)
-
-
 
             distanceCPDirect = location.distanceTo(locationCP)
             distanceCPTotal += location.distanceTo(currentLocation)
@@ -146,42 +141,48 @@ class ForegroundService : Service() {
         val intent = Intent(C.LOCATION_UPDATE_ACTION)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, location.latitude)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, location.longitude)
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLDIRECT, distanceOverallDirect)
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, distanceOverallTotal)
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO, 0)
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_CPDIRECT, distanceCPDirect)
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_CPTOTAL, distanceCPTotal)
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_CPTEMPO, 0)
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_WPDIRECT, distanceWPDirect)
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_WPTOTAL, distanceWPTotal)
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_WPTEMPO, 0)
+
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLDIRECT, distanceOverallDirect )
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, distanceOverallTotal )
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO, tempoOverall )
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME, longToDateString(durationOverall))
+
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_CPDIRECT,distanceCPDirect )
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_CPTOTAL,distanceCPTotal )
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_CPTEMPO, tempoCP)
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_CPTIME, durationCP)
+
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_WPDIRECT,distanceWPDirect )
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_WPTOTAL,distanceWPTotal )
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_WPTEMPO, tempoWP)
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_WPTIME, durationWP)
 
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 
     }
 
+
+
     private fun createLocationRequest() {
-        mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS)
-        mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS)
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-        mLocationRequest.setMaxWaitTime(UPDATE_INTERVAL_IN_MILLISECONDS)
+        mLocationRequest.interval = UPDATE_INTERVAL_IN_MILLISECONDS
+        mLocationRequest.fastestInterval = FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS
+        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        mLocationRequest.maxWaitTime = UPDATE_INTERVAL_IN_MILLISECONDS
     }
 
 
     private fun getLastLocation() {
         try {
             mFusedLocationClient.lastLocation
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        Log.w(TAG, "task successful");
-                        if (task.result != null) {
-                            onNewLocation(task.result!!)
-                        }
-                    } else {
-
-                        Log.w(TAG, "Failed to get location." + task.exception)
+                .addOnCompleteListener { task -> if (task.isSuccessful) {
+                    Log.w(TAG, "task successfull")
+                    if (task.result != null){
+                        onNewLocation(task.result!!)
                     }
-                }
+                } else {
+
+                    Log.w(TAG, "Failed to get location." + task.exception)
+                }}
         } catch (unlikely: SecurityException) {
             Log.e(TAG, "Lost location permission.$unlikely")
         }
@@ -197,6 +198,7 @@ class ForegroundService : Service() {
 
         // remove notifications
         NotificationManagerCompat.from(this).cancelAll()
+
 
         // don't forget to unregister brodcast receiver!!!!
         unregisterReceiver(broadcastReceiver)
@@ -216,21 +218,18 @@ class ForegroundService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "onStartCommand")
 
+        startTimeOverall = getCurrentDateTime()
+        startTimeCP = startTimeOverall
+        startTimeWP = startTimeOverall
+
         // set counters and locations to 0/null
         currentLocation = null
         locationStart = null
         locationCP = null
         locationWP = null
-        startTimeOverall = getCurrentDateTime()
-        startTimeCP = startTimeOverall
-        startTimeWP = startTimeOverall
 
-        //Distance covered (meters)
-        //Session duration hh:mm:sec
-        //Average speed (minutes per 1 kilometer)
         distanceOverallDirect = 0f
         distanceOverallTotal = 0f
-        speedOverall = 0
         distanceCPDirect = 0f
         distanceCPTotal = 0f
         distanceWPDirect = 0f
@@ -259,42 +258,42 @@ class ForegroundService : Service() {
 
     }
 
-    fun showNotification() {
+    fun showNotification(){
         val intentCp = Intent(C.NOTIFICATION_ACTION_CP)
         val intentWp = Intent(C.NOTIFICATION_ACTION_WP)
 
         val pendingIntentCp = PendingIntent.getBroadcast(this, 0, intentCp, 0)
         val pendingIntentWp = PendingIntent.getBroadcast(this, 0, intentWp, 0)
 
-        val notifyview = RemoteViews(
-            packageName,
-            R.layout.track_control
-        )
+        val notificationsView = RemoteViews(packageName, R.layout.track_control)
+        val durationStartString = longToDateString(durationOverall)
 
-        notifyview.setOnClickPendingIntent(R.id.imageButtonCP, pendingIntentCp)
-        notifyview.setOnClickPendingIntent(R.id.imageButtonWP, pendingIntentWp)
+        notificationsView.setOnClickPendingIntent(R.id.imageButtonCP, pendingIntentCp)
+        notificationsView.setOnClickPendingIntent(R.id.imageButtonWP, pendingIntentWp)
+
+        notificationsView.setTextViewText(R.id.textViewOverallDirect, "%.2f".format(distanceOverallDirect))
+        notificationsView.setTextViewText(R.id.textViewOverallTotal, durationStartString)
+        notificationsView.setTextViewText(R.id.textViewOverallTempo, tempoOverall.toString())
+
+        notificationsView.setTextViewText(R.id.textViewCPDirect, "%.2f".format(distanceCPDirect))
+        notificationsView.setTextViewText(R.id.textViewCPTotal, "%.2f".format(distanceCPTotal))
+        notificationsView.setTextViewText(R.id.textViewCPTempo, tempoCP.toString())
+
+        notificationsView.setTextViewText(R.id.textViewWPDirect, "%.2f".format(distanceWPDirect))
+        notificationsView.setTextViewText(R.id.textViewWPTotal, "%.2f".format(distanceWPTotal))
+        notificationsView.setTextViewText(R.id.textViewWPTempo, tempoWP.toString())
 
 
-        notifyview.setTextViewText(R.id.textViewOverallDirect, "%.2f".format(distanceOverallDirect))
-        notifyview.setTextViewText(R.id.textViewOverallTotal, "%.2f".format(distanceOverallTotal))
 
-        notifyview.setTextViewText(R.id.textViewWPDirect, "%.2f".format(distanceWPDirect))
-        notifyview.setTextViewText(R.id.textViewWPTotal, "%.2f".format(distanceWPTotal))
-
-        notifyview.setTextViewText(R.id.textViewCPDirect, "%.2f".format(distanceCPDirect))
-        notifyview.setTextViewText(R.id.textViewCPTotal, "%.2f".format(distanceCPTotal))
 
         // construct and show notification
-        var builder = NotificationCompat.Builder(
-            applicationContext,
-            C.NOTIFICATION_CHANNEL
-        )
+        val builder = NotificationCompat.Builder(applicationContext, C.NOTIFICATION_CHANNEL)
             .setSmallIcon(R.drawable.baseline_gps_fixed_24)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
-        builder.setContent(notifyview)
+        builder.setContent(notificationsView)
 
         // Super important, start as foreground service - ie android considers this as an active app. Need visual reminder - notification.
         // must be called within 5 secs after service starts.
@@ -303,53 +302,55 @@ class ForegroundService : Service() {
     }
 
 
-    private inner class InnerBroadcastReceiver : BroadcastReceiver() {
+    private inner class InnerBroadcastReceiver: BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             Log.d(TAG, intent!!.action)
-            when (intent!!.action) {
+            when(intent.action){
                 C.NOTIFICATION_ACTION_WP -> {
                     locationWP = currentLocation
                     distanceWPDirect = 0f
                     distanceWPTotal = 0f
-                    startTimeWP = getCurrentDateTime()
+                    durationWP = 0
                     showNotification()
                 }
                 C.NOTIFICATION_ACTION_CP -> {
                     locationCP = currentLocation
                     distanceCPDirect = 0f
                     distanceCPTotal = 0f
-                    startTimeCP = getCurrentDateTime()
+                    durationCP = 0
                     showNotification()
                 }
             }
         }
 
     }
+    private fun longToDateString(milliseconds: Long): String {
+        return if (milliseconds > 0) {
+            val hours = milliseconds / 1000 / 60 / 60
+            val minutes = milliseconds / 1000 / 60
+            val seconds = milliseconds / 1000 % 60
 
-}
+            if (seconds > 99) {
+                "$hours:$minutes:" + seconds.toString().get(0) + seconds.toString().get(1)
+            } else {
+                "$hours:$minutes:$seconds"
+            }
 
-fun Date.toString(format: String, locale: Locale = Locale.getDefault()): String {
-    val format = "HH:mm:ss"
-    val formatter = SimpleDateFormat(format, locale)
-    return formatter.format(this)
-}
-
-private fun longToDateString(milliseconds: Long): String {
-    return if (milliseconds > 0) {
-        val seconds: Long = milliseconds / 1000
-        val minutes = seconds / 60
-        val hours = minutes / 60
-        if (seconds > 99) {
-            "$hours:$minutes:" + seconds.toString().get(0) + seconds.toString().get(1)
         } else {
-            "$hours:$minutes:$seconds"
+            "00:00:00"
         }
-
-    } else {
-        "00:00:00"
     }
-}
 
-private fun getCurrentDateTime(): Date {
-    return Calendar.getInstance().time
+    private fun getCurrentDateTime(): Long {
+        return Calendar.getInstance().timeInMillis
+    }
+    private fun calculateTempo(milliseconds: Long, distanceTotal: Float): Int {
+
+        val minutes = milliseconds / 1000 / 60 + 1
+        val kilometers = distanceTotal / 1000
+        var tempo = (kilometers / minutes).toDouble()
+
+        tempo = floor(tempo)
+        return tempo.toInt()
+    }
 }

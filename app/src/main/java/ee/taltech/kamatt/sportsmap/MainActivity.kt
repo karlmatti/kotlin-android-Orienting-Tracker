@@ -1,8 +1,8 @@
-package ee.taltech.kamatt
+package ee.taltech.kamatt.sportsmap
 
+import android.Manifest
 // do not import this! never! If this get inserted automatically when pasting java code, remove it
 //import android.R
-import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
@@ -39,9 +39,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private val broadcastReceiver = InnerBroadcastReceiver()
     private val broadcastReceiverIntentFilter: IntentFilter = IntentFilter()
+
     private lateinit var mMap: GoogleMap
 
-    private var foregroundServiceActive = false
+    private var locationServiceActive = false
 
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,12 +50,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
-
-        mapFragment.getMapAsync(this)
-
 
         // safe to call every time
         createNotificationChannel()
@@ -64,6 +59,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         broadcastReceiverIntentFilter.addAction(C.LOCATION_UPDATE_ACTION)
+
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        val mapFragment = supportFragmentManager
+            .findFragmentById(R.id.map) as SupportMapFragment
+
+        mapFragment.getMapAsync(this)
+
     }
 
     // ============================================== LIFECYCLE CALLBACKS =============================================
@@ -111,7 +113,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                 C.NOTIFICATION_CHANNEL,
                 "Default channel",
                 NotificationManager.IMPORTANCE_LOW
-            );
+            )
 
             //.setShowBadge(false).setSound(null, null);
 
@@ -211,37 +213,33 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     }
 
-
     // ============================================== CLICK HANDLERS =============================================
     fun buttonStartStopOnClick(view: View) {
-        Log.d(TAG, "buttonStartStopOnClick. foregroundServiceActive: $foregroundServiceActive")
+        Log.d(TAG, "buttonStartStopOnClick. locationServiceActive: $locationServiceActive")
         // try to start/stop the background service
 
-        if (foregroundServiceActive) {
+        if (locationServiceActive) {
             // stopping the service
-            stopService(Intent(this, ForegroundService::class.java))
-            buttonStartStop.setImageResource(R.drawable.round_play_arrow_24)
-            //buttonStartStop.text = "START"
+            stopService(Intent(this, LocationService::class.java))
+
+            buttonStartStop.text = "START"
         } else {
             if (Build.VERSION.SDK_INT >= 26) {
                 // starting the FOREGROUND service
                 // service has to display non-dismissable notification within 5 secs
-                startForegroundService(Intent(this, ForegroundService::class.java))
+                startForegroundService(Intent(this, LocationService::class.java))
             } else {
-                startService(Intent(this, ForegroundService::class.java))
+                startService(Intent(this, LocationService::class.java))
             }
-
-            buttonStartStop.setImageResource(R.drawable.round_stop_24)
-            //buttonStartStop.text = "STOP"
+            buttonStartStop.text = "STOP"
         }
 
-        foregroundServiceActive = !foregroundServiceActive
+        locationServiceActive = !locationServiceActive
     }
 
     fun buttonWPOnClick(view: View) {
         Log.d(TAG, "buttonWPOnClick")
         sendBroadcast(Intent(C.NOTIFICATION_ACTION_WP))
-
     }
 
     fun buttonCPOnClick(view: View) {
@@ -253,47 +251,48 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private inner class InnerBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             Log.d(TAG, intent!!.action)
-            when (intent!!.action) {
+            when (intent.action) {
                 C.LOCATION_UPDATE_ACTION -> {
                     val lat = intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0)
                     val lng = intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
                     val position = LatLng(lat, lng)
-                    //textViewLatitude.text = lat.toString()
-                    //textViewLongitude.text = lng.toString()
                     mMap.clear()
                     mMap.addMarker(
                         MarkerOptions().position(position).title("Marker in current location")
                     )
                     mMap.moveCamera(CameraUpdateFactory.newLatLng(position))
-
-
                     textViewOverallDirect.text =
-                        intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_OVERALLDIRECT, 0.0F).toInt()
+                        intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, 0.0F).toInt()
                             .toString()
                     textViewOverallTotal.text =
-                        intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, 0.0F).toInt()
+                        intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME)
+                    textViewOverallTempo.text =
+                        intent.getIntExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO, 0).toString()
+
+                    textViewCPTotal.text =
+                        intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_CPTOTAL, 0.0F).toInt()
                             .toString()
                     textViewCPDirect.text =
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_CPDIRECT, 0.0F).toInt()
                             .toString()
-                    textViewCPTotal.text =
-                        intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_CPTOTAL, 0.0F).toInt()
+                    textViewCPTempo.text =
+                        intent.getIntExtra(C.LOCATION_UPDATE_ACTION_CPTEMPO, 0).toString()
+
+                    textViewWPTotal.text =
+                        intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_WPTOTAL, 0.0F).toInt()
                             .toString()
                     textViewWPDirect.text =
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_WPDIRECT, 0.0F).toInt()
                             .toString()
-                    textViewWPTotal.text =
-                        intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_WPTOTAL, 0.0F).toInt()
-                            .toString()
+                    textViewWPTempo.text =
+                        intent.getIntExtra(C.LOCATION_UPDATE_ACTION_WPTEMPO, 0).toString()
 
                 }
-
             }
-
         }
     }
 
-    // ============================================== MANAGE GOOGLE MAPS =============================================
+    // ============================================== HANDLE MAP =============================================
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
@@ -303,13 +302,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.clear()
         mMap.addMarker(MarkerOptions().position(position).title("Marker in current location"))
         mMap.moveCamera(CameraUpdateFactory.newLatLng(position))
-
-        // Add a marker in Sydney and move the camera
-        /*
-        val sydney = LatLng(-34.0, 151.0)
-        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
-        */
     }
+
 
 }
