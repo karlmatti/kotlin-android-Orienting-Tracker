@@ -50,7 +50,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
-
+        imageButtonCP.setOnClickListener { handleCpOnClick() }
+        imageButtonWP.setOnClickListener { handleWpOnClick() }
         // safe to call every time
         createNotificationChannel()
 
@@ -222,7 +223,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             // stopping the service
             stopService(Intent(this, LocationService::class.java))
 
-            buttonStartStop.text = "START"
+            buttonStartStop.setImageResource(R.drawable.baseline_play_arrow_24)
         } else {
             if (Build.VERSION.SDK_INT >= 26) {
                 // starting the FOREGROUND service
@@ -231,12 +232,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             } else {
                 startService(Intent(this, LocationService::class.java))
             }
-            buttonStartStop.text = "STOP"
+            buttonStartStop.setImageResource(R.drawable.baseline_stop_24)
         }
 
         locationServiceActive = !locationServiceActive
     }
-
+    fun handleWpOnClick() {
+        Log.d(TAG, "buttonWPOnClick")
+        sendBroadcast(Intent(C.NOTIFICATION_ACTION_WP))
+    }
+    fun handleCpOnClick() {
+        Log.d(TAG, "buttonCPOnClick")
+        sendBroadcast(Intent(C.NOTIFICATION_ACTION_CP))
+    }
     fun buttonWPOnClick(view: View) {
         Log.d(TAG, "buttonWPOnClick")
         sendBroadcast(Intent(C.NOTIFICATION_ACTION_WP))

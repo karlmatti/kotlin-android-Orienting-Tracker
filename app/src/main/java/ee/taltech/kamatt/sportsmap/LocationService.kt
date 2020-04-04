@@ -283,12 +283,9 @@ class LocationService : Service() {
         notificationsView.setTextViewText(R.id.textViewWPTotal, "%.2f".format(distanceWPTotal))
         notificationsView.setTextViewText(R.id.textViewWPTempo, tempoWP.toString())
 
-
-
-
         // construct and show notification
         val builder = NotificationCompat.Builder(applicationContext, C.NOTIFICATION_CHANNEL)
-            .setSmallIcon(R.drawable.baseline_gps_fixed_24)
+            .setSmallIcon(R.drawable.baseline_directions_walk_24)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
