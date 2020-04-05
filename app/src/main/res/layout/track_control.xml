@@ -10,30 +10,30 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_marginRight="8dp"
+        android:layout_marginEnd="8dp"
         android:layout_weight="1"
-        android:gravity="right"
+        android:gravity="end"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/textViewOverallDirect"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TextView"
+            android:text="@string/no_value"
             android:textSize="16sp" />
 
         <TextView
             android:id="@+id/textViewOverallTotal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TextView"
+            android:text="@string/no_value"
             android:textSize="16sp" />
 
         <TextView
             android:id="@+id/textViewOverallTempo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TextView"
+            android:text="@string/no_value"
             android:textSize="16sp" />
     </LinearLayout>
 
@@ -47,14 +47,15 @@
         android:src="@drawable/baseline_add_location_black_24"
         android:tint="@color/common_google_signin_btn_text_dark_default"
         app:srcCompat="@drawable/baseline_add_location_24"
-        tools:srcCompat="@drawable/baseline_add_location_black_24" />
+        tools:srcCompat="@drawable/baseline_add_location_black_24"
+        android:contentDescription="Button for saving control point" />
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_marginRight="8dp"
+        android:layout_marginEnd="8dp"
         android:layout_weight="1"
-        android:gravity="right"
+        android:gravity="end"
         android:orientation="vertical">
 
 
@@ -62,21 +63,21 @@
             android:id="@+id/textViewCPDirect"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TextView"
+            android:text="@string/no_value"
             android:textSize="16sp" />
 
         <TextView
             android:id="@+id/textViewCPTotal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TextView"
+            android:text="@string/no_value"
             android:textSize="16sp" />
 
         <TextView
             android:id="@+id/textViewCPTempo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TextView"
+            android:text="@string/no_value"
             android:textSize="16sp" />
     </LinearLayout>
 
@@ -95,29 +96,29 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:gravity="right"
-        android:layout_marginRight="8dp"
+        android:gravity="end"
+        android:layout_marginEnd="8dp"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/textViewWPDirect"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TextView"
+            android:text="@string/no_value"
             android:textSize="16sp" />
 
         <TextView
             android:id="@+id/textViewWPTotal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TextView"
+            android:text="@string/no_value"
             android:textSize="16sp" />
 
         <TextView
             android:id="@+id/textViewWPTempo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TextView"
+            android:text="@string/no_value"
             android:textSize="16sp" />
 
     </LinearLayout>
