@@ -15,8 +15,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
-import java.util.*
-import kotlin.math.floor
 
 
 class LocationService : Service() {
@@ -54,7 +52,7 @@ class LocationService : Service() {
     private var tempoWP = 0
     private var locationWP: Location? = null
 
-    private var startTimeOverall: Long = getCurrentDateTime()
+    private var startTimeOverall: Long = Utils.getCurrentDateTime()
     private var startTimeCP: Long = startTimeOverall
     private var startTimeWP: Long = startTimeOverall
     private var currentTime: Long = startTimeOverall
@@ -110,13 +108,13 @@ class LocationService : Service() {
 
     private fun onNewLocation(location: Location) {
         Log.i(TAG, "New location: $location")
-        currentTime = getCurrentDateTime()
+        currentTime = Utils.getCurrentDateTime()
         durationOverall = currentTime - startTimeOverall
         durationCP = currentTime - startTimeCP
         durationWP = currentTime - startTimeWP
-        tempoOverall = calculateTempo(durationOverall, distanceOverallTotal)
-        tempoCP = calculateTempo(durationCP, distanceCPTotal)
-        tempoWP = calculateTempo(durationWP, distanceWPTotal)
+        tempoOverall = Utils.calculateTempo(durationOverall, distanceOverallTotal)
+        tempoCP = Utils.calculateTempo(durationCP, distanceCPTotal)
+        tempoWP = Utils.calculateTempo(durationWP, distanceWPTotal)
 
         if (currentLocation == null){
             locationStart = location
@@ -136,7 +134,7 @@ class LocationService : Service() {
         currentLocation = location
 
         showNotification()
-
+        Utils.addToMapPolylineOptions(location.latitude, location.longitude)
         // broadcast new location to UI
         val intent = Intent(C.LOCATION_UPDATE_ACTION)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, location.latitude)
@@ -145,7 +143,7 @@ class LocationService : Service() {
         intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLDIRECT, distanceOverallDirect )
         intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, distanceOverallTotal )
         intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO, tempoOverall )
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME, longToDateString(durationOverall))
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME, Utils.longToDateString(durationOverall))
 
         intent.putExtra(C.LOCATION_UPDATE_ACTION_CPDIRECT,distanceCPDirect )
         intent.putExtra(C.LOCATION_UPDATE_ACTION_CPTOTAL,distanceCPTotal )
@@ -218,7 +216,7 @@ class LocationService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "onStartCommand")
 
-        startTimeOverall = getCurrentDateTime()
+        startTimeOverall = Utils.getCurrentDateTime()
         startTimeCP = startTimeOverall
         startTimeWP = startTimeOverall
 
@@ -266,7 +264,7 @@ class LocationService : Service() {
         val pendingIntentWp = PendingIntent.getBroadcast(this, 0, intentWp, 0)
 
         val notificationsView = RemoteViews(packageName, R.layout.track_control)
-        val durationStartString = longToDateString(durationOverall)
+        val durationStartString = Utils.longToDateString(durationOverall)
 
         notificationsView.setOnClickPendingIntent(R.id.imageButtonCP, pendingIntentCp)
         notificationsView.setOnClickPendingIntent(R.id.imageButtonWP, pendingIntentWp)
@@ -321,33 +319,8 @@ class LocationService : Service() {
         }
 
     }
-    private fun longToDateString(milliseconds: Long): String {
-        return if (milliseconds > 0) {
-            val hours = milliseconds / 1000 / 60 / 60
-            val minutes = milliseconds / 1000 / 60
-            val seconds = milliseconds / 1000 % 60
 
-            if (seconds > 99) {
-                "$hours:$minutes:" + seconds.toString().get(0) + seconds.toString().get(1)
-            } else {
-                "$hours:$minutes:$seconds"
-            }
 
-        } else {
-            "00:00:00"
-        }
-    }
 
-    private fun getCurrentDateTime(): Long {
-        return Calendar.getInstance().timeInMillis
-    }
-    private fun calculateTempo(milliseconds: Long, distanceTotal: Float): Int {
 
-        val minutes = milliseconds / 1000 / 60 + 1
-        val kilometers = distanceTotal / 1000
-        var tempo = (kilometers / minutes).toDouble()
-
-        tempo = floor(tempo)
-        return tempo.toInt()
-    }
 }

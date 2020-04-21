@@ -14,14 +14,16 @@
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
 
     <include
         android:id="@+id/include"
         layout="@layout/buttons_top"
         android:layout_width="0dp"
-        android:layout_height="48dp"
+        android:layout_height="40dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="8dp"
@@ -52,7 +54,6 @@
         android:layout_marginStart="16dp"
         android:backgroundTint="#388E3C"
         android:contentDescription="starts_or_stops_flow"
-        android:onClick="buttonStartStopOnClick"
         android:src="@drawable/baseline_play_arrow_24"
         android:tint="#FFFFFF"
         app:layout_constraintBottom_toBottomOf="@+id/include3"
@@ -63,7 +64,22 @@
         app:layout_constraintVertical_bias="1.0"
         app:srcCompat="@drawable/baseline_play_arrow_24" />
 
+    <ImageView
+        android:id="@+id/imageViewNorthDir"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
 
+        android:background="@drawable/baseline_arrow_upward_black_24"
+        android:backgroundTint="@android:color/holo_blue_dark"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="@+id/include1"
+        app:layout_constraintDimensionRatio="w,1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/include"
+        app:layout_constraintVertical_bias="0.0" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
