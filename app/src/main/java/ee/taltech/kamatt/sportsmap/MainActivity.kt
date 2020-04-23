@@ -1,8 +1,8 @@
 package ee.taltech.kamatt.sportsmap
 
-import android.Manifest
 // do not import this! never! If this get inserted automatically when pasting java code, remove it
 //import android.R
+import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
@@ -17,10 +17,13 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.hardware.SensorManager.SENSOR_DELAY_GAME
+import android.location.Location
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.provider.SyncStateContract
 import android.util.Log
 import android.view.View
 import android.view.animation.Animation.RELATIVE_TO_SELF
@@ -35,12 +38,16 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.*
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.Polyline
+import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.buttons_top.*
 import kotlinx.android.synthetic.main.track_control.*
 import java.lang.Math.toDegrees
+import kotlin.math.floor
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListener {
@@ -66,14 +73,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     //  private var markerCP: Marker? = null
     //  private var markerWP: Marker? = null
     private var mapPolyline: Polyline? = null
+    private var mapPolylineArray: Array<Polyline>? = null
+    private var mapPolylineOptions: PolylineOptions? = null
     private var locationServiceActive = false
     private var isCompassEnabled = true
     private var isOptionsEnabled = false
 
-    private var polyLineMinSpeed: Int = 4
-    private var polyLineMaxSpeed: Int = 7
+    private var polyLineMinSpeed: Int = 1
+    private var polyLineMaxSpeed: Int = 31
     private var polyLineMinColor: String = "green"
     private var polyLineMaxColor: String = "red"
+    private var polylineLastSegment: Int = 0xff000000.toInt()
+
+    private var lastLatitude: Double = 0.0
+    private var lastLongitude: Double = 0.0
+    private var lastTimestamp = Utils.getCurrentDateTime()
+    private var coordinateList: MutableList<LatLng>? = null
+    private var polylineOptionsList: MutableList<PolylineOptions>? = null
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
@@ -196,14 +212,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                 "Hey, i really need to access GPS!",
                 Snackbar.LENGTH_INDEFINITE
             )
-                .setAction("OK", {
+                .setAction("OK") {
                     // Request permission
                     ActivityCompat.requestPermissions(
                         this,
                         arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                         C.REQUEST_PERMISSIONS_REQUEST_CODE
                     )
-                })
+                }
                 .show()
         } else {
             Log.i(TAG, "Requesting permission")
@@ -239,7 +255,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     "You denied GPS! What can I do?",
                     Snackbar.LENGTH_INDEFINITE
                 )
-                    .setAction("Settings", {
+                    .setAction("Settings") {
                         // Build intent that displays the App settings screen.
                         val intent = Intent()
                         intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
@@ -250,7 +266,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                         intent.data = uri
                         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
                         startActivity(intent)
-                    })
+                    }
                     .show()
             }
         }
@@ -262,17 +278,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private fun handleWpOnClick() {
         Log.d(TAG, "buttonWPOnClick")
         sendBroadcast(Intent(C.NOTIFICATION_ACTION_WP))
-
-        val lat = intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0F).toDouble()
-        val lng = intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0F).toDouble()
-
-
     }
 
     private fun handleCpOnClick() {
         Log.d(TAG, "buttonCPOnClick")
         sendBroadcast(Intent(C.NOTIFICATION_ACTION_CP))
-
     }
 
     private fun handleStartStopOnClick() {
@@ -339,6 +349,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             // Log.d(TAG, intent!!.action)
             when (intent!!.action) {
                 C.LOCATION_UPDATE_ACTION -> {
+
                     textViewOverallDirect.text =
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, 0.0F).toInt()
                             .toString()
@@ -369,6 +380,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                         intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0),
                         intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
                     )
+                    lastTimestamp = Utils.getCurrentDateTime()
 
                 }
                 C.LOCATION_UPDATE_STOP -> {
@@ -386,10 +398,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     }
 
-    private fun updateMap(lat: Double, lon: Double) {
-        // mMap.clear()
-        val center = LatLng(lat, lon)
-
+    private fun updateMap(lat: Double, lng: Double) {
         if (marker != null) {
             marker!!.remove()
         }
@@ -398,61 +407,83 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             mapPolyline!!.remove()
         }
 
-        /*
-        marker = mMap
-            .addMarker(
-                MarkerOptions()
-                    .position(center)
-                    .icon(
-                        BitmapDescriptorFactory
-                            .defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
-                    )
-                    .anchor(0.5f, 0.5f) // use icon center for lat,lon
-            )*/
-
-        var polylineOptions = Utils.getMapPolylineOptions()
-
-        Utils.setMapPolyLineColor(0xffff0000.toInt())
-        mapPolyline = mMap.addPolyline(polylineOptions)
 
 
 
-        ///mMap.moveCamera(CameraUpdateFactory.newLatLng(center))
-    }
-
-    /*
-    private fun addCPMarkerOnMap(lat: Double, lon: Double) {
-        val location = LatLng(lat, lon)
-        markerCP = mMap
-            .addMarker(
-                MarkerOptions()
-                    .position(location)
-                    .icon(
-                        BitmapDescriptorFactory
-                            .defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
-                    )
-                    .anchor(0.5f, 0.5f) // use icon center for lat,lon
-            )
-    }
-    private fun addWPMarkerOnMap(lat: Double, lng: Double) {
-        val location = LatLng(lat, lng)
-        Log.d("addWPMarker", "lat")
-        Log.d("addWPMarker", "lng")
-        if (markerWP != null) {
-            markerWP!!.remove()
+        val oldLocation: Location = Location(LocationManager.GPS_PROVIDER).apply {
+            latitude = lastLatitude
+            longitude = lastLongitude
         }
-        markerWP = mMap
-            .addMarker(
-                MarkerOptions()
-                    .position(location)
-                    .icon(
-                        BitmapDescriptorFactory
-                            .defaultMarker(BitmapDescriptorFactory.HUE_ORANGE)
-                    )
-                    .anchor(0.5f, 0.5f) // use icon center for lat,lon
-            )
-        Log.d("addWPMarker", "end")
-    }*/
+        val newLocation = Location(LocationManager.GPS_PROVIDER).apply {
+            latitude = lat
+            longitude = lng
+        }
+        //val polylineOptions = Utils.getMapPolylineOptions()
+        val distanceFromLastPoint:Float = oldLocation.distanceTo(newLocation)
+
+        val newTimeDifference = Utils.getCurrentDateTime() - lastTimestamp
+        val tempo: Int = Utils.getPaceInteger(newTimeDifference, distanceFromLastPoint)
+        Log.d("tempo: Int", tempo.toString())
+        val newColor = Utils.calculateMapPolyLineColor(polyLineMinSpeed, polyLineMaxSpeed, polyLineMinColor, polyLineMaxColor, tempo)
+
+        if (polylineOptionsList == null) {
+            polylineOptionsList = mutableListOf(PolylineOptions()
+                .color(newColor)
+                .add(LatLng(newLocation.latitude, newLocation.longitude)))
+        } else {
+            polylineOptionsList!!.add(PolylineOptions()
+                .color(newColor)
+                .add(LatLng(oldLocation.latitude, oldLocation.longitude))
+                .add(LatLng(newLocation.latitude, newLocation.longitude)))
+        }
+        for (polylineOptions in polylineOptionsList!!) {
+            mapPolyline = mMap.addPolyline(polylineOptions)
+        }
+        //Utils.setMapPolyLineColor(newColor)
+        //mapPolylineOptions = Utils.getMapPolylineOptions()
+/*
+        if (oldLocation.latitude == 0.0 && oldLocation.longitude == 0.0) {
+            mapPolyline = mMap.addPolyline(PolylineOptions()
+                .color(newColor)
+                .add(LatLng(newLocation.latitude, newLocation.longitude)))
+        } else {
+            mapPolyline = mMap.addPolyline(PolylineOptions()
+                .color(newColor)
+                .add(LatLng(oldLocation.latitude, oldLocation.longitude))
+                .add(LatLng(newLocation.latitude, newLocation.longitude)))
+        }
+*/
+       //val polylineOptions: PolylineOptions = PolylineOptions().color(newColor)
+
+
+        //Utils.setMapPolyLineColor(newColor)
+        //Utils.setMapPolyLineColor(newColor)
+        //mapPolyline = mapPolyline.mMap.addPolyline(polylineOptions)
+
+
+
+        polylineLastSegment = newColor
+        lastLatitude = lat
+        lastLongitude = lng
+
+    }
+    fun calculateTempoNew(milliseconds: Long, distanceTotal: Float): Float {
+        Log.d("multiplier", "calculateTempoNew")
+
+        var minutes: Float = (milliseconds / 60000).toFloat()
+        var kilometers: Float = distanceTotal / 1000
+        Log.d("multiplier minutes", milliseconds.toString())
+        Log.d("multiplier kilometers", distanceTotal.toString())
+        val multiplier: Float = 1 / minutes
+        minutes *= multiplier
+        kilometers *= multiplier
+        Log.d("minutes*multiplier>", minutes.toString())
+        Log.d("kilometers*multiplier>", kilometers.toString())
+        var tempo = (kilometers / minutes).toDouble()
+
+        tempo = floor(tempo)
+        return String.format("%.2f", tempo).toFloat()
+    }
 
     // ============================================== COMPASS =============================================
 
@@ -491,7 +522,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     }
 
-    fun lowPass(input: FloatArray, output: FloatArray) {
+    private fun lowPass(input: FloatArray, output: FloatArray) {
         val alpha = 0.05f
 
         for (i in input.indices) {

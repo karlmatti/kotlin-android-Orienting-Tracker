@@ -92,7 +92,7 @@ class LocationService : Service() {
                 onNewLocation(locationResult.lastLocation)
             }
         }
-        getRestToken()
+        //getRestToken()
         getLastLocation()
 
         createLocationRequest()
@@ -206,7 +206,7 @@ class LocationService : Service() {
     }
 
 
-    fun requestLocationUpdates() {
+    private fun requestLocationUpdates() {
         Log.i(TAG, "Requesting location updates")
 
         try {
@@ -224,13 +224,10 @@ class LocationService : Service() {
 
     private fun onNewLocation(location: Location) {
         Log.i(TAG, "New location: $location")
-        currentTime = Utils.getCurrentDateTime()
-        durationOverall = currentTime - startTimeOverall
-        durationCP = currentTime - startTimeCP
-        durationWP = currentTime - startTimeWP
-        tempoOverall = Utils.calculateTempo(durationOverall, distanceOverallTotal)
-        tempoCP = Utils.calculateTempo(durationCP, distanceCPTotal)
-        tempoWP = Utils.calculateTempo(durationWP, distanceWPTotal)
+
+        if (location.accuracy > 100) {
+            return
+        }
 
         if (currentLocation == null) {
             locationStart = location
@@ -239,17 +236,25 @@ class LocationService : Service() {
         } else {
             distanceOverallDirect = location.distanceTo(locationStart)
             distanceOverallTotal += location.distanceTo(currentLocation)
+            tempoOverall = Utils.calculateTempo(durationOverall, distanceOverallTotal).toInt()
+            durationOverall += (location.time - currentLocation!!.time)
 
             distanceCPDirect = location.distanceTo(locationCP)
             distanceCPTotal += location.distanceTo(currentLocation)
+            tempoCP = Utils.calculateTempo(durationCP, distanceCPTotal).toInt()
+            durationCP += (location.time - currentLocation!!.time)
+
 
             distanceWPDirect = location.distanceTo(locationWP)
             distanceWPTotal += location.distanceTo(currentLocation)
+            tempoWP = Utils.calculateTempo(durationWP, distanceWPTotal).toInt()
+            durationWP += (location.time - currentLocation!!.time)
         }
         // save the location for calculations
         currentLocation = location
 
         showNotification()
+
         Utils.addToMapPolylineOptions(location.latitude, location.longitude)
         // broadcast new location to UI
         val intent = Intent(C.LOCATION_UPDATE_ACTION)
@@ -318,7 +323,7 @@ class LocationService : Service() {
         NotificationManagerCompat.from(this).cancelAll()
 
 
-        // don't forget to unregister brodcast receiver!!!!
+        // don't forget to unregister broadcast receiver!!!!
         unregisterReceiver(broadcastReceiver)
 
 
@@ -431,7 +436,7 @@ class LocationService : Service() {
                     distanceWPDirect = 0f
                     distanceWPTotal = 0f
                     durationWP = 0
-                    saveRestLocation(locationWP!!, C.REST_LOCATIONID_WP)
+                    //saveRestLocation(locationWP!!, C.REST_LOCATIONID_WP)
                     showNotification()
                 }
                 C.NOTIFICATION_ACTION_CP -> {
@@ -439,7 +444,14 @@ class LocationService : Service() {
                     distanceCPDirect = 0f
                     distanceCPTotal = 0f
                     durationCP = 0
-                    saveRestLocation(locationCP!!, C.REST_LOCATIONID_CP)
+
+                    //reset WP also, since we know exactly where we are on the map
+                    locationWP = currentLocation
+                    distanceWPDirect = 0f
+                    distanceWPTotal = 0f
+                    durationWP = 0
+
+                    //saveRestLocation(locationCP!!, C.REST_LOCATIONID_CP)
                     showNotification()
                 }
             }

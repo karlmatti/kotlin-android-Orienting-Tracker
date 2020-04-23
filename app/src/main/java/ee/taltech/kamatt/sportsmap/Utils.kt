@@ -1,10 +1,9 @@
 package ee.taltech.kamatt.sportsmap
 
-import android.graphics.Color
-import android.widget.Switch
+import android.animation.ArgbEvaluator
+import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
-import java.nio.file.Files.size
 import java.util.*
 import kotlin.math.floor
 
@@ -32,9 +31,30 @@ class Utils {
             mapPolylineOptions!!.color(androidColor)
         }
         fun calculateMapPolyLineColor(minSpeed: Int, maxSpeed: Int, minColor: String, maxColor: String, currentTempo: Int): Int {
-            //  colorPercent = 0% -> minColor ... colorPercent = 100% -> maxColor
-            val colorPercent: Int = (((currentTempo - minSpeed) * 100) / maxSpeed - minSpeed)
-            return colorPercent
+
+            val resultColor: Int
+            when {
+                currentTempo >= maxSpeed -> resultColor = getAndroidColor(maxColor)
+                currentTempo <= minSpeed -> resultColor = getAndroidColor(minColor)
+                else -> {
+                    //  colorPercent = 0% -> minColor ... colorPercent = 100% -> maxColor
+                    val colorPercent: Float = (((currentTempo - minSpeed) * 100) / maxSpeed - minSpeed) / 100F
+                    resultColor = ArgbEvaluator().evaluate(colorPercent, getAndroidColor(maxColor), getAndroidColor(minColor)) as Int
+                    Log.d("calcMapPolyLineColor", "colorPercent: $colorPercent")
+                }
+            }
+            Log.d("calcMapPolyLineColor", "resultColor: $resultColor")
+
+            return resultColor
+        }
+
+        private fun getAndroidColor(colorName: String): Int {
+            return when (colorName) {
+                "green" -> 0xff00ff00.toInt()
+                "red" -> 0xffff0000.toInt()
+                "blue" -> 0xff0000ff.toInt()
+                else -> 0xff000000.toInt()
+            }
         }
 
         fun addToMapPolylineOptions(lat: Double, lon: Double){
@@ -62,16 +82,35 @@ class Utils {
             }
         }
 
-
-        fun calculateTempo(milliseconds: Long, distanceTotal: Float): Int {
+        // tempo km/min
+        fun calculateTempo(milliseconds: Long, distanceTotal: Float): Float {
 
             val minutes = milliseconds / 1000 / 60 + 1
             val kilometers = distanceTotal / 1000
             var tempo = (kilometers / minutes).toDouble()
 
             tempo = floor(tempo)
-            return tempo.toInt()
+            return String.format("%.2f", tempo).toFloat()
         }
+        fun getPaceString(millis: Long, distance: Float): String {
+            Log.d(TAG, millis.toString() + '-' + distance.toString())
+            val speed = millis / 60.0 / distance
+            if (speed > 99) return "--:--"
+            val minutes = (speed ).toInt();
+            val seconds = ((speed - minutes) * 60).toInt()
 
+            return minutes.toString() + ":" + (if (seconds < 10)  "0" else "") +seconds.toString();
+
+        }
+        fun getPaceInteger(millis: Long, distance: Float): Int {
+            Log.d(TAG, millis.toString() + '-' + distance.toString())
+            val speed = millis / 60.0 / distance
+            if (speed > 99) return 0
+            val minutes = (speed ).toInt();
+            val seconds = ((speed - minutes) * 60).toInt()
+
+            return minutes
+
+        }
     }
 }
