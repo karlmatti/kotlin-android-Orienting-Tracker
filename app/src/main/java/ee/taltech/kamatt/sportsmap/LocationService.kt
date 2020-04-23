@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.location.Location
+import android.os.Build
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
@@ -15,6 +16,12 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.android.gms.location.*
+import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.*
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.JsonObjectRequest
 
 
 class LocationService : Service() {
@@ -62,6 +69,11 @@ class LocationService : Service() {
     private var durationCP: Long = 0
     private var durationWP: Long = 0
 
+    private var jwt: String? = null
+    private var trackingSessionId: String? = null
+
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault())
+
     override fun onCreate() {
         Log.d(TAG, "onCreate")
         super.onCreate()
@@ -70,9 +82,7 @@ class LocationService : Service() {
         broadcastReceiverIntentFilter.addAction(C.NOTIFICATION_ACTION_WP)
         broadcastReceiverIntentFilter.addAction(C.LOCATION_UPDATE_ACTION)
 
-
         registerReceiver(broadcastReceiver, broadcastReceiverIntentFilter)
-
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -82,13 +92,119 @@ class LocationService : Service() {
                 onNewLocation(locationResult.lastLocation)
             }
         }
-
+        getRestToken()
         getLastLocation()
 
         createLocationRequest()
         requestLocationUpdates()
 
     }
+
+    private fun getRestToken() {
+        val handler = WebApiSingletonHandler.getInstance(applicationContext)
+
+        val requestJsonParameters = JSONObject()
+        requestJsonParameters.put("email", C.REST_USERNAME)
+        requestJsonParameters.put("password", C.REST_PASSWORD)
+
+
+        val httpRequest = JsonObjectRequest(
+            Request.Method.POST,
+            C.REST_BASE_URL + "account/login",
+            requestJsonParameters,
+            Response.Listener { response ->
+                Log.d(TAG, response.toString())
+                jwt = response.getString("token")
+                startRestTrackingSession()
+            },
+            Response.ErrorListener { error ->
+                Log.d(TAG, error.toString())
+            }
+        )
+
+        handler.addToRequestQueue(httpRequest)
+
+    }
+
+    private fun startRestTrackingSession() {
+        val handler = WebApiSingletonHandler.getInstance(applicationContext)
+        val requestJsonParameters = JSONObject()
+        requestJsonParameters.put("name", Date().toString())
+        requestJsonParameters.put("description", Date().toString())
+        requestJsonParameters.put("paceMin", 6 * 60)
+        requestJsonParameters.put("paceMax", 18 * 60)
+
+
+        val httpRequest = object : JsonObjectRequest(
+            Request.Method.POST,
+            C.REST_BASE_URL + "GpsSessions",
+            requestJsonParameters,
+            Response.Listener { response ->
+                Log.d(TAG, response.toString())
+                trackingSessionId = response.getString("id")
+            },
+            Response.ErrorListener { error ->
+                Log.d(TAG, error.toString())
+            }
+        ) {
+            override fun getHeaders(): MutableMap<String, String> {
+                val headers = HashMap<String, String>()
+                for ((key, value) in super.getHeaders()) {
+                    headers[key] = value
+                }
+                headers["Authorization"] = "Bearer " + jwt!!
+                return headers
+            }
+        }
+
+
+        handler.addToRequestQueue(httpRequest)
+    }
+
+    private fun saveRestLocation(location: Location, location_type: String) {
+        if (jwt == null || trackingSessionId == null) {
+            return
+        }
+
+        val handler = WebApiSingletonHandler.getInstance(applicationContext)
+        val requestJsonParameters = JSONObject()
+
+        requestJsonParameters.put("recordedAt", dateFormat.format(Date(location.time)))
+
+        requestJsonParameters.put("latitude", location.latitude)
+        requestJsonParameters.put("longitude", location.longitude)
+        requestJsonParameters.put("accuracy", location.accuracy)
+        requestJsonParameters.put("altitude", location.altitude)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            requestJsonParameters.put("verticalAccuracy", location.verticalAccuracyMeters)
+        }
+        requestJsonParameters.put("gpsSessionId", trackingSessionId)
+        requestJsonParameters.put("gpsLocationTypeId", location_type)
+
+
+        val httpRequest = object : JsonObjectRequest(
+            Request.Method.POST,
+            C.REST_BASE_URL + "GpsLocations",
+            requestJsonParameters,
+            Response.Listener { response ->
+                Log.d(TAG, response.toString())
+            },
+            Response.ErrorListener { error ->
+                Log.d(TAG, error.toString())
+            }
+        ) {
+            override fun getHeaders(): MutableMap<String, String> {
+                val headers = HashMap<String, String>()
+                for ((key, value) in super.getHeaders()) {
+                    headers[key] = value
+                }
+                headers["Authorization"] = "Bearer " + jwt!!
+                return headers
+            }
+        }
+        handler.addToRequestQueue(httpRequest)
+    }
+
 
     fun requestLocationUpdates() {
         Log.i(TAG, "Requesting location updates")
@@ -116,7 +232,7 @@ class LocationService : Service() {
         tempoCP = Utils.calculateTempo(durationCP, distanceCPTotal)
         tempoWP = Utils.calculateTempo(durationWP, distanceWPTotal)
 
-        if (currentLocation == null){
+        if (currentLocation == null) {
             locationStart = location
             locationCP = location
             locationWP = location
@@ -140,25 +256,27 @@ class LocationService : Service() {
         intent.putExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, location.latitude)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, location.longitude)
 
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLDIRECT, distanceOverallDirect )
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, distanceOverallTotal )
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO, tempoOverall )
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME, Utils.longToDateString(durationOverall))
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLDIRECT, distanceOverallDirect)
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, distanceOverallTotal)
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO, tempoOverall)
+        intent.putExtra(
+            C.LOCATION_UPDATE_ACTION_OVERALLTIME,
+            Utils.longToDateString(durationOverall)
+        )
 
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_CPDIRECT,distanceCPDirect )
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_CPTOTAL,distanceCPTotal )
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_CPDIRECT, distanceCPDirect)
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_CPTOTAL, distanceCPTotal)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_CPTEMPO, tempoCP)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_CPTIME, durationCP)
 
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_WPDIRECT,distanceWPDirect )
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_WPTOTAL,distanceWPTotal )
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_WPDIRECT, distanceWPDirect)
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_WPTOTAL, distanceWPTotal)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_WPTEMPO, tempoWP)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_WPTIME, durationWP)
 
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 
     }
-
 
 
     private fun createLocationRequest() {
@@ -172,15 +290,17 @@ class LocationService : Service() {
     private fun getLastLocation() {
         try {
             mFusedLocationClient.lastLocation
-                .addOnCompleteListener { task -> if (task.isSuccessful) {
-                    Log.w(TAG, "task successfull")
-                    if (task.result != null){
-                        onNewLocation(task.result!!)
-                    }
-                } else {
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Log.w(TAG, "task successful")
+                        if (task.result != null) {
+                            onNewLocation(task.result!!)
+                        }
+                    } else {
 
-                    Log.w(TAG, "Failed to get location." + task.exception)
-                }}
+                        Log.w(TAG, "Failed to get location." + task.exception)
+                    }
+                }
         } catch (unlikely: SecurityException) {
             Log.e(TAG, "Lost location permission.$unlikely")
         }
@@ -242,7 +362,7 @@ class LocationService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? {
         Log.d(TAG, "onBind")
-        TODO("not implemented")
+        TODO("Return the communication channel to the service.")
     }
 
     override fun onRebind(intent: Intent?) {
@@ -256,9 +376,11 @@ class LocationService : Service() {
 
     }
 
-    fun showNotification(){
+    fun showNotification() {
+
         val intentCp = Intent(C.NOTIFICATION_ACTION_CP)
         val intentWp = Intent(C.NOTIFICATION_ACTION_WP)
+
 
         val pendingIntentCp = PendingIntent.getBroadcast(this, 0, intentCp, 0)
         val pendingIntentWp = PendingIntent.getBroadcast(this, 0, intentWp, 0)
@@ -269,7 +391,10 @@ class LocationService : Service() {
         notificationsView.setOnClickPendingIntent(R.id.imageButtonCP, pendingIntentCp)
         notificationsView.setOnClickPendingIntent(R.id.imageButtonWP, pendingIntentWp)
 
-        notificationsView.setTextViewText(R.id.textViewOverallDirect, "%.2f".format(distanceOverallDirect))
+        notificationsView.setTextViewText(
+            R.id.textViewOverallDirect,
+            "%.2f".format(distanceOverallDirect)
+        )
         notificationsView.setTextViewText(R.id.textViewOverallTotal, durationStartString)
         notificationsView.setTextViewText(R.id.textViewOverallTempo, tempoOverall.toString())
 
@@ -297,15 +422,16 @@ class LocationService : Service() {
     }
 
 
-    private inner class InnerBroadcastReceiver: BroadcastReceiver() {
+    private inner class InnerBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             Log.d(TAG, intent!!.action)
-            when(intent.action){
+            when (intent.action) {
                 C.NOTIFICATION_ACTION_WP -> {
                     locationWP = currentLocation
                     distanceWPDirect = 0f
                     distanceWPTotal = 0f
                     durationWP = 0
+                    saveRestLocation(locationWP!!, C.REST_LOCATIONID_WP)
                     showNotification()
                 }
                 C.NOTIFICATION_ACTION_CP -> {
@@ -313,14 +439,13 @@ class LocationService : Service() {
                     distanceCPDirect = 0f
                     distanceCPTotal = 0f
                     durationCP = 0
+                    saveRestLocation(locationCP!!, C.REST_LOCATIONID_CP)
                     showNotification()
                 }
             }
         }
 
     }
-
-
 
 
 }

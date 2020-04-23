@@ -2,33 +2,42 @@ package ee.taltech.kamatt.sportsmap
 
 class C {
     companion object {
-        val NOTIFICATION_CHANNEL = "default_channel"
-        val NOTIFICATION_ACTION_WP = "ee.taltech.kamatt.wp"
-        val NOTIFICATION_ACTION_CP = "ee.taltech.kamatt.cp"
+        private const val PREFIX = "ee.taltech.kamatt."
+        const val NOTIFICATION_CHANNEL = "default_channel"
+        const val NOTIFICATION_ACTION_WP = PREFIX + "wp"
+        const val NOTIFICATION_ACTION_CP = PREFIX + "cp"
 
-        val LOCATION_UPDATE_ACTION = "ee.taltech.kamatt.location_update"
+        const val LOCATION_UPDATE_ACTION = PREFIX + "location_update"
+        const val LOCATION_UPDATE_STOP = PREFIX + "location_stop"
 
-        val LOCATION_UPDATE_ACTION_LATITUDE = "ee.taltech.kamatt.location_update.latitude"
-        val LOCATION_UPDATE_ACTION_LONGITUDE = "ee.taltech.kamatt.location_update.longitude"
+        const val LOCATION_UPDATE_ACTION_LATITUDE = PREFIX + "location_update.latitude"
+        const val LOCATION_UPDATE_ACTION_LONGITUDE = PREFIX + "location_update.longitude"
 
-        val LOCATION_UPDATE_ACTION_OVERALLDIRECT = "ee.taltech.kamatt.location_update.overalldirect"
-        val LOCATION_UPDATE_ACTION_OVERALLTOTAL = "ee.taltech.kamatt.location_update.overalltotal"
-        val LOCATION_UPDATE_ACTION_OVERALLTEMPO = "ee.taltech.kamatt.location_update.overalltempo"
-        val LOCATION_UPDATE_ACTION_OVERALLTIME = "ee.taltech.kamatt.location_update.overalltime"
+        const val LOCATION_UPDATE_ACTION_OVERALLDIRECT = PREFIX + "location_update.overalldirect"
+        const val LOCATION_UPDATE_ACTION_OVERALLTOTAL = PREFIX + "location_update.overalltotal"
+        const val LOCATION_UPDATE_ACTION_OVERALLTEMPO = PREFIX + "location_update.overalltempo"
+        const val LOCATION_UPDATE_ACTION_OVERALLTIME = PREFIX + "location_update.overalltime"
 
-        val LOCATION_UPDATE_ACTION_CPDIRECT = "ee.taltech.kamatt.location_update.cpdirect"
-        val LOCATION_UPDATE_ACTION_CPTOTAL = "ee.taltech.kamatt.location_update.cptotal"
-        val LOCATION_UPDATE_ACTION_CPTEMPO = "ee.taltech.kamatt.location_update.cptempo"
-        val LOCATION_UPDATE_ACTION_CPTIME = "ee.taltech.kamatt.location_update.cptime"
+        const val LOCATION_UPDATE_ACTION_CPDIRECT = PREFIX + "location_update.cpdirect"
+        const val LOCATION_UPDATE_ACTION_CPTOTAL = PREFIX + "location_update.cptotal"
+        const val LOCATION_UPDATE_ACTION_CPTEMPO = PREFIX + "location_update.cptempo"
+        const val LOCATION_UPDATE_ACTION_CPTIME = PREFIX + "location_update.cptime"
 
-        val LOCATION_UPDATE_ACTION_WPDIRECT = "ee.taltech.kamatt.location_update.wpdirect"
-        val LOCATION_UPDATE_ACTION_WPTOTAL = "ee.taltech.kamatt.location_update.wptotal"
-        val LOCATION_UPDATE_ACTION_WPTEMPO = "ee.taltech.kamatt.location_update.wptempo"
-        val LOCATION_UPDATE_ACTION_WPTIME = "ee.taltech.kamatt.location_update.wptime"
+        const val LOCATION_UPDATE_ACTION_WPDIRECT = PREFIX + "location_update.wpdirect"
+        const val LOCATION_UPDATE_ACTION_WPTOTAL = PREFIX + "location_update.wptotal"
+        const val LOCATION_UPDATE_ACTION_WPTEMPO = PREFIX + "location_update.wptempo"
+        const val LOCATION_UPDATE_ACTION_WPTIME = PREFIX + "location_update.wptime"
 
-        val NOTIFICATION_ID = 4321
-        val REQUEST_PERMISSIONS_REQUEST_CODE = 34
+        const val NOTIFICATION_ID = 4321
+        const val REQUEST_PERMISSIONS_REQUEST_CODE = 34
 
+        const val REST_BASE_URL = "https://sportmap.akaver.com/api/v1.0/"
+        const val REST_USERNAME = "kamatt@taltech.ee"
+        const val REST_PASSWORD = "Lambi.ats4321"
+
+        const val REST_LOCATIONID_LOC = "00000000-0000-0000-0000-000000000001"
+        const val REST_LOCATIONID_WP = "00000000-0000-0000-0000-000000000002"
+        const val REST_LOCATIONID_CP = "00000000-0000-0000-0000-000000000003"
 
     }
 }

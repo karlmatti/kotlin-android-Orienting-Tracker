@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/design_default_color_background"
+    android:backgroundTint="@color/design_default_color_background">
+
+    <EditText
+        android:id="@+id/editTextMinSpeed"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="4"
+        app:layout_constraintBottom_toTopOf="@+id/textViewMinColor"
+        app:layout_constraintEnd_toStartOf="@+id/editTextMaxSpeed"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewMinSpeed" />
+
+    <TextView
+        android:id="@+id/textViewMinSpeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Min speed (min per km)"
+        app:layout_constraintBottom_toTopOf="@+id/editTextMinSpeed"
+        app:layout_constraintEnd_toEndOf="@+id/editTextMinSpeed"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <EditText
+        android:id="@+id/editTextMaxSpeed"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="7"
+        app:layout_constraintBottom_toBottomOf="@+id/editTextMinSpeed"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/editTextMinSpeed"
+        app:layout_constraintTop_toTopOf="@+id/editTextMinSpeed" />
+
+    <TextView
+        android:id="@+id/textViewMaxSpeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Max speed (min per km)"
+        app:layout_constraintBottom_toTopOf="@+id/editTextMaxSpeed"
+        app:layout_constraintEnd_toEndOf="@+id/editTextMaxSpeed"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/editTextMaxSpeed"
+        app:layout_constraintTop_toTopOf="@+id/textViewMinSpeed" />
+
+    <EditText
+        android:id="@+id/editTextMinColor"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="green"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/editTextMaxColor"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewMinColor" />
+
+    <EditText
+        android:id="@+id/editTextMaxColor"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="red"
+        app:layout_constraintBottom_toBottomOf="@+id/editTextMinColor"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/editTextMinColor"
+        app:layout_constraintTop_toTopOf="@+id/editTextMinColor" />
+
+    <TextView
+        android:id="@+id/textViewMaxColor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Color of max speed (rgb)"
+        app:layout_constraintBottom_toTopOf="@+id/editTextMaxColor"
+        app:layout_constraintEnd_toEndOf="@+id/editTextMaxColor"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/editTextMaxColor"
+        app:layout_constraintTop_toTopOf="@+id/textViewMinColor"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <TextView
+        android:id="@+id/textViewMinColor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Color of min speed (rgb)"
+        app:layout_constraintBottom_toTopOf="@+id/editTextMinColor"
+        app:layout_constraintEnd_toEndOf="@+id/editTextMinColor"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextMinSpeed" />
+
+    <Button
+        android:id="@+id/buttonUpdatePolylineParams"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="#388E3C"
+        android:text="update"
+        android:textColor="@color/design_default_color_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextMaxColor"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <Button
+        android:id="@+id/buttonGoToOldSessions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="#388E3C"
+        android:text="Old sessions"
+        android:textColor="@color/design_default_color_background"
+        app:layout_constraintBottom_toTopOf="@+id/buttonLogOut"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonUpdatePolylineParams"
+        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <Button
+        android:id="@+id/buttonLogOut"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="#388E3C"
+        android:text="Log out"
+        android:textColor="@color/design_default_color_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/buttonGoToOldSessions"
+        app:layout_constraintStart_toStartOf="@+id/buttonGoToOldSessions"
+        app:layout_constraintTop_toBottomOf="@+id/buttonGoToOldSessions"
+        app:layout_constraintVertical_bias="0.0" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

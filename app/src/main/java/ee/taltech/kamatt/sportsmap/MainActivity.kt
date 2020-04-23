@@ -68,7 +68,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var mapPolyline: Polyline? = null
     private var locationServiceActive = false
     private var isCompassEnabled = true
+    private var isOptionsEnabled = false
 
+    private var polyLineMinSpeed: Int = 4
+    private var polyLineMaxSpeed: Int = 7
+    private var polyLineMinColor: String = "green"
+    private var polyLineMaxColor: String = "red"
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
@@ -79,6 +84,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         imageButtonWP.setOnClickListener { handleWpOnClick() }
         buttonStartStop.setOnClickListener { handleStartStopOnClick() }
         imageViewToggleCompass.setOnClickListener { handleToggleCompass() }
+        imageViewOptions.setOnClickListener { handleOptionsOnClick() }
         // safe to call every time
         createNotificationChannel()
 
@@ -304,16 +310,26 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     }
 
     private fun handleToggleCompass() {
-        Log.d("handleToggleComp", isCompassEnabled.toString())
         if (isCompassEnabled) {
             compassImage.setBackgroundResource(0)
-            Log.d("handleToggleComp", "now invisible")
             isCompassEnabled = false
 
         } else {
             compassImage.setBackgroundResource(R.drawable.baseline_arrow_upward_black_24)
-            Log.d("handleToggleComp", "now visible")
             isCompassEnabled = true
+        }
+    }
+
+    private fun handleOptionsOnClick() {
+
+        if (isOptionsEnabled) {
+            includeOptions.visibility = View.INVISIBLE
+
+            isOptionsEnabled = false
+
+        } else {
+            includeOptions.visibility = View.VISIBLE
+            isOptionsEnabled = true
         }
     }
 
@@ -355,6 +371,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     )
 
                 }
+                C.LOCATION_UPDATE_STOP -> {
+
+                }
             }
         }
     }
@@ -391,8 +410,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     .anchor(0.5f, 0.5f) // use icon center for lat,lon
             )*/
 
+        var polylineOptions = Utils.getMapPolylineOptions()
 
-        mapPolyline = mMap.addPolyline(Utils.getMapPolylineOptions())
+        Utils.setMapPolyLineColor(0xffff0000.toInt())
+        mapPolyline = mMap.addPolyline(polylineOptions)
+
 
 
         ///mMap.moveCamera(CameraUpdateFactory.newLatLng(center))

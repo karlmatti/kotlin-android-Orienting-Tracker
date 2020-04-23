@@ -1,11 +1,13 @@
 package ee.taltech.kamatt.sportsmap
 
-import android.content.Context
-import android.util.Log
+import android.graphics.Color
+import android.widget.Switch
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
+import java.nio.file.Files.size
 import java.util.*
 import kotlin.math.floor
+
 
 class Utils {
     companion object {
@@ -18,6 +20,7 @@ class Utils {
             if (mapPolylineOptions == null) {
                 mapPolylineOptions = PolylineOptions()
             }
+
             return mapPolylineOptions!!;
         }
 
@@ -25,7 +28,17 @@ class Utils {
             mapPolylineOptions = PolylineOptions()
         }
 
+        fun setMapPolyLineColor(androidColor: Int){
+            mapPolylineOptions!!.color(androidColor)
+        }
+        fun calculateMapPolyLineColor(minSpeed: Int, maxSpeed: Int, minColor: String, maxColor: String, currentTempo: Int): Int {
+            //  colorPercent = 0% -> minColor ... colorPercent = 100% -> maxColor
+            val colorPercent: Int = (((currentTempo - minSpeed) * 100) / maxSpeed - minSpeed)
+            return colorPercent
+        }
+
         fun addToMapPolylineOptions(lat: Double, lon: Double){
+
             getMapPolylineOptions().add(LatLng(lat, lon))
         }
 
