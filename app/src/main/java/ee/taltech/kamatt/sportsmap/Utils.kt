@@ -40,10 +40,10 @@ class Utils {
                     //  colorPercent = 0% -> minColor ... colorPercent = 100% -> maxColor
                     val colorPercent: Float = (((currentTempo - minSpeed) * 100) / maxSpeed - minSpeed) / 100F
                     resultColor = ArgbEvaluator().evaluate(colorPercent, getAndroidColor(maxColor), getAndroidColor(minColor)) as Int
-                    Log.d("calcMapPolyLineColor", "colorPercent: $colorPercent")
+                    //Log.d("calcMapPolyLineColor", "colorPercent: $colorPercent")
                 }
             }
-            Log.d("calcMapPolyLineColor", "resultColor: $resultColor")
+            //Log.d("calcMapPolyLineColor", "resultColor: $resultColor")
 
             return resultColor
         }
@@ -82,16 +82,6 @@ class Utils {
             }
         }
 
-        // tempo km/min
-        fun calculateTempo(milliseconds: Long, distanceTotal: Float): Float {
-
-            val minutes = milliseconds / 1000 / 60 + 1
-            val kilometers = distanceTotal / 1000
-            var tempo = (kilometers / minutes).toDouble()
-
-            tempo = floor(tempo)
-            return String.format("%.2f", tempo).toFloat()
-        }
         fun getPaceString(millis: Long, distance: Float): String {
             Log.d(TAG, millis.toString() + '-' + distance.toString())
             val speed = millis / 60.0 / distance

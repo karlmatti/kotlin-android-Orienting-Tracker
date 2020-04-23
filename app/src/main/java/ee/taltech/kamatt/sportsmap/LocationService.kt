@@ -46,17 +46,17 @@ class LocationService : Service() {
 
     private var distanceOverallDirect = 0f
     private var distanceOverallTotal = 0f
-    private var tempoOverall = 0
+    private var tempoOverall: String = ""
     private var locationStart: Location? = null
 
     private var distanceCPDirect = 0f
     private var distanceCPTotal = 0f
-    private var tempoCP = 0
+    private var tempoCP: String = ""
     private var locationCP: Location? = null
 
     private var distanceWPDirect = 0f
     private var distanceWPTotal = 0f
-    private var tempoWP = 0
+    private var tempoWP: String = ""
     private var locationWP: Location? = null
 
     private var startTimeOverall: Long = Utils.getCurrentDateTime()
@@ -236,18 +236,18 @@ class LocationService : Service() {
         } else {
             distanceOverallDirect = location.distanceTo(locationStart)
             distanceOverallTotal += location.distanceTo(currentLocation)
-            tempoOverall = Utils.calculateTempo(durationOverall, distanceOverallTotal).toInt()
+            tempoOverall = Utils.getPaceString(durationOverall, distanceOverallTotal)
             durationOverall += (location.time - currentLocation!!.time)
 
             distanceCPDirect = location.distanceTo(locationCP)
             distanceCPTotal += location.distanceTo(currentLocation)
-            tempoCP = Utils.calculateTempo(durationCP, distanceCPTotal).toInt()
+            tempoCP = Utils.getPaceString(durationCP, distanceCPTotal)
             durationCP += (location.time - currentLocation!!.time)
 
 
             distanceWPDirect = location.distanceTo(locationWP)
             distanceWPTotal += location.distanceTo(currentLocation)
-            tempoWP = Utils.calculateTempo(durationWP, distanceWPTotal).toInt()
+            tempoWP = Utils.getPaceString(durationWP, distanceWPTotal)
             durationWP += (location.time - currentLocation!!.time)
         }
         // save the location for calculations
@@ -401,15 +401,15 @@ class LocationService : Service() {
             "%.2f".format(distanceOverallDirect)
         )
         notificationsView.setTextViewText(R.id.textViewOverallTotal, durationStartString)
-        notificationsView.setTextViewText(R.id.textViewOverallTempo, tempoOverall.toString())
+        notificationsView.setTextViewText(R.id.textViewOverallTempo, tempoOverall)
 
         notificationsView.setTextViewText(R.id.textViewCPDirect, "%.2f".format(distanceCPDirect))
         notificationsView.setTextViewText(R.id.textViewCPTotal, "%.2f".format(distanceCPTotal))
-        notificationsView.setTextViewText(R.id.textViewCPTempo, tempoCP.toString())
+        notificationsView.setTextViewText(R.id.textViewCPTempo, tempoCP)
 
         notificationsView.setTextViewText(R.id.textViewWPDirect, "%.2f".format(distanceWPDirect))
         notificationsView.setTextViewText(R.id.textViewWPTotal, "%.2f".format(distanceWPTotal))
-        notificationsView.setTextViewText(R.id.textViewWPTempo, tempoWP.toString())
+        notificationsView.setTextViewText(R.id.textViewWPTempo, tempoWP)
 
         // construct and show notification
         val builder = NotificationCompat.Builder(applicationContext, C.NOTIFICATION_CHANNEL)

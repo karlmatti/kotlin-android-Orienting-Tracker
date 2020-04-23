@@ -23,7 +23,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.provider.SyncStateContract
 import android.util.Log
 import android.view.View
 import android.view.animation.Animation.RELATIVE_TO_SELF
@@ -73,10 +72,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     //  private var markerCP: Marker? = null
     //  private var markerWP: Marker? = null
     private var mapPolyline: Polyline? = null
-    private var mapPolylineArray: Array<Polyline>? = null
-    private var mapPolylineOptions: PolylineOptions? = null
     private var locationServiceActive = false
-    private var isCompassEnabled = true
+    private var isCompassEnabled = false
     private var isOptionsEnabled = false
 
     private var polyLineMinSpeed: Int = 1
@@ -88,12 +85,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var lastLatitude: Double = 0.0
     private var lastLongitude: Double = 0.0
     private var lastTimestamp = Utils.getCurrentDateTime()
-    private var coordinateList: MutableList<LatLng>? = null
+
     private var polylineOptionsList: MutableList<PolylineOptions>? = null
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
         super.onCreate(savedInstanceState)
+        // If we have a saved state then we can restore it now
 
         setContentView(R.layout.activity_main)
         imageButtonCP.setOnClickListener { handleCpOnClick() }
@@ -119,12 +117,42 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(TYPE_ACCELEROMETER)
         magnetometer = sensorManager.getDefaultSensor(TYPE_MAGNETIC_FIELD)
+        if (savedInstanceState != null) {
+            locationServiceActive = savedInstanceState.getBoolean("locationServiceActive", false)
+            isCompassEnabled = savedInstanceState.getBoolean("isCompassEnabled", false)
+            isOptionsEnabled = savedInstanceState.getBoolean("isOptionsEnabled", false)
+            restoreCompassState()
+            restoreOptionsState()
+        }
+        if (locationServiceActive) {
+            buttonStartStop.setImageDrawable(
+                ContextCompat.getDrawable(
+                    this,
+                    R.drawable.baseline_stop_24
+                )
+            )
+        } else {
+
+            buttonStartStop.setImageDrawable(
+                ContextCompat.getDrawable(
+                    this,
+                    R.drawable.baseline_play_arrow_24
+                )
+            )
+        }
+
 
     }
 
 
 
     // ============================================== LIFECYCLE CALLBACKS =============================================
+    override fun onSaveInstanceState(outState: Bundle): Unit {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean("locationServiceActive", locationServiceActive)
+        outState.putBoolean("isCompassEnabled", isCompassEnabled)
+        outState.putBoolean("isOptionsEnabled", isOptionsEnabled)
+    }
     override fun onStart() {
         Log.d(TAG, "onStart")
         super.onStart()
@@ -356,7 +384,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     textViewOverallTotal.text =
                         intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME)
                     textViewOverallTempo.text =
-                        intent.getIntExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO, 0).toString()
+                        intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO)
 
                     textViewCPTotal.text =
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_CPTOTAL, 0.0F).toInt()
@@ -365,7 +393,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_CPDIRECT, 0.0F).toInt()
                             .toString()
                     textViewCPTempo.text =
-                        intent.getIntExtra(C.LOCATION_UPDATE_ACTION_CPTEMPO, 0).toString()
+                        intent.getStringExtra(C.LOCATION_UPDATE_ACTION_CPTEMPO)
 
                     textViewWPTotal.text =
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_WPTOTAL, 0.0F).toInt()
@@ -374,7 +402,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_WPDIRECT, 0.0F).toInt()
                             .toString()
                     textViewWPTempo.text =
-                        intent.getIntExtra(C.LOCATION_UPDATE_ACTION_WPTEMPO, 0).toString()
+                        intent.getStringExtra(C.LOCATION_UPDATE_ACTION_WPTEMPO)
 
                     updateMap(
                         intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0),
@@ -527,6 +555,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
         for (i in input.indices) {
             output[i] = output[i] + alpha * (input[i] - output[i])
+        }
+    }
+
+    private fun restoreCompassState() {
+        if (!isCompassEnabled) {
+            compassImage.setBackgroundResource(0)
+        } else {
+            compassImage.setBackgroundResource(R.drawable.baseline_arrow_upward_black_24)
+        }
+    }
+
+    // ============================================== OPTIONS =============================================
+    private fun restoreOptionsState() {
+        if (isOptionsEnabled) {
+            includeOptions.visibility = View.VISIBLE
+        } else {
+            includeOptions.visibility = View.INVISIBLE
         }
     }
 }

@@ -87,7 +87,6 @@
         android:layout_height="40dp"
 
         android:layout_marginTop="8dp"
-        android:background="@drawable/baseline_arrow_upward_black_24"
         android:backgroundTint="@android:color/holo_blue_dark"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="@+id/include1"
