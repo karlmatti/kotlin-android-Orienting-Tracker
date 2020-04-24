@@ -97,8 +97,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         Log.d(TAG, "onCreate")
         super.onCreate(savedInstanceState)
         // If we have a saved state then we can restore it now
-
-
+        locationTypeRepository = LocationTypeRepository(this).open()
         val locationTypes = locationTypeRepository.getAll()
         for (locationType in locationTypes) {
             Log.d("locationType", locationType.toString())
@@ -333,6 +332,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private fun handleStartStopOnClick() {
         Log.d(TAG, "buttonStartStop. locationServiceActive: $locationServiceActive")
         if (locationServiceActive) {
+            mMap.isMyLocationEnabled = false
             // stopping the service
             stopService(Intent(this, LocationService::class.java))
             buttonStartStop.setImageDrawable(
@@ -343,6 +343,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             )
 
         } else {
+            mMap.isMyLocationEnabled = true
             // clear the track on map
             Utils.clearMapPolylineOptions()
 
@@ -438,7 +439,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     // ============================================== HANDLE MAP =============================================
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        mMap.isMyLocationEnabled = true
+
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.3927437, 24.6642), 17.0f))
 
     }

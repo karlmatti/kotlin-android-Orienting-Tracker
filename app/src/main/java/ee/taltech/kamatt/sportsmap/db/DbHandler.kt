@@ -5,7 +5,6 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import ee.taltech.kamatt.sportsmap.C
 import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
-private lateinit var locationTypeRepository: LocationTypeRepository
 
 class DbHandler(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
