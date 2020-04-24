@@ -18,12 +18,10 @@ class DbHandler(context: Context) :
         const val GPS_SESSION_TABLE_NAME: String = "GPS_SESSION"
 
         //  Create table SQL statements
-        val SQL_CREATE_APP_USER_TABLE: String = getCreateTableAppUser(APP_USER_TABLE_NAME)
-        val SQL_CREATE_GPS_LOCATION_TYPE_TABLE: String =
-            getCreateTableGpsLocationType(GPS_LOCATION_TYPE_TABLE_NAME)
-        val SQL_CREATE_GPS_SESSION_TABLE: String = getCreateTableGpsSession(GPS_SESSION_TABLE_NAME)
-        val SQL_CREATE_GPS_LOCATION_TABLE: String =
-            getCreateTableGpsLocation(GPS_LOCATION_TABLE_NAME)
+        val SQL_CREATE_APP_USER_TABLE: String = getCreateTableAppUser()
+        val SQL_CREATE_GPS_LOCATION_TYPE_TABLE: String = getCreateTableGpsLocationType()
+        val SQL_CREATE_GPS_SESSION_TABLE: String = getCreateTableGpsSession()
+        val SQL_CREATE_GPS_LOCATION_TABLE: String = getCreateTableGpsLocation()
 
         //  Delete table SQL statements
         const val SQL_DELETE_APP_USER_TABLE = "DROP TABLE IF EXISTS $APP_USER_TABLE_NAME"
@@ -33,7 +31,7 @@ class DbHandler(context: Context) :
         const val SQL_DELETE_GPS_SESSION_TABLE = "DROP TABLE IF EXISTS $GPS_SESSION_TABLE_NAME"
 
         //  Functions for create table SQL statements
-        private fun getCreateTableGpsSession(TABLE_NAME: String): String {
+        private fun getCreateTableGpsSession(): String {
 
             val ID = "_id"
             val NAME = "name"
@@ -50,7 +48,7 @@ class DbHandler(context: Context) :
             val DESCENT = "descent"
             val APP_USER_ID = "appUserId"
 
-            return "create table $TABLE_NAME(" +
+            return "create table $GPS_SESSION_TABLE_NAME(" +
                     "$ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "$NAME TEXT NOT NULL, " +
                     "$DESCRIPTION TEXT NOT NULL, " +
@@ -69,7 +67,7 @@ class DbHandler(context: Context) :
                     ");"
         }
 
-        private fun getCreateTableGpsLocation(TABLE_NAME: String): String {
+        private fun getCreateTableGpsLocation(): String {
 
             val ID = "_id"
             val RECORDED_AT = "recordedAt"
@@ -82,7 +80,7 @@ class DbHandler(context: Context) :
             val GPS_LOCATION_TYPE_ID = "gpsLocationTypeId"
             val APP_USER_ID = "appUserId"
 
-            return "create table $TABLE_NAME(" +
+            return "create table $GPS_LOCATION_TABLE_NAME(" +
                     "$ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "$RECORDED_AT TEXT NOT NULL, " +
                     "$LATITUDE DOUBLE," +
@@ -100,27 +98,27 @@ class DbHandler(context: Context) :
 
         }
 
-        private fun getCreateTableGpsLocationType(TABLE_NAME: String): String {
+        private fun getCreateTableGpsLocationType(): String {
 
             val ID = "_id"
             val NAME = "name"
             val DESCRIPTION = "description"
 
-            return "create table $TABLE_NAME(" +
+            return "create table $GPS_LOCATION_TYPE_TABLE_NAME(" +
                     "$ID TEXT PRIMARY KEY, " +
                     "$NAME TEXT NOT NULL, " +
                     "$DESCRIPTION TEXT NOT NULL " +
                     ");"
         }
 
-        private fun getCreateTableAppUser(TABLE_NAME: String): String {
+        private fun getCreateTableAppUser(): String {
 
 
             val ID = "_id"
             val EMAIL = "name"
             val PASSWORD = "description"
 
-            return "create table $TABLE_NAME(" +
+            return "create table $APP_USER_TABLE_NAME(" +
                     "$ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "$EMAIL TEXT NOT NULL, " +
                     "$PASSWORD TEXT NOT NULL " +

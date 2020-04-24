@@ -5,7 +5,6 @@ import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
 import java.util.*
-import kotlin.math.floor
 
 
 class Utils {
@@ -20,26 +19,34 @@ class Utils {
                 mapPolylineOptions = PolylineOptions()
             }
 
-            return mapPolylineOptions!!;
+            return mapPolylineOptions!!
         }
 
-        fun clearMapPolylineOptions(){
+        fun clearMapPolylineOptions() {
             mapPolylineOptions = PolylineOptions()
         }
 
-        fun setMapPolyLineColor(androidColor: Int){
-            mapPolylineOptions!!.color(androidColor)
-        }
-        fun calculateMapPolyLineColor(minSpeed: Int, maxSpeed: Int, minColor: String, maxColor: String, currentTempo: Int): Int {
+        fun calculateMapPolyLineColor(
+            minSpeed: Int,
+            maxSpeed: Int,
+            minColor: String,
+            maxColor: String,
+            currentTempo: Int
+        ): Int {
 
             val resultColor: Int
-            when {
-                currentTempo >= maxSpeed -> resultColor = getAndroidColor(maxColor)
-                currentTempo <= minSpeed -> resultColor = getAndroidColor(minColor)
+            resultColor = when {
+                currentTempo >= maxSpeed -> getAndroidColor(maxColor)
+                currentTempo <= minSpeed -> getAndroidColor(minColor)
                 else -> {
                     //  colorPercent = 0% -> minColor ... colorPercent = 100% -> maxColor
-                    val colorPercent: Float = (((currentTempo - minSpeed) * 100) / maxSpeed - minSpeed) / 100F
-                    resultColor = ArgbEvaluator().evaluate(colorPercent, getAndroidColor(maxColor), getAndroidColor(minColor)) as Int
+                    val colorPercent: Float =
+                        (((currentTempo - minSpeed) * 100) / maxSpeed - minSpeed) / 100F
+                    ArgbEvaluator().evaluate(
+                        colorPercent,
+                        getAndroidColor(maxColor),
+                        getAndroidColor(minColor)
+                    ) as Int
                     //Log.d("calcMapPolyLineColor", "colorPercent: $colorPercent")
                 }
             }
@@ -57,7 +64,7 @@ class Utils {
             }
         }
 
-        fun addToMapPolylineOptions(lat: Double, lon: Double){
+        fun addToMapPolylineOptions(lat: Double, lon: Double) {
 
             getMapPolylineOptions().add(LatLng(lat, lon))
         }
@@ -65,6 +72,7 @@ class Utils {
         fun getCurrentDateTime(): Long {
             return Calendar.getInstance().timeInMillis
         }
+
         fun longToDateString(milliseconds: Long): String {
             return if (milliseconds > 0) {
                 val hours = milliseconds / 1000 / 60 / 60
@@ -72,7 +80,7 @@ class Utils {
                 val seconds = milliseconds / 1000 % 60
 
                 if (seconds > 99) {
-                    "$hours:$minutes:" + seconds.toString().get(0) + seconds.toString().get(1)
+                    "$hours:$minutes:" + seconds.toString()[0] + seconds.toString()[1]
                 } else {
                     "$hours:$minutes:$seconds"
                 }
@@ -83,22 +91,23 @@ class Utils {
         }
 
         fun getPaceString(millis: Long, distance: Float): String {
-            Log.d(TAG, millis.toString() + '-' + distance.toString())
+            Log.d(TAG, "$millis-$distance")
             val speed = millis / 60.0 / distance
             if (speed > 99) return "--:--"
-            val minutes = (speed ).toInt();
+            val minutes = (speed).toInt()
             val seconds = ((speed - minutes) * 60).toInt()
 
-            return minutes.toString() + ":" + (if (seconds < 10)  "0" else "") +seconds.toString();
+            return minutes.toString() + ":" + (if (seconds < 10) "0" else "") + seconds.toString()
 
         }
+
         fun getPaceInteger(millis: Long, distance: Float): Int {
-            Log.d(TAG, millis.toString() + '-' + distance.toString())
+            Log.d(TAG, "$millis-$distance")
             val speed = millis / 60.0 / distance
             if (speed > 99) return 0
-            val minutes = (speed ).toInt();
+            val minutes = (speed).toInt()
             val seconds = ((speed - minutes) * 60).toInt()
-
+            //  TODO return seconds not minutes
             return minutes
 
         }

@@ -62,7 +62,6 @@ class LocationService : Service() {
     private var startTimeOverall: Long = Utils.getCurrentDateTime()
     private var startTimeCP: Long = startTimeOverall
     private var startTimeWP: Long = startTimeOverall
-    private var currentTime: Long = startTimeOverall
 
 
     private var durationOverall: Long = 0
@@ -429,8 +428,8 @@ class LocationService : Service() {
 
     private inner class InnerBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            Log.d(TAG, intent!!.action)
-            when (intent.action) {
+            //  Log.d(TAG, intent!!.action)
+            when (intent!!.action) {
                 C.NOTIFICATION_ACTION_WP -> {
                     locationWP = currentLocation
                     distanceWPDirect = 0f
