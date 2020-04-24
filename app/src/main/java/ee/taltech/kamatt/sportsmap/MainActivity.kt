@@ -98,29 +98,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         super.onCreate(savedInstanceState)
         // If we have a saved state then we can restore it now
 
-        //  Add 3 values to locationType table
-        locationTypeRepository = LocationTypeRepository(this).open()
-        locationTypeRepository.add(
-            LocationType(
-                C.REST_LOCATIONID_LOC,
-                "Regular periodic location update",
-                "LOC"
-            )
-        )
-        locationTypeRepository.add(
-            LocationType(
-                C.REST_LOCATIONID_WP,
-                "Waypoint - temporary location, used as navigation aid",
-                "WP"
-            )
-        )
-        locationTypeRepository.add(
-            LocationType(
-                C.REST_LOCATIONID_CP,
-                "Checkpoint - found on terrain the location marked on the paper map",
-                "CP"
-            )
-        )
+
         val locationTypes = locationTypeRepository.getAll()
         for (locationType in locationTypes) {
             Log.d("locationType", locationType.toString())
@@ -583,4 +561,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             includeOptions.visibility = View.INVISIBLE
         }
     }
+
+    // ============================================== DATABASE CONTROLLER =============================================
+
+
 }

@@ -4,6 +4,8 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import ee.taltech.kamatt.sportsmap.C
+import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
+private lateinit var locationTypeRepository: LocationTypeRepository
 
 class DbHandler(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
@@ -131,6 +133,7 @@ class DbHandler(context: Context) :
         db?.execSQL(SQL_CREATE_GPS_LOCATION_TYPE_TABLE)
         db?.execSQL(SQL_CREATE_GPS_SESSION_TABLE)
         db?.execSQL(SQL_CREATE_GPS_LOCATION_TABLE)
+        initLocationType(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
@@ -141,5 +144,19 @@ class DbHandler(context: Context) :
         onCreate(db)
     }
 
+    private fun initLocationType(db: SQLiteDatabase?) {
+        val ID = "_id"
+        val NAME = "name"
+        val DESCRIPTION = "description"
+        db?.execSQL("INSERT INTO $GPS_LOCATION_TYPE_TABLE_NAME (" +
+                "$ID, $NAME ,$DESCRIPTION)VALUES( " +
+                "'${C.REST_LOCATIONID_LOC}', 'LOC', 'Regular periodic location update')")
+        db?.execSQL("INSERT INTO $GPS_LOCATION_TYPE_TABLE_NAME (" +
+                "$ID, $NAME ,$DESCRIPTION)VALUES( " +
+                "'${C.REST_LOCATIONID_WP}', 'WP', 'Waypoint - temporary location, used as navigation aid')")
+        db?.execSQL("INSERT INTO $GPS_LOCATION_TYPE_TABLE_NAME (" +
+                "$ID, $NAME ,$DESCRIPTION)VALUES( " +
+                "'${C.REST_LOCATIONID_CP}', 'CP', 'Checkpoint - found on terrain the location marked on the paper map')")
+    }
 
 }
