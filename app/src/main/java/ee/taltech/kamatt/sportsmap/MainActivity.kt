@@ -42,8 +42,10 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.snackbar.Snackbar
+import ee.taltech.kamatt.sportsmap.db.model.GpsLocation
 import ee.taltech.kamatt.sportsmap.db.model.GpsSession
 import ee.taltech.kamatt.sportsmap.db.model.LocationType
+import ee.taltech.kamatt.sportsmap.db.repository.GpsLocationRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
 import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
 import kotlinx.android.synthetic.main.activity_main.*
@@ -94,6 +96,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     private lateinit var locationTypeRepository: LocationTypeRepository
     private lateinit var gpsSessionRepository: GpsSessionRepository
+    private lateinit var gpsLocationRepository: GpsLocationRepository
 
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,13 +109,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             Log.d("locationType", locationType.toString())
         }
         gpsSessionRepository = GpsSessionRepository(this).open()
-        gpsSessionRepository.add(GpsSession("Onu Heino", "Onu Heino description"))
-        gpsSessionRepository.add(GpsSession("Onu Tauno", "Onu Tauno description"))
+
         val gpsSessions = gpsSessionRepository.getAll()
         for (gpsSession in gpsSessions) {
             Log.d("gpsSession", gpsSession.toString())
         }
-
+        gpsLocationRepository = GpsLocationRepository(this).open()
+        val gpsLocations = gpsLocationRepository.getAll()
+        for (gpsLocation in gpsLocations) {
+            Log.d("gpsLocation", gpsLocation.toString())
+        }
         setContentView(R.layout.activity_main)
         imageButtonCP.setOnClickListener { handleCpOnClick() }
         imageButtonWP.setOnClickListener { handleWpOnClick() }
