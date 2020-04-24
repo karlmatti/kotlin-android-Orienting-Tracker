@@ -36,7 +36,7 @@ class DbHandler(context: Context) :
 
             val ID = "_id"
             val NAME = "name"
-            val DESCRIPTION = "sort"
+            val DESCRIPTION = "description"
             val PACE_MIN = "paceMin"
             val PACE_MAX = "paceMax"
             val COLOR_MIN = "colorMin"

@@ -1,5 +1,7 @@
 package ee.taltech.kamatt.sportsmap.db.model
 
+import android.content.ContentValues
+
 class GpsSession {
     var id: Int = 0
     var name: String
@@ -88,6 +90,40 @@ class GpsSession {
         this.name = name
         this.description = description
     }
+    fun getContentValues(): ContentValues {
+        val values = ContentValues()
+        val NAME = "name"
+        val DESCRIPTION = "description"
+        val PACE_MIN = "paceMin"
+        val PACE_MAX = "paceMax"
+        val COLOR_MIN = "colorMin"
+        val COLOR_MAX = "colorMax"
+        val RECORDED_AT = "recordedAt"
+        val DURATION = "duration"
+        val SPEED = "speed"
+        val DISTANCE = "distance"
+        val CLIMB = "climb"
+        val DESCENT = "descent"
+        val APP_USER_ID = "appUserId"
 
+        values.put(NAME, this.name)
+        values.put(DESCRIPTION, this.description)
+        values.put(PACE_MIN, this.paceMin)
+        values.put(PACE_MAX, this.paceMax)
+        values.put(COLOR_MIN, this.colorMin)
+        values.put(COLOR_MAX, this.colorMax)
+        values.put(RECORDED_AT, this.recordedAt)
+        values.put(DURATION, this.duration)
+        values.put(SPEED, this.speed)
+        values.put(DISTANCE, this.distance)
+        values.put(CLIMB, this.climb)
+        values.put(DESCENT, this.descent)
+        values.put(APP_USER_ID, this.appUserId)
+        return values
+    }
+
+    override fun toString(): String {
+        return "GpsSession(id=$id, name='$name', description='$description', paceMin=$paceMin, paceMax=$paceMax, colorMin='$colorMin', colorMax='$colorMax', recordedAt='$recordedAt', duration=$duration, speed=$speed, distance=$distance, climb=$climb, descent=$descent, appUserId=$appUserId)"
+    }
 
 }
