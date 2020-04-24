@@ -4,7 +4,6 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import ee.taltech.kamatt.sportsmap.C
-import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
 
 class DbHandler(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
@@ -63,8 +62,8 @@ class DbHandler(context: Context) :
                     "$DISTANCE DOUBLE," +
                     "$CLIMB DOUBLE," +
                     "$DESCENT DOUBLE," +
-                    "$APP_USER_ID INT NOT NULL," +
-                    "FOREIGN KEY($APP_USER_ID) REFERENCES $APP_USER_TABLE_NAME(_id)" +
+                    "$APP_USER_ID LONG NOT NULL," +
+                    "FOREIGN KEY($APP_USER_ID) REFERENCES $APP_USER_TABLE_NAME(rowid)" +
                     ");"
         }
 
@@ -89,12 +88,12 @@ class DbHandler(context: Context) :
                     "$ACCURACY DOUBLE," +
                     "$ALTITUDE DOUBLE," +
                     "$VERTICAL_ACCURACY DOUBLE," +
-                    "$GPS_SESSION_ID INT NOT NULL," +
+                    "$GPS_SESSION_ID LONG NOT NULL," +
                     "$GPS_LOCATION_TYPE_ID TEXT NOT NULL," +
-                    "$APP_USER_ID INT NOT NULL," +
-                    "FOREIGN KEY($GPS_SESSION_ID) REFERENCES $GPS_SESSION_TABLE_NAME(_id)," +
+                    "$APP_USER_ID LONG NOT NULL," +
+                    "FOREIGN KEY($GPS_SESSION_ID) REFERENCES $GPS_SESSION_TABLE_NAME(rowid)," +
                     "FOREIGN KEY($GPS_LOCATION_TYPE_ID) REFERENCES $GPS_LOCATION_TYPE_TABLE_NAME(_id)," +
-                    "FOREIGN KEY($APP_USER_ID) REFERENCES $APP_USER_TABLE_NAME(_id)" +
+                    "FOREIGN KEY($APP_USER_ID) REFERENCES $APP_USER_TABLE_NAME(rowid)" +
                     ");"
 
         }
@@ -114,14 +113,13 @@ class DbHandler(context: Context) :
 
         private fun getCreateTableAppUser(): String {
 
-
             val ID = "_id"
             val EMAIL = "email"
             val PASSWORD = "password"
 
             return "create table $APP_USER_TABLE_NAME(" +
                     "$ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "$EMAIL TEXT NOT NULL, " +
+                    "$EMAIL TEXT UNIQUE NOT NULL, " +
                     "$PASSWORD TEXT NOT NULL " +
                     ");"
         }

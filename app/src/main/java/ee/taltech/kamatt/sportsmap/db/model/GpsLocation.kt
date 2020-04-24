@@ -6,30 +6,30 @@ class GpsLocation {
 
 
     var id = 0
-    var recorderAt: String
+    var recordedAt: String
     var latitude: Double
     var longitude: Double
     var accuracy: Double
     var altitude: Double
     var verticalAccuracy: Double
-    var gpsSessionId: Int
+    var gpsSessionId: Long
     var gpsLocationTypeId: String
-    var appUserId: Int
+    var appUserId: Long
 
     constructor(
         id: Int,
-        recorderAt: String,
+        recordedAt: String,
         latitude: Double,
         longitude: Double,
         accuracy: Double,
         altitude: Double,
         verticalAccuracy: Double,
-        gpsSessionId: Int,
+        gpsSessionId: Long,
         gpsLocationTypeId: String,
-        appUserId: Int
+        appUserId: Long
     ) {
         this.id = id
-        this.recorderAt = recorderAt
+        this.recordedAt = recordedAt
         this.latitude = latitude
         this.longitude = longitude
         this.accuracy = accuracy
@@ -41,17 +41,17 @@ class GpsLocation {
     }
 
     constructor(
-        recorderAt: String,
+        recordedAt: String,
         latitude: Double,
         longitude: Double,
         accuracy: Double,
         altitude: Double,
         verticalAccuracy: Double,
-        gpsSessionId: Int,
+        gpsSessionId: Long,
         gpsLocationTypeId: String,
-        appUserId: Int
+        appUserId: Long
     ) {
-        this.recorderAt = recorderAt
+        this.recordedAt = recordedAt
         this.latitude = latitude
         this.longitude = longitude
         this.accuracy = accuracy
@@ -61,6 +61,8 @@ class GpsLocation {
         this.gpsLocationTypeId = gpsLocationTypeId
         this.appUserId = appUserId
     }
+
+
     fun getContentValues(): ContentValues {
 
         val RECORDED_AT = "recordedAt"
@@ -74,7 +76,7 @@ class GpsLocation {
         val APP_USER_ID = "appUserId"
 
         val values = ContentValues()
-        values.put(RECORDED_AT, this.recorderAt)
+        values.put(RECORDED_AT, this.recordedAt)
         values.put(LATITUDE, this.latitude)
         values.put(LONGITUDE, this.longitude)
         values.put(ACCURACY, this.accuracy)
@@ -88,7 +90,7 @@ class GpsLocation {
     }
 
     override fun toString(): String {
-        return "GpsLocation(id=$id, recorderAt='$recorderAt', latitude=$latitude, longitude=$longitude, accuracy=$accuracy, altitude=$altitude, verticalAccuracy=$verticalAccuracy, gpsSessionId=$gpsSessionId, gpsLocationTypeId='$gpsLocationTypeId', appUserId=$appUserId)"
+        return "GpsLocation(id=$id, recorderAt='$recordedAt', latitude=$latitude, longitude=$longitude, accuracy=$accuracy, altitude=$altitude, verticalAccuracy=$verticalAccuracy, gpsSessionId=$gpsSessionId, gpsLocationTypeId='$gpsLocationTypeId', appUserId=$appUserId)"
     }
 
 }

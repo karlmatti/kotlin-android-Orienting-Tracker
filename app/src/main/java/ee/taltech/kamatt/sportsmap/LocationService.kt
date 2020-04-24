@@ -22,6 +22,12 @@ import java.util.*
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
+import ee.taltech.kamatt.sportsmap.db.model.GpsLocation
+import ee.taltech.kamatt.sportsmap.db.model.GpsSession
+import ee.taltech.kamatt.sportsmap.db.repository.AppUserRepository
+import ee.taltech.kamatt.sportsmap.db.repository.GpsLocationRepository
+import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
+import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
 
 
 class LocationService : Service() {
@@ -72,6 +78,15 @@ class LocationService : Service() {
     private var trackingSessionId: String? = null
 
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault())
+    private lateinit var locationTypeRepository: LocationTypeRepository
+    private lateinit var gpsSessionRepository: GpsSessionRepository
+    private lateinit var gpsLocationRepository: GpsLocationRepository
+    private lateinit var appUserRepository: AppUserRepository
+
+    private var currentDbUserId: Long = 0
+    private var currentDbSessionId: Long = -1
+    private lateinit var currentDbSession: GpsSession
+
 
     override fun onCreate() {
         Log.d(TAG, "onCreate")
@@ -91,6 +106,14 @@ class LocationService : Service() {
                 onNewLocation(locationResult.lastLocation)
             }
         }
+
+        locationTypeRepository = LocationTypeRepository(this).open()
+        gpsSessionRepository = GpsSessionRepository(this).open()
+        gpsLocationRepository = GpsLocationRepository(this).open()
+        appUserRepository = AppUserRepository(this).open()
+        currentDbUserId = appUserRepository.getUserIdByEmail(C.REST_USERNAME)
+        Log.d("currentUserId", currentDbUserId.toString())
+
         //getRestToken()
         getLastLocation()
 
@@ -251,6 +274,7 @@ class LocationService : Service() {
         }
         // save the location for calculations
         currentLocation = location
+        updateDbGpsLocation(location, C.REST_LOCATIONID_LOC)
 
         showNotification()
 
@@ -315,6 +339,7 @@ class LocationService : Service() {
         Log.d(TAG, "onDestroy")
         super.onDestroy()
 
+
         //stop location updates
         mFusedLocationClient.removeLocationUpdates(mLocationCallback)
 
@@ -357,7 +382,11 @@ class LocationService : Service() {
         distanceWPDirect = 0f
         distanceWPTotal = 0f
 
-
+        startDbTrackingSession(
+            dateFormat.format(Date(startTimeOverall)), 6 * 60.0,
+            18 * 60.0, "green",
+            "red"
+        )
         showNotification()
 
         return START_STICKY
@@ -443,12 +472,13 @@ class LocationService : Service() {
                     distanceCPDirect = 0f
                     distanceCPTotal = 0f
                     durationCP = 0
-
+                    updateDbGpsLocation(locationCP!!, C.REST_LOCATIONID_CP)
                     //reset WP also, since we know exactly where we are on the map
                     locationWP = currentLocation
                     distanceWPDirect = 0f
                     distanceWPTotal = 0f
                     durationWP = 0
+                    updateDbGpsLocation(locationWP!!, C.REST_LOCATIONID_WP)
 
                     //saveRestLocation(locationCP!!, C.REST_LOCATIONID_CP)
                     showNotification()
@@ -457,6 +487,41 @@ class LocationService : Service() {
         }
 
     }
+    // ============================================== DATABASE CONTROLLER =============================================
 
+    private fun startDbTrackingSession(
+        recordedAt: String, paceMin: Double,
+        paceMax: Double, colorMin: String,
+        colorMax: String
+    ) {
 
+        currentDbSession = GpsSession(
+            recordedAt, recordedAt, paceMin,
+            paceMax, colorMin, colorMax, recordedAt, 0,
+            0.0, 0.0, 0.0, 0.0, currentDbUserId
+        )
+        currentDbSessionId = gpsSessionRepository.add(currentDbSession)
+    }
+
+    private fun updateDbGpsLocation(location: Location, locationType: String) {
+        val gpsLocation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            GpsLocation(
+                dateFormat.format(Date(location.time)),
+                location.latitude, location.longitude,
+                location.accuracy.toDouble(), location.altitude,
+                location.verticalAccuracyMeters.toDouble(), currentDbSessionId,
+                locationType, currentDbUserId
+            )
+        } else {
+            GpsLocation(
+                dateFormat.format(Date(location.time)),
+                location.latitude, location.longitude,
+                location.accuracy.toDouble(), location.altitude,
+                0.0, currentDbSessionId,
+                locationType, currentDbUserId
+            )
+        }
+        gpsLocationRepository.add(gpsLocation)
+
+    }
 }

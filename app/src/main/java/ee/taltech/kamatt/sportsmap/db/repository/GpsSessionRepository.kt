@@ -1,6 +1,5 @@
 package ee.taltech.kamatt.sportsmap.db.repository
 
-import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
@@ -24,9 +23,8 @@ class GpsSessionRepository(val context: Context) {
     }
 
 
-
-    fun add(gpsSession: GpsSession){
-        db.insert(DbHandler.GPS_SESSION_TABLE_NAME, null, gpsSession.getContentValues())
+    fun add(gpsSession: GpsSession): Long {
+        return db.insert(DbHandler.GPS_SESSION_TABLE_NAME, null, gpsSession.getContentValues())
     }
 
 
@@ -81,7 +79,7 @@ class GpsSessionRepository(val context: Context) {
                     cursor.getDouble(cursor.getColumnIndex("distance")),
                     cursor.getDouble(cursor.getColumnIndex("climb")),
                     cursor.getDouble(cursor.getColumnIndex("descent")),
-                    cursor.getInt(cursor.getColumnIndex("appUserId"))
+                    cursor.getLong(cursor.getColumnIndex("appUserId"))
                 )
             )
         }

@@ -42,10 +42,6 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.snackbar.Snackbar
-import ee.taltech.kamatt.sportsmap.db.model.AppUser
-import ee.taltech.kamatt.sportsmap.db.model.GpsLocation
-import ee.taltech.kamatt.sportsmap.db.model.GpsSession
-import ee.taltech.kamatt.sportsmap.db.model.LocationType
 import ee.taltech.kamatt.sportsmap.db.repository.AppUserRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsLocationRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
@@ -84,10 +80,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var isCompassEnabled = false
     private var isOptionsEnabled = false
 
-    private var polyLineMinSpeed: Int = 1
-    private var polyLineMaxSpeed: Int = 31
-    private var polyLineMinColor: String = "green"
-    private var polyLineMaxColor: String = "red"
+    private var paceMin: Int = 1
+    private var paceMax: Int = 31
+    private var colorMin: String = "green"
+    private var colorMax: String = "red"
     private var polylineLastSegment: Int = 0xff000000.toInt()
 
     private var lastLatitude: Double = 0.0
@@ -122,15 +118,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         for (gpsLocation in gpsLocations) {
             Log.d("gpsLocation", gpsLocation.toString())
         }
-        Log.d("appUser","starting up")
+
         appUserRepository = AppUserRepository(this).open()
-        appUserRepository.add(AppUser("aadu@udaa.ee", "Aaadu.1213"))
-        appUserRepository.add(AppUser("iida@udaa.ee", "Iidu.1213"))
+        //  appUserRepository.add(AppUser(C.REST_USERNAME, C.REST_PASSWORD))
         val appUsers = appUserRepository.getAll()
         for (appUser in appUsers) {
             Log.d("appUser", appUser.toString())
         }
-        Log.d("appUser","ending")
+
         setContentView(R.layout.activity_main)
         imageButtonCP.setOnClickListener { handleCpOnClick() }
         imageButtonWP.setOnClickListener { handleWpOnClick() }
@@ -497,10 +492,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         val tempo: Int = Utils.getPaceInteger(newTimeDifference, distanceFromLastPoint)
 
         val newColor = Utils.calculateMapPolyLineColor(
-            polyLineMinSpeed,
-            polyLineMaxSpeed,
-            polyLineMinColor,
-            polyLineMaxColor,
+            paceMin,
+            paceMax,
+            colorMin,
+            colorMax,
             tempo
         )
 

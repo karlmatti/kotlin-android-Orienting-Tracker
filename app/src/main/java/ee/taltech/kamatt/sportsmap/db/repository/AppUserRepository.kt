@@ -3,6 +3,7 @@ package ee.taltech.kamatt.sportsmap.db.repository
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.util.Log
 import ee.taltech.kamatt.sportsmap.db.DbHandler
 import ee.taltech.kamatt.sportsmap.db.model.AppUser
 import ee.taltech.kamatt.sportsmap.db.model.LocationType
@@ -65,5 +66,19 @@ class AppUserRepository(val context: Context) {
 
         return appUsers
     }
+
+    fun getUserIdByEmail(email: String): Long {
+        val cursor = this.db.rawQuery(
+            "select rowid from " + DbHandler.APP_USER_TABLE_NAME + " where email='" + email + "'",
+            null
+        )
+        while (cursor.moveToNext()) {
+            return cursor.getLong(cursor.getColumnIndex("rowid"))
+        }
+        return 0
+    }
+
+
+
 
 }

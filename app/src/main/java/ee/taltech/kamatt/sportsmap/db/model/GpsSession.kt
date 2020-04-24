@@ -16,7 +16,49 @@ class GpsSession {
     var distance: Double = 0.0
     var climb: Double = 0.0
     var descent: Double = 0.0
-    var appUserId: Int = 0
+    var appUserId: Long = 0
+
+
+    constructor(name: String, description: String) {
+        this.name = name
+        this.description = description
+    }
+
+    constructor(id: Int, name: String, description: String) {
+        this.id = id
+        this.name = name
+        this.description = description
+    }
+
+    constructor(
+        name: String,
+        description: String,
+        paceMin: Double,
+        paceMax: Double,
+        colorMin: String,
+        colorMax: String,
+        recordedAt: String,
+        duration: Int,
+        speed: Double,
+        distance: Double,
+        climb: Double,
+        descent: Double,
+        appUserId: Long
+    ) {
+        this.name = name
+        this.description = description
+        this.paceMin = paceMin
+        this.paceMax = paceMax
+        this.colorMin = colorMin
+        this.colorMax = colorMax
+        this.recordedAt = recordedAt
+        this.duration = duration
+        this.speed = speed
+        this.distance = distance
+        this.climb = climb
+        this.descent = descent
+        this.appUserId = appUserId
+    }
 
     constructor(
         id: Int,
@@ -32,7 +74,7 @@ class GpsSession {
         distance: Double,
         climb: Double,
         descent: Double,
-        appUserId: Int
+        appUserId: Long
     ) {
         this.id = id
         this.name = name
@@ -50,46 +92,6 @@ class GpsSession {
         this.appUserId = appUserId
     }
 
-    constructor(
-        name: String,
-        description: String,
-        paceMin: Double,
-        paceMax: Double,
-        colorMin: String,
-        colorMax: String,
-        recordedAt: String,
-        duration: Int,
-        speed: Double,
-        distance: Double,
-        climb: Double,
-        descent: Double,
-        appUserId: Int
-    ) {
-        this.name = name
-        this.description = description
-        this.paceMin = paceMin
-        this.paceMax = paceMax
-        this.colorMin = colorMin
-        this.colorMax = colorMax
-        this.recordedAt = recordedAt
-        this.duration = duration
-        this.speed = speed
-        this.distance = distance
-        this.climb = climb
-        this.descent = descent
-        this.appUserId = appUserId
-    }
-
-    constructor(name: String, description: String) {
-        this.name = name
-        this.description = description
-    }
-
-    constructor(id: Int, name: String, description: String) {
-        this.id = id
-        this.name = name
-        this.description = description
-    }
     fun getContentValues(): ContentValues {
         val values = ContentValues()
         val NAME = "name"
