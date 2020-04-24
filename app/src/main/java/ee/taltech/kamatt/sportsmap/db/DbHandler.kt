@@ -116,8 +116,8 @@ class DbHandler(context: Context) :
 
 
             val ID = "_id"
-            val EMAIL = "name"
-            val PASSWORD = "description"
+            val EMAIL = "email"
+            val PASSWORD = "password"
 
             return "create table $APP_USER_TABLE_NAME(" +
                     "$ID INTEGER PRIMARY KEY AUTOINCREMENT, " +

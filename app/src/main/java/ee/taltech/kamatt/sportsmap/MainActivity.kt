@@ -42,9 +42,11 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.snackbar.Snackbar
+import ee.taltech.kamatt.sportsmap.db.model.AppUser
 import ee.taltech.kamatt.sportsmap.db.model.GpsLocation
 import ee.taltech.kamatt.sportsmap.db.model.GpsSession
 import ee.taltech.kamatt.sportsmap.db.model.LocationType
+import ee.taltech.kamatt.sportsmap.db.repository.AppUserRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsLocationRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
 import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
@@ -97,6 +99,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private lateinit var locationTypeRepository: LocationTypeRepository
     private lateinit var gpsSessionRepository: GpsSessionRepository
     private lateinit var gpsLocationRepository: GpsLocationRepository
+    private lateinit var appUserRepository: AppUserRepository
 
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -119,6 +122,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         for (gpsLocation in gpsLocations) {
             Log.d("gpsLocation", gpsLocation.toString())
         }
+        Log.d("appUser","starting up")
+        appUserRepository = AppUserRepository(this).open()
+        appUserRepository.add(AppUser("aadu@udaa.ee", "Aaadu.1213"))
+        appUserRepository.add(AppUser("iida@udaa.ee", "Iidu.1213"))
+        val appUsers = appUserRepository.getAll()
+        for (appUser in appUsers) {
+            Log.d("appUser", appUser.toString())
+        }
+        Log.d("appUser","ending")
         setContentView(R.layout.activity_main)
         imageButtonCP.setOnClickListener { handleCpOnClick() }
         imageButtonWP.setOnClickListener { handleWpOnClick() }
