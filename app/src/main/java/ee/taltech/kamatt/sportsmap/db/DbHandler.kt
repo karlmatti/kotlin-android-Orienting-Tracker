@@ -62,8 +62,8 @@ class DbHandler(context: Context) :
                     "$DISTANCE DOUBLE," +
                     "$CLIMB DOUBLE," +
                     "$DESCENT DOUBLE," +
-                    "$APP_USER_ID LONG NOT NULL," +
-                    "FOREIGN KEY($APP_USER_ID) REFERENCES $APP_USER_TABLE_NAME(rowid)" +
+                    "$APP_USER_ID INT NOT NULL," +
+                    "FOREIGN KEY($APP_USER_ID) REFERENCES $APP_USER_TABLE_NAME(_id)" +
                     ");"
         }
 
@@ -90,10 +90,10 @@ class DbHandler(context: Context) :
                     "$VERTICAL_ACCURACY DOUBLE," +
                     "$GPS_SESSION_ID LONG NOT NULL," +
                     "$GPS_LOCATION_TYPE_ID TEXT NOT NULL," +
-                    "$APP_USER_ID LONG NOT NULL," +
+                    "$APP_USER_ID INTEGER NOT NULL," +
                     "FOREIGN KEY($GPS_SESSION_ID) REFERENCES $GPS_SESSION_TABLE_NAME(rowid)," +
                     "FOREIGN KEY($GPS_LOCATION_TYPE_ID) REFERENCES $GPS_LOCATION_TYPE_TABLE_NAME(_id)," +
-                    "FOREIGN KEY($APP_USER_ID) REFERENCES $APP_USER_TABLE_NAME(rowid)" +
+                    "FOREIGN KEY($APP_USER_ID) REFERENCES $APP_USER_TABLE_NAME(_id)" +
                     ");"
 
         }

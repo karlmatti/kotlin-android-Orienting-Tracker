@@ -67,14 +67,16 @@ class AppUserRepository(val context: Context) {
         return appUsers
     }
 
-    fun getUserIdByEmail(email: String): Long {
-        val cursor = this.db.rawQuery(
-            "select rowid from " + DbHandler.APP_USER_TABLE_NAME + " where email='" + email + "'",
-            null
-        )
-        while (cursor.moveToNext()) {
-            return cursor.getLong(cursor.getColumnIndex("rowid"))
+    fun getUserIdByEmail(email: String): Int {
+        val sqlQuery: String =
+            "select rowid, * from " + DbHandler.APP_USER_TABLE_NAME + " where email='" + email + "'"
+        val cursor = db.rawQuery(sqlQuery, null)
+        if (cursor.moveToFirst()) {
+            cursor.moveToFirst()
+            return cursor.getInt(cursor.getColumnIndex("_id"))
         }
+
+        Log.d("@getUserIdByEmail", "Cannot find user with specified email")
         return 0
     }
 

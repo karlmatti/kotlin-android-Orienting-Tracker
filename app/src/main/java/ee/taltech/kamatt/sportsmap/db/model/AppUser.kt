@@ -19,7 +19,7 @@ class AppUser () {
     fun getContentValues(): ContentValues {
         val values = ContentValues()
         val EMAIL = "email"
-        val PASSWORD = "PASSWORD"
+        val PASSWORD = "password"
         values.put(EMAIL, this.email)
         values.put(PASSWORD, this.password)
         return values

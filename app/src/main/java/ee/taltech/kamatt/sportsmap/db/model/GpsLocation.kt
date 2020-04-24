@@ -14,7 +14,7 @@ class GpsLocation {
     var verticalAccuracy: Double
     var gpsSessionId: Long
     var gpsLocationTypeId: String
-    var appUserId: Long
+    var appUserId: Int
 
     constructor(
         id: Int,
@@ -26,7 +26,7 @@ class GpsLocation {
         verticalAccuracy: Double,
         gpsSessionId: Long,
         gpsLocationTypeId: String,
-        appUserId: Long
+        appUserId: Int
     ) {
         this.id = id
         this.recordedAt = recordedAt
@@ -49,7 +49,7 @@ class GpsLocation {
         verticalAccuracy: Double,
         gpsSessionId: Long,
         gpsLocationTypeId: String,
-        appUserId: Long
+        appUserId: Int
     ) {
         this.recordedAt = recordedAt
         this.latitude = latitude
@@ -90,7 +90,7 @@ class GpsLocation {
     }
 
     override fun toString(): String {
-        return "GpsLocation(id=$id, recorderAt='$recordedAt', latitude=$latitude, longitude=$longitude, accuracy=$accuracy, altitude=$altitude, verticalAccuracy=$verticalAccuracy, gpsSessionId=$gpsSessionId, gpsLocationTypeId='$gpsLocationTypeId', appUserId=$appUserId)"
+        return "GpsLocation(id=$id, recordedAt='$recordedAt', latitude=$latitude, longitude=$longitude, accuracy=$accuracy, altitude=$altitude, verticalAccuracy=$verticalAccuracy, gpsSessionId=$gpsSessionId, gpsLocationTypeId='$gpsLocationTypeId', appUserId=$appUserId)"
     }
 
 }

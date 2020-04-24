@@ -71,7 +71,7 @@ class GpsLocationRepository(val context: Context) {
                     cursor.getDouble(cursor.getColumnIndex("verticalAccuracy")),
                     cursor.getLong(cursor.getColumnIndex("gpsSessionId")),
                     cursor.getString(cursor.getColumnIndex("gpsLocationTypeId")),
-                    cursor.getLong(cursor.getColumnIndex("appUserId"))
+                    cursor.getInt(cursor.getColumnIndex("appUserId"))
 
 
                 )

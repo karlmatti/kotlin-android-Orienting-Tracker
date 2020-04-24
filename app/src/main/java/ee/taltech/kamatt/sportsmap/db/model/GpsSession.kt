@@ -16,7 +16,7 @@ class GpsSession {
     var distance: Double = 0.0
     var climb: Double = 0.0
     var descent: Double = 0.0
-    var appUserId: Long = 0
+    var appUserId: Int = 0
 
 
     constructor(name: String, description: String) {
@@ -43,7 +43,7 @@ class GpsSession {
         distance: Double,
         climb: Double,
         descent: Double,
-        appUserId: Long
+        appUserId: Int
     ) {
         this.name = name
         this.description = description
@@ -74,7 +74,7 @@ class GpsSession {
         distance: Double,
         climb: Double,
         descent: Double,
-        appUserId: Long
+        appUserId: Int
     ) {
         this.id = id
         this.name = name

@@ -79,7 +79,7 @@ class GpsSessionRepository(val context: Context) {
                     cursor.getDouble(cursor.getColumnIndex("distance")),
                     cursor.getDouble(cursor.getColumnIndex("climb")),
                     cursor.getDouble(cursor.getColumnIndex("descent")),
-                    cursor.getLong(cursor.getColumnIndex("appUserId"))
+                    cursor.getInt(cursor.getColumnIndex("appUserId"))
                 )
             )
         }

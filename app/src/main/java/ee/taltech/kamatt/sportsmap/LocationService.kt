@@ -35,6 +35,10 @@ class LocationService : Service() {
         private val TAG = this::class.java.declaringClass!!.simpleName
     }
 
+    private var paceMin: Int = 1
+    private var paceMax: Int = 31
+    private var colorMin: String = "green"
+    private var colorMax: String = "red"
 
     // The desired intervals for location updates. Inexact. Updates may be more or less frequent.
     private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 2000
@@ -83,7 +87,7 @@ class LocationService : Service() {
     private lateinit var gpsLocationRepository: GpsLocationRepository
     private lateinit var appUserRepository: AppUserRepository
 
-    private var currentDbUserId: Long = 0
+    private var currentDbUserId: Int = 0
     private var currentDbSessionId: Long = -1
     private lateinit var currentDbSession: GpsSession
 
@@ -382,10 +386,19 @@ class LocationService : Service() {
         distanceWPDirect = 0f
         distanceWPTotal = 0f
 
+
+        val intentCp = Intent(C.NOTIFICATION_ACTION_CP)
+        val intentWp = Intent(C.NOTIFICATION_ACTION_WP)
+
+        paceMin = intent!!.getIntExtra(C.PACE_MIN, 1)
+        paceMax = intent.getIntExtra(C.PACE_MAX, 31)
+        colorMin = intent.getStringExtra(C.COLOR_MIN)!!
+        colorMax = intent.getStringExtra(C.COLOR_MAX)!!
+
         startDbTrackingSession(
-            dateFormat.format(Date(startTimeOverall)), 6 * 60.0,
-            18 * 60.0, "green",
-            "red"
+            dateFormat.format(Date(startTimeOverall)), paceMin * 60.0,
+            paceMax * 60.0, colorMin,
+            colorMax
         )
         showNotification()
 

@@ -42,6 +42,7 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.snackbar.Snackbar
+import ee.taltech.kamatt.sportsmap.db.model.AppUser
 import ee.taltech.kamatt.sportsmap.db.repository.AppUserRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsLocationRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
@@ -82,7 +83,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     private var paceMin: Int = 1
     private var paceMax: Int = 31
-    private var colorMin: String = "green"
+    private var colorMin: String = "blue"
     private var colorMax: String = "red"
     private var polylineLastSegment: Int = 0xff000000.toInt()
 
@@ -120,7 +121,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         }
 
         appUserRepository = AppUserRepository(this).open()
-        //  appUserRepository.add(AppUser(C.REST_USERNAME, C.REST_PASSWORD))
+        appUserRepository.add(AppUser(C.REST_USERNAME, C.REST_PASSWORD))
         val appUsers = appUserRepository.getAll()
         for (appUser in appUsers) {
             Log.d("appUser", appUser.toString())
@@ -373,8 +374,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             if (Build.VERSION.SDK_INT >= 26) {
                 // starting the FOREGROUND service
                 // service has to display non-dismissable notification within 5 secs
-                startForegroundService(Intent(this, LocationService::class.java))
+                val intent: Intent = Intent(this, LocationService::class.java)
+                intent.putExtra(C.PACE_MAX, paceMax)
+                intent.putExtra(C.PACE_MIN, paceMin)
+                intent.putExtra(C.COLOR_MAX, colorMax)
+                intent.putExtra(C.COLOR_MIN, colorMin)
+                startForegroundService(intent)
             } else {
+                val intent: Intent = Intent(this, LocationService::class.java)
+                intent.putExtra(C.PACE_MAX, paceMax)
+                intent.putExtra(C.PACE_MIN, paceMin)
+                intent.putExtra(C.COLOR_MAX, colorMax)
+                intent.putExtra(C.COLOR_MIN, colorMin)
                 startService(Intent(this, LocationService::class.java))
             }
             buttonStartStop.setImageDrawable(
