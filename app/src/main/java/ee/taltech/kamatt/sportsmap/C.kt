@@ -35,6 +35,9 @@ class C {
         const val REST_USERNAME = "kamatt@taltech.ee"
         const val REST_PASSWORD = "Lambi.ats4321"
 
+        const val DB_NAME = "sportsmap.db"
+        const val DB_VERSION = 1
+
         const val REST_LOCATIONID_LOC = "00000000-0000-0000-0000-000000000001"
         const val REST_LOCATIONID_WP = "00000000-0000-0000-0000-000000000002"
         const val REST_LOCATIONID_CP = "00000000-0000-0000-0000-000000000003"

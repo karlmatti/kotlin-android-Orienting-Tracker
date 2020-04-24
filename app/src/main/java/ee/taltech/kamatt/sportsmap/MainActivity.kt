@@ -42,6 +42,8 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.snackbar.Snackbar
+import ee.taltech.kamatt.sportsmap.db.model.LocationType
+import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.buttons_top.*
 import kotlinx.android.synthetic.main.track_control.*
@@ -87,11 +89,24 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var lastTimestamp = Utils.getCurrentDateTime()
 
     private var polylineOptionsList: MutableList<PolylineOptions>? = null
+
+    private lateinit var locationTypeRepository: LocationTypeRepository
+
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
         super.onCreate(savedInstanceState)
         // If we have a saved state then we can restore it now
+
+        //  Add 3 values to locationType table
+        locationTypeRepository = LocationTypeRepository(this).open()
+        locationTypeRepository.add(LocationType("00000000-0000-0000-0000-000000000001", "Regular periodic location update", "LOC"))
+        locationTypeRepository.add(LocationType("00000000-0000-0000-0000-000000000002", "Waypoint - temporary location, used as navigation aid", "WP"))
+        locationTypeRepository.add(LocationType("00000000-0000-0000-0000-000000000003", "Checkpoint - found on terrain the location marked on the paper map", "CP"))
+        val locationTypes = locationTypeRepository.getAll()
+        for (locationType in locationTypes) {
+            Log.d("locationType", locationType.toString())
+        }
 
         setContentView(R.layout.activity_main)
         imageButtonCP.setOnClickListener { handleCpOnClick() }
@@ -185,6 +200,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     override fun onDestroy() {
         Log.d(TAG, "onDestroy")
         super.onDestroy()
+        locationTypeRepository.close()
     }
 
     override fun onRestart() {
