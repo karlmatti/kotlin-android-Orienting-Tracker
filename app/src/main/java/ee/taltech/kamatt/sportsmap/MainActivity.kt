@@ -30,6 +30,7 @@ import android.view.animation.RotateAnimation
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -83,15 +84,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
         fun deleteSessionFromDb(gpsSession: GpsSession) {
             gpsSessionRepository.removeSessionById(gpsSession.id)
-        }
-
-        fun showEditSession(gpsSession: GpsSession) {
-            currentlyEditedSession = gpsSession
-
-            includeEditSession.visibility = View.INVISIBLE
-            recyclerViewSessions.visibility = View.VISIBLE
-            buttonCloseRecyclerView.visibility = View.VISIBLE
-            isOldSessionsVisible = true
         }
 
         private lateinit var currentlyEditedSession: GpsSession
@@ -698,9 +690,31 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
 
     // ============================================== DATABASE CONTROLLER =============================================
+    fun startEditingSession(gpsSession: GpsSession) {
+        currentlyEditedSession = gpsSession
+        includeEditSession.visibility = View.VISIBLE
+        recyclerViewSessions.visibility = View.INVISIBLE
+        buttonCloseRecyclerView.visibility = View.INVISIBLE
+        isOldSessionsVisible = false
+        editTextSessionName.setText(gpsSession.name)
+        editTextSessionDescription.setText(gpsSession.description)
+        editTextSessionMinSpeed.setText(gpsSession.paceMin.toString())
+        editTextSessionMaxSpeed.setText(gpsSession.paceMax.toString())
+        editTextSessionMinColor.setText(gpsSession.colorMin)
+        editTextSessionMaxColor.setText(gpsSession.colorMax)
 
 
-    fun updateSessionInDb(gpsSession: GpsSession) {
-        gpsSessionRepository.updateSession(gpsSession)
     }
+/*
+    fun updateSessionInDb(gpsSession: GpsSession) {
+        currentlyEditedSession = gpsSession
+        context.findViewById<ConstraintLayout>(R.id.includeEditSession).visibility = View.VISIBLE
+        context.findViewById<ConstraintLayout>(R.id.recyclerViewSessions).visibility = View.INVISIBLE
+        context.findViewById<ConstraintLayout>(R.id.buttonCloseRecyclerView).visibility = View.INVISIBLE
+        includeEditSession.visibility = View.VISIBLE
+        recyclerViewSessions.visibility = View.INVISIBLE
+
+        isOldSessionsVisible = false
+        gpsSessionRepository.updateSession(currentlyEditedSession)
+    }*/
 }
