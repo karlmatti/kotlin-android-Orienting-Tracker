@@ -643,7 +643,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     private fun restoreOldSessionsState() {
         if (isOldSessionsVisible) {
-
+            recyclerViewSessions.visibility = View.VISIBLE
+            buttonCloseRecyclerView.visibility = View.VISIBLE
+        } else {
+            recyclerViewSessions.visibility = View.INVISIBLE
+            buttonCloseRecyclerView.visibility = View.INVISIBLE
         }
     }
 
