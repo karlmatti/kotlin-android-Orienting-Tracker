@@ -51,6 +51,7 @@ import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
 import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.buttons_top.*
+import kotlinx.android.synthetic.main.edit_session.*
 import kotlinx.android.synthetic.main.options.*
 import kotlinx.android.synthetic.main.track_control.*
 import java.lang.Math.toDegrees
@@ -81,8 +82,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         private lateinit var appUserRepository: AppUserRepository
 
         fun deleteSessionFromDb(gpsSession: GpsSession) {
-            gpsSessionRepository.removeSingleSession(gpsSession.id)
+            gpsSessionRepository.removeSessionById(gpsSession.id)
         }
+
+        fun showEditSession(gpsSession: GpsSession) {
+            currentlyEditedSession = gpsSession
+
+            includeEditSession.visibility = View.INVISIBLE
+            recyclerViewSessions.visibility = View.VISIBLE
+            buttonCloseRecyclerView.visibility = View.VISIBLE
+            isOldSessionsVisible = true
+        }
+
+        private lateinit var currentlyEditedSession: GpsSession
+
+
+
 
 
     }
@@ -162,6 +177,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         imageViewOptions.setOnClickListener { handleOptionsOnClick() }
         buttonGoToOldSessions.setOnClickListener { handleOpenOldSessionsOnClick() }
         buttonCloseRecyclerView.setOnClickListener { handleCloseOldSessionsOnClick() }
+        buttonUpdateSession.setOnClickListener { handleUpdateSessionOnClick() }
         // safe to call every time
         createNotificationChannel()
 
@@ -474,6 +490,28 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         isOldSessionsVisible = false
     }
 
+    private fun handleUpdateSessionOnClick() {
+        // update db and adapter
+        currentlyEditedSession.name = editTextSessionName.text.toString()
+        currentlyEditedSession.description = editTextSessionDescription.text.toString()
+        val paceMin: Double = editTextSessionMinSpeed.text.toString().toDouble()
+        val paceMax: Double = editTextSessionMaxSpeed.text.toString().toDouble()
+        if (paceMin < paceMax && paceMin >= 0) {
+            currentlyEditedSession.paceMin = paceMin
+            currentlyEditedSession.paceMax = paceMax
+        }
+        currentlyEditedSession.colorMin = editTextSessionMinColor.text.toString()
+        currentlyEditedSession.colorMax = editTextSessionMaxColor.text.toString()
+        // update db and adapter
+        gpsSessionRepository.updateSession(currentlyEditedSession)
+        recyclerViewSessions.adapter!!.notifyDataSetChanged()
+        // close session window
+        includeEditSession.visibility = View.INVISIBLE
+        recyclerViewSessions.visibility = View.VISIBLE
+        buttonCloseRecyclerView.visibility = View.VISIBLE
+        isOldSessionsVisible = true
+    }
+
     // ============================================== BROADCAST RECEIVER =============================================
     private inner class InnerBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -662,4 +700,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     // ============================================== DATABASE CONTROLLER =============================================
 
 
+    fun updateSessionInDb(gpsSession: GpsSession) {
+        gpsSessionRepository.updateSession(gpsSession)
+    }
 }

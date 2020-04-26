@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">ORIENTING</string>
     <string name="no_value">-</string>
+    <string name="name">Name</string>
+    <string name="description">Description</string>
+    <string name="min_speed_min_per_km">Min speed (min per km)</string>
+    <string name="max_speed_min_per_km">Max speed (min per km)</string>
+    <string name="color_of_max_speed_rgb">Color of max speed (rgb)</string>
+    <string name="color_of_min_speed_rgb">Color of min speed (rgb)</string>
 </resources>

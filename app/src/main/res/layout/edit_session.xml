@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#E6A9F6AD">
+
+    <TextView
+        android:id="@+id/textViewSessionName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/name"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/editTextSessionName"
+        app:layout_constraintEnd_toEndOf="@+id/editTextSessionName"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <TextView
+        android:id="@+id/textViewSessionDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/description"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/textViewSessionName"
+        app:layout_constraintEnd_toEndOf="@+id/editTextSessionDescription"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/editTextSessionDescription"
+        app:layout_constraintTop_toTopOf="@+id/textViewSessionName" />
+
+    <EditText
+        android:id="@+id/editTextSessionDescription"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="8dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="-description-"
+        app:layout_constraintBottom_toBottomOf="@+id/editTextSessionName"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/editTextSessionName"
+        app:layout_constraintTop_toTopOf="@+id/editTextSessionName" />
+
+    <EditText
+        android:id="@+id/editTextSessionName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="4dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="-name-"
+        app:layout_constraintBottom_toTopOf="@+id/textViewSessionMinSpeed"
+        app:layout_constraintEnd_toStartOf="@+id/editTextSessionDescription"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewSessionName" />
+
+    <EditText
+        android:id="@+id/editTextSessionMaxSpeed"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="8dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="-max speed-"
+        app:layout_constraintBottom_toBottomOf="@+id/editTextSessionMinSpeed"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/editTextSessionMinSpeed"
+        app:layout_constraintTop_toTopOf="@+id/editTextSessionMinSpeed" />
+
+    <EditText
+        android:id="@+id/editTextSessionMinSpeed"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="4dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="-min speed-"
+        app:layout_constraintBottom_toTopOf="@+id/textViewSessionMinColor"
+        app:layout_constraintEnd_toStartOf="@+id/editTextSessionMaxSpeed"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewSessionMinSpeed" />
+
+    <TextView
+        android:id="@+id/textViewSessionMinSpeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/min_speed_min_per_km"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/editTextSessionMinSpeed"
+        app:layout_constraintEnd_toEndOf="@+id/editTextSessionMinSpeed"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextSessionName" />
+
+    <TextView
+        android:id="@+id/textViewSessionMaxSpeed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/max_speed_min_per_km"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/textViewSessionMinSpeed"
+        app:layout_constraintEnd_toEndOf="@+id/editTextSessionMaxSpeed"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/editTextSessionMaxSpeed"
+        app:layout_constraintTop_toTopOf="@+id/textViewSessionMinSpeed" />
+
+    <EditText
+        android:id="@+id/editTextSessionMaxColor"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="8dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="-max color-"
+        app:layout_constraintBottom_toBottomOf="@+id/editTextSessionMinColor"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/editTextSessionMinColor"
+        app:layout_constraintTop_toTopOf="@+id/editTextSessionMinColor" />
+
+    <EditText
+        android:id="@+id/editTextSessionMinColor"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="4dp"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text="-min color-"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/editTextSessionMaxColor"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewSessionMinColor" />
+
+    <TextView
+        android:id="@+id/textViewSessionMaxColor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/color_of_max_speed_rgb"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/textViewSessionMinColor"
+        app:layout_constraintEnd_toEndOf="@+id/editTextSessionMaxColor"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/editTextSessionMaxColor"
+        app:layout_constraintTop_toTopOf="@+id/textViewSessionMinColor" />
+
+    <TextView
+        android:id="@+id/textViewSessionMinColor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/color_of_min_speed_rgb"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/editTextSessionMinColor"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTextSessionMinSpeed" />
+
+    <Button
+        android:id="@+id/buttonUpdateSession"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="#388E3C"
+        android:text="update"
+        android:textColor="@color/design_default_color_background"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/editTextSessionMaxColor"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/editTextSessionMaxColor"
+        app:layout_constraintTop_toBottomOf="@+id/editTextSessionMaxColor"
+        app:layout_constraintVertical_bias="0.0" />
+</androidx.constraintlayout.widget.ConstraintLayout>

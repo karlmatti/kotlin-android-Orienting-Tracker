@@ -1,5 +1,6 @@
 package ee.taltech.kamatt.sportsmap.db.repository
 
+import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
@@ -121,8 +122,17 @@ class GpsSessionRepository(val context: Context) {
      *
      * @param sessionId to remove
      */
-    fun removeSingleSession(sessionId: Int) {
+    fun removeSessionById(sessionId: Int) {
         db.execSQL("DELETE FROM " + DbHandler.GPS_SESSION_TABLE_NAME + " WHERE _id= '" + sessionId + "'")
+    }
+
+    fun updateSession(gpsSession: GpsSession) {
+        db.update(
+            DbHandler.GPS_SESSION_TABLE_NAME,
+            gpsSession.getContentValues(),
+            "_id=" + gpsSession.id,
+            null
+        )
     }
 
 

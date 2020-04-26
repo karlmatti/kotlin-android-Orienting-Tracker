@@ -30,7 +30,7 @@ class DataRecyclerViewAdapterSessions(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val session = dataSet.get(position)
-        holder.itemView.textViewName.text = session.name
+        holder.itemView.textViewSessionName.text = session.name
         holder.itemView.textViewDescription.text = session.description
         holder.itemView.textViewRecordedAt.text = session.recordedAt
         holder.itemView.textViewDurationOverall.text = session.duration.toString()
@@ -43,6 +43,14 @@ class DataRecyclerViewAdapterSessions(
             dataSet.removeAt(position) // remove the item from list
 
             notifyItemRemoved(position) // notify the adapter about the removed item
+        }
+        holder.itemView.buttonEditSession.setOnClickListener {
+            val theEditedItem: GpsSession = dataSet.get(position)
+
+            includeEditSession.visibility = View.INVISIBLE
+            recyclerViewSessions.visibility = View.VISIBLE
+            buttonCloseRecyclerView.visibility = View.VISIBLE
+
         }
 
     }
