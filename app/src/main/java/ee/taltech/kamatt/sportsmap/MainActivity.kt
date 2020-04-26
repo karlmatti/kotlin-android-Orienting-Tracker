@@ -50,6 +50,7 @@ import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
 import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.buttons_top.*
+import kotlinx.android.synthetic.main.options.*
 import kotlinx.android.synthetic.main.track_control.*
 import java.lang.Math.toDegrees
 
@@ -66,7 +67,8 @@ import java.lang.Math.toDegrees
 
 //  TODO: bug. end session last point goes to LatLng(0, 0)
 
-//  TODO: bug. polyline disappears when orientation changes
+//  TODO: bug. polyline disappears when orientation changes or app works in background for a while
+
 
 
 
@@ -96,8 +98,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     //  private var markerWP: Marker? = null
     private var mapPolyline: Polyline? = null
     private var locationServiceActive = false
-    private var isCompassEnabled = false
-    private var isOptionsEnabled = false
+    private var isCompassVisible = false
+    private var isOptionsVisible = false
+    private var isOldSessionsVisible = false
 
     private var paceMin: Int = 1
     private var paceMax: Int = 31
@@ -151,6 +154,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         buttonStartStop.setOnClickListener { handleStartStopOnClick() }
         imageViewToggleCompass.setOnClickListener { handleToggleCompass() }
         imageViewOptions.setOnClickListener { handleOptionsOnClick() }
+        buttonGoToOldSessions.setOnClickListener { handleOpenOldSessionsOnClick() }
+        buttonCloseRecyclerView.setOnClickListener { handleCloseOldSessionsOnClick() }
         // safe to call every time
         createNotificationChannel()
 
@@ -171,10 +176,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         magnetometer = sensorManager.getDefaultSensor(TYPE_MAGNETIC_FIELD)
         if (savedInstanceState != null) {
             locationServiceActive = savedInstanceState.getBoolean("locationServiceActive", false)
-            isCompassEnabled = savedInstanceState.getBoolean("isCompassEnabled", false)
-            isOptionsEnabled = savedInstanceState.getBoolean("isOptionsEnabled", false)
+            isCompassVisible = savedInstanceState.getBoolean("isCompassVisible", false)
+            isOptionsVisible = savedInstanceState.getBoolean("isOptionsVisible", false)
+            isOldSessionsVisible = savedInstanceState.getBoolean("isOldSessionsVisible", false)
             restoreCompassState()
             restoreOptionsState()
+            restoreOldSessionsState()
         }
         if (locationServiceActive) {
             buttonStartStop.setImageDrawable(
@@ -203,8 +210,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean("locationServiceActive", locationServiceActive)
-        outState.putBoolean("isCompassEnabled", isCompassEnabled)
-        outState.putBoolean("isOptionsEnabled", isOptionsEnabled)
+        outState.putBoolean("isCompassVisible", isCompassVisible)
+        outState.putBoolean("isOptionsVisible", isOptionsVisible)
+        outState.putBoolean("isOldSessionsVisible", isOldSessionsVisible)
     }
 
     override fun onStart() {
@@ -420,7 +428,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     }
 
     private fun handleToggleCompass() {
-        isCompassEnabled = if (isCompassEnabled) {
+        isCompassVisible = if (isCompassVisible) {
             compassImage.setBackgroundResource(0)
             false
 
@@ -432,15 +440,31 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     private fun handleOptionsOnClick() {
 
-        if (isOptionsEnabled) {
+        if (isOptionsVisible) {
             includeOptions.visibility = View.INVISIBLE
 
-            isOptionsEnabled = false
+            isOptionsVisible = false
 
         } else {
             includeOptions.visibility = View.VISIBLE
-            isOptionsEnabled = true
+            isOptionsVisible = true
         }
+    }
+
+    private fun handleOpenOldSessionsOnClick() {
+
+        includeOptions.visibility = View.INVISIBLE
+        recyclerViewSessions.visibility = View.VISIBLE
+        buttonCloseRecyclerView.visibility = View.VISIBLE
+        isOptionsVisible = false
+        isOldSessionsVisible = true
+
+    }
+
+    private fun handleCloseOldSessionsOnClick() {
+        recyclerViewSessions.visibility = View.INVISIBLE
+        buttonCloseRecyclerView.visibility = View.INVISIBLE
+        isOldSessionsVisible = false
     }
 
     // ============================================== BROADCAST RECEIVER =============================================
@@ -601,7 +625,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     }
 
     private fun restoreCompassState() {
-        if (!isCompassEnabled) {
+        if (!isCompassVisible) {
             compassImage.setBackgroundResource(0)
         } else {
             compassImage.setBackgroundResource(R.drawable.baseline_arrow_upward_black_24)
@@ -610,12 +634,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     // ============================================== OPTIONS =============================================
     private fun restoreOptionsState() {
-        if (isOptionsEnabled) {
+        if (isOptionsVisible) {
             includeOptions.visibility = View.VISIBLE
         } else {
             includeOptions.visibility = View.INVISIBLE
         }
     }
+
+    private fun restoreOldSessionsState() {
+        if (isOldSessionsVisible) {
+
+        }
+    }
+
 
     // ============================================== DATABASE CONTROLLER =============================================
 

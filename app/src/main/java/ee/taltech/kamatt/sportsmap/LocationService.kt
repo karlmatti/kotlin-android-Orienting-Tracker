@@ -359,6 +359,7 @@ class LocationService : Service() {
         val intent = Intent(C.LOCATION_UPDATE_ACTION)
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 
+
     }
 
     override fun onLowMemory() {
