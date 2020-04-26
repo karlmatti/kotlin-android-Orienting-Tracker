@@ -15,7 +15,7 @@ class DataRecyclerViewAdapterSessions(
     private val userId: Int
 ) : RecyclerView.Adapter<DataRecyclerViewAdapterSessions.ViewHolder>() {
 
-    var dataSet: List<GpsSession> = repo.getByUserId(userId)
+    var dataSet: MutableList<GpsSession> = repo.getByUserId(userId) as MutableList<GpsSession>
 
     private val inflater: LayoutInflater = LayoutInflater.from(context)
 
@@ -36,8 +36,17 @@ class DataRecyclerViewAdapterSessions(
         holder.itemView.textViewDurationOverall.text = session.duration.toString()
         holder.itemView.textViewDistanceOverall.text = session.distance.toString()
         holder.itemView.textViewTempoOverall.text = session.speed.toString()
+        holder.itemView.buttonDeleteSession.setOnClickListener {
+            val theRemovedItem: GpsSession = dataSet.get(position)
+            // remove your item from data base
+            MainActivity.deleteSessionFromDb(theRemovedItem)
+            dataSet.removeAt(position) // remove the item from list
+
+            notifyItemRemoved(position) // notify the adapter about the removed item
+        }
 
     }
+
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
 

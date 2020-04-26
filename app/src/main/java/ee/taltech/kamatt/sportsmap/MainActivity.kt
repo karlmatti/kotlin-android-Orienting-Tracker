@@ -44,6 +44,7 @@ import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.snackbar.Snackbar
 import ee.taltech.kamatt.sportsmap.db.model.AppUser
+import ee.taltech.kamatt.sportsmap.db.model.GpsSession
 import ee.taltech.kamatt.sportsmap.db.repository.AppUserRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsLocationRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
@@ -56,8 +57,6 @@ import java.lang.Math.toDegrees
 
 //  TODO: in options - updating pacemin, pacemax, colormin, colormax values then
 //   it updates data sent to db, rest and when updating polyline
-
-//  TODO: in options>old sessions - all user sessions are available and scrollable
 
 //  TODO: users old sessions are loadable - shows session polyline, statistics
 
@@ -75,6 +74,17 @@ import java.lang.Math.toDegrees
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListener {
     companion object {
         private val TAG = this::class.java.declaringClass!!.simpleName
+
+        private lateinit var locationTypeRepository: LocationTypeRepository
+        private lateinit var gpsSessionRepository: GpsSessionRepository
+        private lateinit var gpsLocationRepository: GpsLocationRepository
+        private lateinit var appUserRepository: AppUserRepository
+
+        fun deleteSessionFromDb(gpsSession: GpsSession) {
+            gpsSessionRepository.removeSingleSession(gpsSession.id)
+        }
+
+
     }
 
     //  Compass
@@ -114,10 +124,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     private var polylineOptionsList: MutableList<PolylineOptions>? = null
 
-    private lateinit var locationTypeRepository: LocationTypeRepository
-    private lateinit var gpsSessionRepository: GpsSessionRepository
-    private lateinit var gpsLocationRepository: GpsLocationRepository
-    private lateinit var appUserRepository: AppUserRepository
 
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -203,6 +209,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         recyclerViewSessions.layoutManager = LinearLayoutManager(this)
         recyclerViewSessions.adapter =
             DataRecyclerViewAdapterSessions(this, gpsSessionRepository, 1)
+
     }
 
 
