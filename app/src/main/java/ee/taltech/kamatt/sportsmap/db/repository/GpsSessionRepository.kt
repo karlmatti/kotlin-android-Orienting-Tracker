@@ -3,6 +3,7 @@ package ee.taltech.kamatt.sportsmap.db.repository
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.util.Log
 import ee.taltech.kamatt.sportsmap.db.DbHandler
 import ee.taltech.kamatt.sportsmap.db.model.GpsSession
 
@@ -86,5 +87,35 @@ class GpsSessionRepository(val context: Context) {
 
         return gpsSessions
     }
+
+    fun getByUserId(userId: Int): List<GpsSession> {
+        val sqlQuery: String =
+            "select * from " + DbHandler.GPS_SESSION_TABLE_NAME + " where appUserId='" + userId.toString() + "'"
+        val cursor = db.rawQuery(sqlQuery, null)
+        val gpsSessions = ArrayList<GpsSession>()
+        while (cursor.moveToNext()) {
+            gpsSessions.add(
+                GpsSession(
+                    cursor.getInt(cursor.getColumnIndex("_id")),
+                    cursor.getString(cursor.getColumnIndex("name")),
+                    cursor.getString(cursor.getColumnIndex("description")),
+                    cursor.getDouble(cursor.getColumnIndex("paceMin")),
+                    cursor.getDouble(cursor.getColumnIndex("paceMax")),
+                    cursor.getString(cursor.getColumnIndex("colorMin")),
+                    cursor.getString(cursor.getColumnIndex("colorMax")),
+                    cursor.getString(cursor.getColumnIndex("recordedAt")),
+                    cursor.getInt(cursor.getColumnIndex("duration")),
+                    cursor.getDouble(cursor.getColumnIndex("speed")),
+                    cursor.getDouble(cursor.getColumnIndex("distance")),
+                    cursor.getDouble(cursor.getColumnIndex("climb")),
+                    cursor.getDouble(cursor.getColumnIndex("descent")),
+                    cursor.getInt(cursor.getColumnIndex("appUserId"))
+                )
+            )
+        }
+        return gpsSessions
+
+    }
+
 
 }

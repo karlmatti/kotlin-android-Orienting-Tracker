@@ -33,6 +33,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -51,6 +52,23 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.buttons_top.*
 import kotlinx.android.synthetic.main.track_control.*
 import java.lang.Math.toDegrees
+
+//  TODO: in options - updating pacemin, pacemax, colormin, colormax values then
+//   it updates data sent to db, rest and when updating polyline
+
+//  TODO: in options>old sessions - all user sessions are available and scrollable
+
+//  TODO: users old sessions are loadable - shows session polyline, statistics
+
+//  TODO: users old sessions can be changed (pacemin, pacemax, colormin, colormax, name, description)
+
+//  TODO: time updates in real time not with location update
+
+//  TODO: bug. end session last point goes to LatLng(0, 0)
+
+//  TODO: bug. polyline disappears when orientation changes
+
+
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListener {
     companion object {
@@ -175,7 +193,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             )
         }
 
-
+        recyclerViewSessions.layoutManager = LinearLayoutManager(this)
+        recyclerViewSessions.adapter =
+            DataRecyclerViewAdapterSessions(this, gpsSessionRepository, 1)
     }
 
 
