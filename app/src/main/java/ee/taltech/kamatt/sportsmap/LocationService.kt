@@ -35,10 +35,7 @@ class LocationService : Service() {
         private val TAG = this::class.java.declaringClass!!.simpleName
     }
 
-    private var paceMin: Double = 1.0
-    private var paceMax: Double = 31.0
-    private var colorMin: String = "green"
-    private var colorMax: String = "red"
+
 
     // The desired intervals for location updates. Inexact. Updates may be more or less frequent.
     private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 2000
@@ -56,7 +53,7 @@ class LocationService : Service() {
 
     private var distanceOverallDirect = 0f
     private var distanceOverallTotal = 0f
-    private var tempoOverall: String = ""
+    private var tempoOverall: String = "--:--"
     private var locationStart: Location? = null
 
     private var distanceCPDirect = 0f
@@ -394,14 +391,14 @@ class LocationService : Service() {
         val intentCp = Intent(C.NOTIFICATION_ACTION_CP)
         val intentWp = Intent(C.NOTIFICATION_ACTION_WP)
 
-        paceMin = intent!!.getDoubleExtra(C.PACE_MIN, 1.0)
-        paceMax = intent.getDoubleExtra(C.PACE_MAX, 31.0)
-        colorMin = intent.getStringExtra(C.COLOR_MIN)!!
-        colorMax = intent.getStringExtra(C.COLOR_MAX)!!
+        val paceMin = intent!!.getDoubleExtra(C.PACE_MIN, 120.0)
+        val paceMax = intent.getDoubleExtra(C.PACE_MAX, 480.0)
+        val colorMin = intent.getStringExtra(C.COLOR_MIN)!!
+        val colorMax = intent.getStringExtra(C.COLOR_MAX)!!
 
         startDbTrackingSession(
-            dateFormat.format(Date(startTimeOverall)), paceMin * 60.0,
-            paceMax * 60.0, colorMin,
+            dateFormat.format(Date(startTimeOverall)), paceMin,
+            paceMax, colorMin,
             colorMax
         )
         showNotification()
@@ -514,8 +511,8 @@ class LocationService : Service() {
 
         currentDbSession = GpsSession(
             recordedAt, recordedAt, paceMin,
-            paceMax, colorMin, colorMax, recordedAt, 0,
-            0.0, 0.0, 0.0, 0.0, currentDbUserId
+            paceMax, colorMin, colorMax, recordedAt, "--:--:--",
+            "--:--", 0.0, 0.0, 0.0, currentDbUserId
         )
         currentDbSessionId = gpsSessionRepository.add(currentDbSession)
 

@@ -57,7 +57,7 @@ class DbHandler(context: Context) :
                     "$COLOR_MIN TEXT," +
                     "$COLOR_MAX TEXT," +
                     "$RECORDED_AT TEXT," +
-                    "$DURATION INT," +
+                    "$DURATION STRING," +
                     "$SPEED DOUBLE," +
                     "$DISTANCE DOUBLE," +
                     "$CLIMB DOUBLE," +

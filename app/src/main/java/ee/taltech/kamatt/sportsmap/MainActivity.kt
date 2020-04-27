@@ -60,8 +60,6 @@ import java.lang.Math.toDegrees
 
 //  TODO: users old sessions are loadable - shows session polyline, statistics
 
-//  TODO: IN PROGRESS. bug. session should be saved to db when session stops
-
 //  TODO: bug. polyline only draws when app is open, should show full polyline when user opens app again
 //  TODO: bug. end session last point goes to LatLng(0, 0)
 //  TODO: bug. polyline disappears when orientation changes
@@ -70,6 +68,7 @@ import java.lang.Math.toDegrees
 //  TODO: LOW. pace should be double and in seconds everywhere but UI
 //  TODO: LOW. in old sessions - changes should also be updated in rest (pacemin, pacemax, colormin, colormax, name, description)
 //  TODO: LOW. time updates in real time not with location update
+//  TODO: LOW. save climb and other less important values as well in session when session ends
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListener {
@@ -115,8 +114,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var isOptionsVisible = false
     private var isOldSessionsVisible = false
 
-    private var paceMin: Double = 1 * 60.0
-    private var paceMax: Double = 31 * 60.0
+    private var paceMin: Double = 120.0
+    private var paceMax: Double = 480.0
     private var colorMin: String = "blue"
     private var colorMax: String = "red"
     private var polylineLastSegment: Int = 0xff000000.toInt()
@@ -127,6 +126,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     private var polylineOptionsList: MutableList<PolylineOptions>? = null
     private var currentDbSessionId: Int = -1
+
+
+    private var distanceOverallDirect = 0f
+    private var distanceOverallTotal = 0f
+    private var tempoOverall: String = "0"
+    private var durationOverall: String = "0"
 
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -236,6 +241,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     override fun onResume() {
         Log.d(TAG, "onResume")
         super.onResume()
+        //  TODO: draw polyline again because app was opened
 
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(broadcastReceiver, broadcastReceiverIntentFilter)
@@ -399,6 +405,27 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         if (locationServiceActive) {
             mMap.isMyLocationEnabled = false
             // stopping the service
+            Log.d("stopSession", "starting to stop session: $currentDbSessionId")
+            Log.d("stopSession", "distanceOverallDirect: $distanceOverallDirect")
+            Log.d("stopSession", "distanceOverallTotal: $distanceOverallTotal")
+            Log.d("stopSession", "tempoOverall: $tempoOverall")
+            Log.d("stopSession", "paceMax: $paceMax")
+            Log.d("stopSession", "paceMin: $paceMin")
+            Log.d("stopSession", "colorMin: $colorMin")
+            Log.d("stopSession", "colorMax: $colorMax")
+
+            val currentlyActiveSession: GpsSession =
+                gpsSessionRepository.getSessionById(currentDbSessionId)
+            currentlyActiveSession.distance = distanceOverallTotal.toDouble()
+            currentlyActiveSession.speed = tempoOverall
+            currentlyActiveSession.duration = durationOverall
+            currentlyActiveSession.colorMin = colorMin
+            currentlyActiveSession.colorMax = colorMax
+            currentlyActiveSession.paceMin = paceMin
+            currentlyActiveSession.paceMax = paceMax
+            gpsSessionRepository.updateSession(currentlyActiveSession)
+
+            // stopping the service
             stopService(Intent(this, LocationService::class.java))
             buttonStartStop.setImageDrawable(
                 ContextCompat.getDrawable(
@@ -406,6 +433,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     R.drawable.baseline_play_arrow_24
                 )
             )
+
 
         } else {
             mMap.isMyLocationEnabled = true
@@ -518,9 +546,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         if (locationServiceActive) {
             val currentSession = gpsSessionRepository.getSessionById(currentDbSessionId)
             // update db and adapter
-            paceMin = editTextMinSpeed.text.toString().toDouble() * 60
-            paceMax = editTextMaxSpeed.text.toString().toDouble() * 60
+            paceMin = editTextMinSpeed.text.toString().toDouble() * 60.0
+            paceMax = editTextMaxSpeed.text.toString().toDouble() * 60.0
             if (paceMin < paceMax && paceMin >= 0) {
+
                 currentSession.paceMin = paceMin
                 currentSession.paceMax = paceMax
             }
@@ -546,14 +575,35 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             // Log.d(TAG, intent!!.action)
             when (intent!!.action) {
                 C.LOCATION_UPDATE_ACTION -> {
+                    distanceOverallDirect =
+                        intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_OVERALLDIRECT, 0.0F)
+                    distanceOverallTotal =
+                        intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, 0.0F)
+
+
+                    if (!intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO)
+                            .isNullOrEmpty()
+                    ) {
+                        tempoOverall = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO)
+                        textViewOverallTempo.text =
+                            intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO)
+                    }
+                    if (!intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME).isNullOrEmpty()
+                    ) {
+                        durationOverall =
+                            intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME)
+                    }
 
                     textViewOverallDirect.text =
-                        intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, 0.0F).toInt()
-                            .toString()
+                        intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, 0.0F)
+                            .toInt().toString()
+
                     textViewOverallTotal.text =
                         intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME)
-                    textViewOverallTempo.text =
-                        intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO)
+
+
+
+
 
                     textViewCPTotal.text =
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_CPTOTAL, 0.0F).toInt()
@@ -729,6 +779,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     // ============================================== DATABASE CONTROLLER =============================================
     fun startEditingSession(gpsSession: GpsSession) {
         currentlyEditedSession = gpsSession
+        Log.d("stopSession", "editing session ${currentlyEditedSession.id}")
+        Log.d("stopSession", "editing session minSpeed ${currentlyEditedSession.paceMin}")
+        Log.d("stopSession", "editing session maxSpeed ${currentlyEditedSession.paceMax}")
         includeEditSession.visibility = View.VISIBLE
         handleCloseOldSessionsOnClick()
         editTextSessionName.setText(gpsSession.name)

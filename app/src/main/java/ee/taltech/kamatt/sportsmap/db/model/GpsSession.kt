@@ -11,8 +11,8 @@ class GpsSession {
     var colorMin: String = "green"
     var colorMax: String = "red"
     var recordedAt: String = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
-    var duration: Int = 0
-    var speed: Double = 0.0
+    var duration: String = "HH:mm:ss"
+    var speed: String = "--:--"
     var distance: Double = 0.0
     var climb: Double = 0.0
     var descent: Double = 0.0
@@ -38,8 +38,8 @@ class GpsSession {
         colorMin: String,
         colorMax: String,
         recordedAt: String,
-        duration: Int,
-        speed: Double,
+        duration: String,
+        speed: String,
         distance: Double,
         climb: Double,
         descent: Double,
@@ -69,8 +69,8 @@ class GpsSession {
         colorMin: String,
         colorMax: String,
         recordedAt: String,
-        duration: Int,
-        speed: Double,
+        duration: String,
+        speed: String,
         distance: Double,
         climb: Double,
         descent: Double,

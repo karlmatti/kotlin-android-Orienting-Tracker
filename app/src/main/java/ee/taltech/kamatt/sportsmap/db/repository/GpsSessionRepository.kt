@@ -75,8 +75,8 @@ class GpsSessionRepository(val context: Context) {
                     cursor.getString(cursor.getColumnIndex("colorMin")),
                     cursor.getString(cursor.getColumnIndex("colorMax")),
                     cursor.getString(cursor.getColumnIndex("recordedAt")),
-                    cursor.getInt(cursor.getColumnIndex("duration")),
-                    cursor.getDouble(cursor.getColumnIndex("speed")),
+                    cursor.getString(cursor.getColumnIndex("duration")),
+                    cursor.getString(cursor.getColumnIndex("speed")),
                     cursor.getDouble(cursor.getColumnIndex("distance")),
                     cursor.getDouble(cursor.getColumnIndex("climb")),
                     cursor.getDouble(cursor.getColumnIndex("descent")),
@@ -104,8 +104,8 @@ class GpsSessionRepository(val context: Context) {
                     cursor.getString(cursor.getColumnIndex("colorMin")),
                     cursor.getString(cursor.getColumnIndex("colorMax")),
                     cursor.getString(cursor.getColumnIndex("recordedAt")),
-                    cursor.getInt(cursor.getColumnIndex("duration")),
-                    cursor.getDouble(cursor.getColumnIndex("speed")),
+                    cursor.getString(cursor.getColumnIndex("duration")),
+                    cursor.getString(cursor.getColumnIndex("speed")),
                     cursor.getDouble(cursor.getColumnIndex("distance")),
                     cursor.getDouble(cursor.getColumnIndex("climb")),
                     cursor.getDouble(cursor.getColumnIndex("descent")),
@@ -113,6 +113,7 @@ class GpsSessionRepository(val context: Context) {
                 )
             )
         }
+        cursor.close()
         return gpsSessions
 
     }
@@ -139,8 +140,9 @@ class GpsSessionRepository(val context: Context) {
         val sqlQuery: String =
             "select * from " + DbHandler.GPS_SESSION_TABLE_NAME + " where _id='" + id.toString() + "'"
         val cursor = db.rawQuery(sqlQuery, null)
+        var returnedGpsSession = GpsSession("default name", "default desc")
         while (cursor.moveToNext()) {
-            return GpsSession(
+            returnedGpsSession = GpsSession(
                 cursor.getInt(cursor.getColumnIndex("_id")),
                 cursor.getString(cursor.getColumnIndex("name")),
                 cursor.getString(cursor.getColumnIndex("description")),
@@ -149,16 +151,18 @@ class GpsSessionRepository(val context: Context) {
                 cursor.getString(cursor.getColumnIndex("colorMin")),
                 cursor.getString(cursor.getColumnIndex("colorMax")),
                 cursor.getString(cursor.getColumnIndex("recordedAt")),
-                cursor.getInt(cursor.getColumnIndex("duration")),
-                cursor.getDouble(cursor.getColumnIndex("speed")),
+                cursor.getString(cursor.getColumnIndex("duration")),
+                cursor.getString(cursor.getColumnIndex("speed")),
                 cursor.getDouble(cursor.getColumnIndex("distance")),
                 cursor.getDouble(cursor.getColumnIndex("climb")),
                 cursor.getDouble(cursor.getColumnIndex("descent")),
                 cursor.getInt(cursor.getColumnIndex("appUserId"))
             )
 
+
         }
-        return GpsSession("default name", "default desc")
+        cursor.close()
+        return returnedGpsSession
     }
 
 
