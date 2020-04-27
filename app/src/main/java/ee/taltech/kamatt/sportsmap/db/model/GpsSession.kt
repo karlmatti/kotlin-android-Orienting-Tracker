@@ -1,6 +1,13 @@
 package ee.taltech.kamatt.sportsmap.db.model
 
+import android.content.ClipData
 import android.content.ContentValues
+import android.os.Parcel
+
+import android.os.Parcelable
+
+
+
 
 class GpsSession {
     var id: Int = 0
@@ -17,7 +24,6 @@ class GpsSession {
     var climb: Double = 0.0
     var descent: Double = 0.0
     var appUserId: Int = 0
-
 
     constructor(name: String, description: String) {
         this.name = name

@@ -141,10 +141,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var loadedSession: GpsSession? = null
     private var loadedLocations: List<GpsLocation>? = null
     private var isOldSessionLoaded = false
+
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
         super.onCreate(savedInstanceState)
+
         // If we have a saved state then we can restore it now
         locationTypeRepository = LocationTypeRepository(this).open()
         val locationTypes = locationTypeRepository.getAll()
@@ -188,12 +190,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         }
 
         broadcastReceiverIntentFilter.addAction(C.LOCATION_UPDATE_ACTION)
-
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
 
         mapFragment.getMapAsync(this)
+
+
         compassImage = findViewById(R.id.imageViewNorthDir)
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         accelerometer = sensorManager.getDefaultSensor(TYPE_ACCELEROMETER)
@@ -203,6 +206,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             isCompassVisible = savedInstanceState.getBoolean("isCompassVisible", false)
             isOptionsVisible = savedInstanceState.getBoolean("isOptionsVisible", false)
             isOldSessionsVisible = savedInstanceState.getBoolean("isOldSessionsVisible", false)
+            if (savedInstanceState.getBoolean("isOldSessionLoaded", false)) {
+                val loadedSessionId = savedInstanceState.getInt("loadedSessionId", 0)
+                loadSession(loadedSessionId)
+            }
+
+
             restoreCompassState()
             restoreOptionsState()
             restoreOldSessionsState()
@@ -239,6 +248,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         outState.putBoolean("isCompassVisible", isCompassVisible)
         outState.putBoolean("isOptionsVisible", isOptionsVisible)
         outState.putBoolean("isOldSessionsVisible", isOldSessionsVisible)
+        outState.putBoolean("isOldSessionLoaded", isOldSessionLoaded)
+        if (isOldSessionLoaded) {
+            outState.putInt("loadedSessionId", loadedSession!!.id)
+        }
+
     }
 
     override fun onStart() {
@@ -650,9 +664,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     // ============================================== HANDLE MAP =============================================
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        mMap.isMyLocationEnabled = true
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.3927437, 24.6642), 17.0f))
-
+        mMap!!.isMyLocationEnabled = true
+        mMap!!.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.3927437, 24.6642), 17.0f))
+        reDrawPolyline()
     }
 
     private fun updateMap(lat: Double, lng: Double) {
@@ -671,132 +685,146 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     }
 
     private fun reDrawPolyline() {
-
         if (isOldSessionLoaded) {
-            val loadedMinPace = loadedSession!!.paceMin
-            val loadedMaxPace = loadedSession!!.paceMax
-            val loadedMinColor = loadedSession!!.colorMin
-            val loadedMaxColor = loadedSession!!.colorMax
-            var isStarted = false
-            var oldLocation: Location? = null
-            for (loadedLocation in loadedLocations!!) {
-                if (loadedLocation.gpsLocationTypeId == C.REST_LOCATIONID_LOC) {
-                    
-                    if (!isStarted) {
-                        startPointMarker = MarkerOptions().position(
-                            LatLng(
-                                loadedLocation.latitude,
-                                loadedLocation.longitude
+            if (this::mMap.isInitialized) {
+                Log.d(TAG, "mMap initialized")
+                mMap!!.clear()
+                val loadedMinPace = loadedSession!!.paceMin
+                val loadedMaxPace = loadedSession!!.paceMax
+                val loadedMinColor = loadedSession!!.colorMin
+                val loadedMaxColor = loadedSession!!.colorMax
+                var isStarted = false
+                var oldLocation: Location? = null
+                for (loadedLocation in loadedLocations!!) {
+                    if (loadedLocation.gpsLocationTypeId == C.REST_LOCATIONID_LOC) {
+
+                        if (!isStarted) {
+                            startPointMarker = MarkerOptions().position(
+                                LatLng(
+                                    loadedLocation.latitude,
+                                    loadedLocation.longitude
+                                )
                             )
-                        )
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_play_arrow_black_24))
-                        mMap.addMarker(startPointMarker)
-                        isStarted = true
+                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_play_arrow_black_24))
+                            mMap!!.addMarker(startPointMarker)
+                            isStarted = true
 
-                        oldLocation = Location(LocationManager.GPS_PROVIDER).apply {
-                            latitude = loadedLocation.latitude
-                            longitude = loadedLocation.longitude
-                            time =
-                                LocationService.dateFormat.parse(loadedLocation.recordedAt)!!.time
+                            oldLocation = Location(LocationManager.GPS_PROVIDER).apply {
+                                latitude = loadedLocation.latitude
+                                longitude = loadedLocation.longitude
+                                time =
+                                    LocationService.dateFormat.parse(loadedLocation.recordedAt)!!.time
+                            }
+
+                        } else {
+                            val newLocation = Location(LocationManager.GPS_PROVIDER).apply {
+                                latitude = loadedLocation.latitude
+                                longitude = loadedLocation.longitude
+                                time =
+                                    LocationService.dateFormat.parse(loadedLocation.recordedAt)!!.time
+                            }
+                            val distanceFromLastPoint: Float = oldLocation!!.distanceTo(newLocation)
+                            val newTimeDifference = newLocation.time - oldLocation.time
+                            val tempo: Int =
+                                Utils.getPaceInteger(newTimeDifference, distanceFromLastPoint)
+                            val newColor = Utils.calculateMapPolyLineColor(
+                                loadedMinPace.toInt(),
+                                loadedMaxPace.toInt(),
+                                loadedMinColor,
+                                loadedMaxColor,
+                                tempo
+                            )
+
+
+                            mMap!!.addPolyline(
+                                PolylineOptions()
+                                    .color(newColor)
+                                    .add(LatLng(oldLocation!!.latitude, oldLocation!!.longitude))
+                                    .add(LatLng(newLocation.latitude, newLocation.longitude))
+                            )
+                            oldLocation = newLocation
                         }
 
-                    } else {
-                        val newLocation = Location(LocationManager.GPS_PROVIDER).apply {
-                            latitude = loadedLocation.latitude
-                            longitude = loadedLocation.longitude
-                            time =
-                                LocationService.dateFormat.parse(loadedLocation.recordedAt)!!.time
-                        }
-                        val distanceFromLastPoint: Float = oldLocation!!.distanceTo(newLocation)
-                        val newTimeDifference = newLocation!!.time - oldLocation.time
-                        val tempo: Int =
-                            Utils.getPaceInteger(newTimeDifference, distanceFromLastPoint)
-                        val newColor = Utils.calculateMapPolyLineColor(
-                            loadedMinPace.toInt(),
-                            loadedMaxPace.toInt(),
-                            loadedMinColor,
-                            loadedMaxColor,
-                            tempo
-                        )
 
-
-                        mMap.addPolyline(
-                            PolylineOptions()
-                                .color(newColor)
-                                .add(LatLng(oldLocation!!.latitude, oldLocation!!.longitude))
-                                .add(LatLng(newLocation.latitude, newLocation.longitude))
-                        )
-                        oldLocation = newLocation
-                    }
-
-
-                } else if (loadedLocation.gpsLocationTypeId == C.REST_LOCATIONID_CP) {
-                    val cpMarkerOptions = MarkerOptions()
-                        .position(LatLng(loadedLocation.latitude, loadedLocation.longitude))
-                        .icon(bitmapDescriptorFromVector(this, R.drawable.baseline_add_location_24))
-                    mMap.addMarker(cpMarkerOptions)
-                }
-            }
-
-        } else {
-            if (polylineOptionsList != null) {
-                mMap.clear()
-                if (startPointMarker == null) {
-                    startPointMarker = MarkerOptions().position(LatLng(lastLatitude, lastLongitude))
-                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_play_arrow_black_24))
-
-                    mMap.addMarker(startPointMarker)
-                    mMap.animateCamera(
-                        CameraUpdateFactory.newLatLngZoom(
-                            LatLng(
-                                lastLatitude,
-                                lastLongitude
-                            ), 17.0f
-                        )
-                    )
-                } else {
-                    mMap.addMarker(startPointMarker)
-                }
-                if (listOfCPMarkerLatLngs != null) {
-                    Log.d("cpMarker count", listOfCPMarkerLatLngs!!.size.toString())
-                    for (cpLatLng in listOfCPMarkerLatLngs!!) {
+                    } else if (loadedLocation.gpsLocationTypeId == C.REST_LOCATIONID_CP) {
                         val cpMarkerOptions = MarkerOptions()
-                            .position(LatLng(cpLatLng.latitude, cpLatLng.longitude))
+                            .position(LatLng(loadedLocation.latitude, loadedLocation.longitude))
                             .icon(
                                 bitmapDescriptorFromVector(
                                     this,
                                     R.drawable.baseline_add_location_24
                                 )
                             )
-                        val cpMarker = mMap.addMarker(cpMarkerOptions)
-                        if (markerList == null) {
-                            markerList = mutableListOf(cpMarker)
-                        } else {
-                            markerList!!.add(cpMarker)
+                        mMap!!.addMarker(cpMarkerOptions)
+                    }
+                }
+
+            } else {
+                if (polylineOptionsList != null) {
+                    mMap!!.clear()
+                    if (startPointMarker == null) {
+                        startPointMarker =
+                            MarkerOptions().position(LatLng(lastLatitude, lastLongitude))
+                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_play_arrow_black_24))
+
+                        mMap!!.addMarker(startPointMarker)
+                        mMap!!.animateCamera(
+                            CameraUpdateFactory.newLatLngZoom(
+                                LatLng(
+                                    lastLatitude,
+                                    lastLongitude
+                                ), 17.0f
+                            )
+                        )
+                    } else {
+                        mMap!!.addMarker(startPointMarker)
+                    }
+                    if (listOfCPMarkerLatLngs != null) {
+                        Log.d("cpMarker count", listOfCPMarkerLatLngs!!.size.toString())
+                        for (cpLatLng in listOfCPMarkerLatLngs!!) {
+                            val cpMarkerOptions = MarkerOptions()
+                                .position(LatLng(cpLatLng.latitude, cpLatLng.longitude))
+                                .icon(
+                                    bitmapDescriptorFromVector(
+                                        this,
+                                        R.drawable.baseline_add_location_24
+                                    )
+                                )
+                            val cpMarker = mMap!!.addMarker(cpMarkerOptions)
+                            if (markerList == null) {
+                                markerList = mutableListOf(cpMarker)
+                            } else {
+                                markerList!!.add(cpMarker)
+                            }
+
                         }
-
                     }
-                }
-                if (listOfWPMarkerLatLngs != null) {
-                    Log.d("cpMarker count", listOfWPMarkerLatLngs!!.size.toString())
-                    for (wpLatLng in listOfWPMarkerLatLngs!!) {
-                        val wpMarker = MarkerOptions()
-                            .position(LatLng(wpLatLng.latitude, wpLatLng.longitude))
-                            .icon(bitmapDescriptorFromVector(this, R.drawable.baseline_place_24))
-                        mMap.addMarker(wpMarker)
+                    if (listOfWPMarkerLatLngs != null) {
+                        Log.d("cpMarker count", listOfWPMarkerLatLngs!!.size.toString())
+                        for (wpLatLng in listOfWPMarkerLatLngs!!) {
+                            val wpMarker = MarkerOptions()
+                                .position(LatLng(wpLatLng.latitude, wpLatLng.longitude))
+                                .icon(
+                                    bitmapDescriptorFromVector(
+                                        this,
+                                        R.drawable.baseline_place_24
+                                    )
+                                )
+                            mMap!!.addMarker(wpMarker)
 
+                        }
                     }
-                }
-                for (polylineOptions in polylineOptionsList!!) {
-                    mapPolyline = mMap.addPolyline(polylineOptions)
+                    for (polylineOptions in polylineOptionsList!!) {
+                        mapPolyline = mMap!!.addPolyline(polylineOptions)
+                    }
                 }
             }
+
+
         }
-
-
     }
 
-    private fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
+    fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
 
         return ContextCompat.getDrawable(context, vectorResId)?.run {
             setBounds(0, 0, intrinsicWidth, intrinsicHeight)
@@ -901,11 +929,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     // ============================================== LOAD SESSION =============================================
     fun loadSession(sessionId: Int) {
         isOldSessionLoaded = true
-        mMap.clear()
+
+
         loadedSession = gpsSessionRepository.getSessionById(sessionId)
         loadedLocations = gpsLocationRepository.getLocationsBySessionId(sessionId)
         reDrawPolyline()
         setSessionStatisticsIfLoaded()
+
 
     }
 
