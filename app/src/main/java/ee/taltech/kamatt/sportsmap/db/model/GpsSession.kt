@@ -4,8 +4,8 @@ import android.content.ContentValues
 
 class GpsSession {
     var id: Int = 0
-    var name: String
-    var description: String
+    lateinit var name: String
+    lateinit var description: String
     var paceMin: Double = 0.0
     var paceMax: Double = 0.0
     var colorMin: String = "green"
@@ -90,6 +90,14 @@ class GpsSession {
         this.climb = climb
         this.descent = descent
         this.appUserId = appUserId
+    }
+
+    constructor(id: Int, paceMin: Double, paceMax: Double, colorMin: String, colorMax: String) {
+        this.id = id
+        this.paceMin = paceMin
+        this.paceMax = paceMax
+        this.colorMin = colorMin
+        this.colorMax = colorMax
     }
 
     fun getContentValues(): ContentValues {

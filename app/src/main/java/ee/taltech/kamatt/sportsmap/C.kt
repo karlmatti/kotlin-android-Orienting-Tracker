@@ -28,6 +28,7 @@ class C {
         const val LOCATION_UPDATE_ACTION_WPTEMPO = PREFIX + "location_update.wptempo"
         const val LOCATION_UPDATE_ACTION_WPTIME = PREFIX + "location_update.wptime"
 
+        const val CURRENT_SESSION_ID = PREFIX + "current_session_id"
         const val PACE_MIN = PREFIX + "pace_min"
         const val PACE_MAX = PREFIX + "pace_max"
         const val COLOR_MIN = PREFIX + "color_min"

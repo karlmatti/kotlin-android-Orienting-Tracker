@@ -88,7 +88,7 @@ class GpsSessionRepository(val context: Context) {
         return gpsSessions
     }
 
-    fun getByUserId(userId: Int): List<GpsSession> {
+    fun getSessionsByUserId(userId: Int): List<GpsSession> {
         val sqlQuery: String =
             "select * from " + DbHandler.GPS_SESSION_TABLE_NAME + " where appUserId='" + userId.toString() + "'"
         val cursor = db.rawQuery(sqlQuery, null)
@@ -133,6 +133,32 @@ class GpsSessionRepository(val context: Context) {
             "_id=" + gpsSession.id,
             null
         )
+    }
+
+    fun getSessionById(id: Int): GpsSession {
+        val sqlQuery: String =
+            "select * from " + DbHandler.GPS_SESSION_TABLE_NAME + " where _id='" + id.toString() + "'"
+        val cursor = db.rawQuery(sqlQuery, null)
+        while (cursor.moveToNext()) {
+            return GpsSession(
+                cursor.getInt(cursor.getColumnIndex("_id")),
+                cursor.getString(cursor.getColumnIndex("name")),
+                cursor.getString(cursor.getColumnIndex("description")),
+                cursor.getDouble(cursor.getColumnIndex("paceMin")),
+                cursor.getDouble(cursor.getColumnIndex("paceMax")),
+                cursor.getString(cursor.getColumnIndex("colorMin")),
+                cursor.getString(cursor.getColumnIndex("colorMax")),
+                cursor.getString(cursor.getColumnIndex("recordedAt")),
+                cursor.getInt(cursor.getColumnIndex("duration")),
+                cursor.getDouble(cursor.getColumnIndex("speed")),
+                cursor.getDouble(cursor.getColumnIndex("distance")),
+                cursor.getDouble(cursor.getColumnIndex("climb")),
+                cursor.getDouble(cursor.getColumnIndex("descent")),
+                cursor.getInt(cursor.getColumnIndex("appUserId"))
+            )
+
+        }
+        return GpsSession("default name", "default desc")
     }
 
 

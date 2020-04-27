@@ -4,7 +4,6 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import ee.taltech.kamatt.sportsmap.db.model.GpsSession
 import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
@@ -16,7 +15,8 @@ class DataRecyclerViewAdapterSessions(
     private val userId: Int
 ) : RecyclerView.Adapter<DataRecyclerViewAdapterSessions.ViewHolder>() {
 
-    var dataSet: MutableList<GpsSession> = repo.getByUserId(userId) as MutableList<GpsSession>
+    var dataSet: MutableList<GpsSession> =
+        repo.getSessionsByUserId(userId) as MutableList<GpsSession>
 
     private val inflater: LayoutInflater = LayoutInflater.from(context)
 
@@ -48,12 +48,8 @@ class DataRecyclerViewAdapterSessions(
         }
         holder.itemView.buttonEditSession.setOnClickListener {
             val theEditedItem: GpsSession = dataSet.get(position)
-/*
-            includeEditSession.visibility = View.INVISIBLE
-            recyclerViewSessions.visibility = View.VISIBLE
-            buttonCloseRecyclerView.visibility = View.VISIBLE*/
-            if (context is MainActivity) {
 
+            if (context is MainActivity) {
                 context.startEditingSession(theEditedItem)
             }
 

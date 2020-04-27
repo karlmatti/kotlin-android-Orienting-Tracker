@@ -35,6 +35,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.android.volley.BuildConfig
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -57,20 +58,18 @@ import kotlinx.android.synthetic.main.options.*
 import kotlinx.android.synthetic.main.track_control.*
 import java.lang.Math.toDegrees
 
-//  TODO: in options - updating pacemin, pacemax, colormin, colormax values then
-//   it updates data sent to db, rest and when updating polyline
-
 //  TODO: users old sessions are loadable - shows session polyline, statistics
 
-//  TODO: users old sessions can be changed (pacemin, pacemax, colormin, colormax, name, description)
+//  TODO: IN PROGRESS. bug. session should be saved to db when session stops
 
-//  TODO: time updates in real time not with location update
-
+//  TODO: bug. polyline only draws when app is open, should show full polyline when user opens app again
 //  TODO: bug. end session last point goes to LatLng(0, 0)
+//  TODO: bug. polyline disappears when orientation changes
 
-//  TODO: bug. polyline disappears when orientation changes or app works in background for a while
-
-
+//  TODO: LOW. current user for session is not dynamical
+//  TODO: LOW. pace should be double and in seconds everywhere but UI
+//  TODO: LOW. in old sessions - changes should also be updated in rest (pacemin, pacemax, colormin, colormax, name, description)
+//  TODO: LOW. time updates in real time not with location update
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListener {
@@ -83,14 +82,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         private lateinit var appUserRepository: AppUserRepository
 
         fun deleteSessionFromDb(gpsSession: GpsSession) {
+            gpsLocationRepository.removeLocationsById(gpsSession.id)
             gpsSessionRepository.removeSessionById(gpsSession.id)
         }
 
         private lateinit var currentlyEditedSession: GpsSession
-
-
-
-
 
     }
 
@@ -119,8 +115,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var isOptionsVisible = false
     private var isOldSessionsVisible = false
 
-    private var paceMin: Int = 1
-    private var paceMax: Int = 31
+    private var paceMin: Double = 1 * 60.0
+    private var paceMax: Double = 31 * 60.0
     private var colorMin: String = "blue"
     private var colorMax: String = "red"
     private var polylineLastSegment: Int = 0xff000000.toInt()
@@ -130,7 +126,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var lastTimestamp = Utils.getCurrentDateTime()
 
     private var polylineOptionsList: MutableList<PolylineOptions>? = null
-
+    private var currentDbSessionId: Int = -1
 
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -170,6 +166,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         buttonGoToOldSessions.setOnClickListener { handleOpenOldSessionsOnClick() }
         buttonCloseRecyclerView.setOnClickListener { handleCloseOldSessionsOnClick() }
         buttonUpdateSession.setOnClickListener { handleUpdateSessionOnClick() }
+        buttonUpdatePolylineParams.setOnClickListener { handleUpdatePolylineParamsOnClick() }
         // safe to call every time
         createNotificationChannel()
 
@@ -212,6 +209,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     R.drawable.baseline_play_arrow_24
                 )
             )
+            currentDbSessionId = -1
         }
 
         recyclerViewSessions.layoutManager = LinearLayoutManager(this)
@@ -461,6 +459,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             isOptionsVisible = false
 
         } else {
+            if (currentDbSessionId != -1) {
+                val currentSession = gpsSessionRepository.getSessionById(currentDbSessionId)
+                Log.d("currentDbSessionId", currentSession.id.toString())
+                Log.d("currentDbSess pacemin", (currentSession.paceMin).toInt().toString())
+                Log.d("currentDbSess colmin", currentSession.colorMin)
+                editTextMinSpeed.setText((currentSession.paceMin / 60).toInt().toString())
+                editTextMaxSpeed.setText((currentSession.paceMax / 60).toInt().toString())
+                editTextMinColor.setText(currentSession.colorMin)
+                editTextMaxColor.setText(currentSession.colorMax)
+            }
+
             includeOptions.visibility = View.VISIBLE
             isOptionsVisible = true
         }
@@ -483,11 +492,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     }
 
     private fun handleUpdateSessionOnClick() {
+
         // update db and adapter
         currentlyEditedSession.name = editTextSessionName.text.toString()
         currentlyEditedSession.description = editTextSessionDescription.text.toString()
-        val paceMin: Double = editTextSessionMinSpeed.text.toString().toDouble()
-        val paceMax: Double = editTextSessionMaxSpeed.text.toString().toDouble()
+        val paceMin: Double = editTextSessionMinSpeed.text.toString().toDouble() * 60
+        val paceMax: Double = editTextSessionMaxSpeed.text.toString().toDouble() * 60
         if (paceMin < paceMax && paceMin >= 0) {
             currentlyEditedSession.paceMin = paceMin
             currentlyEditedSession.paceMax = paceMax
@@ -499,9 +509,35 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         recyclerViewSessions.adapter!!.notifyDataSetChanged()
         // close session window
         includeEditSession.visibility = View.INVISIBLE
-        recyclerViewSessions.visibility = View.VISIBLE
-        buttonCloseRecyclerView.visibility = View.VISIBLE
-        isOldSessionsVisible = true
+        handleOpenOldSessionsOnClick()
+
+
+    }
+
+    private fun handleUpdatePolylineParamsOnClick() {
+        if (locationServiceActive) {
+            val currentSession = gpsSessionRepository.getSessionById(currentDbSessionId)
+            // update db and adapter
+            paceMin = editTextMinSpeed.text.toString().toDouble() * 60
+            paceMax = editTextMaxSpeed.text.toString().toDouble() * 60
+            if (paceMin < paceMax && paceMin >= 0) {
+                currentSession.paceMin = paceMin
+                currentSession.paceMax = paceMax
+            }
+            colorMin = editTextMinColor.text.toString()
+            colorMax = editTextMaxColor.text.toString()
+
+            currentSession.colorMin = colorMin
+            currentSession.colorMax = colorMax
+            // update db and adapter
+
+            gpsSessionRepository.updateSession(currentSession)
+            recyclerViewSessions.adapter!!.notifyDataSetChanged()
+            // close session window
+
+            includeOptions.visibility = View.INVISIBLE
+            isOptionsVisible = false
+        }
     }
 
     // ============================================== BROADCAST RECEIVER =============================================
@@ -542,6 +578,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                         intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
                     )
                     lastTimestamp = Utils.getCurrentDateTime()
+                    currentDbSessionId = intent.getLongExtra(C.CURRENT_SESSION_ID, -1).toInt()
 
                 }
                 C.LOCATION_UPDATE_STOP -> {
@@ -584,8 +621,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         val tempo: Int = Utils.getPaceInteger(newTimeDifference, distanceFromLastPoint)
 
         val newColor = Utils.calculateMapPolyLineColor(
-            paceMin,
-            paceMax,
+            paceMin.toInt(),
+            paceMax.toInt(),
             colorMin,
             colorMax,
             tempo
@@ -693,13 +730,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     fun startEditingSession(gpsSession: GpsSession) {
         currentlyEditedSession = gpsSession
         includeEditSession.visibility = View.VISIBLE
-        recyclerViewSessions.visibility = View.INVISIBLE
-        buttonCloseRecyclerView.visibility = View.INVISIBLE
-        isOldSessionsVisible = false
+        handleCloseOldSessionsOnClick()
         editTextSessionName.setText(gpsSession.name)
         editTextSessionDescription.setText(gpsSession.description)
-        editTextSessionMinSpeed.setText(gpsSession.paceMin.toString())
-        editTextSessionMaxSpeed.setText(gpsSession.paceMax.toString())
+        editTextSessionMinSpeed.setText((gpsSession.paceMin / 60).toInt().toString())
+        editTextSessionMaxSpeed.setText((gpsSession.paceMax / 60).toInt().toString())
         editTextSessionMinColor.setText(gpsSession.colorMin)
         editTextSessionMaxColor.setText(gpsSession.colorMax)
 

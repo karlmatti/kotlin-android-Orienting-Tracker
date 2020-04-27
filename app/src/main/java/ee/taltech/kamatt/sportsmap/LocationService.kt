@@ -35,8 +35,8 @@ class LocationService : Service() {
         private val TAG = this::class.java.declaringClass!!.simpleName
     }
 
-    private var paceMin: Int = 1
-    private var paceMax: Int = 31
+    private var paceMin: Double = 1.0
+    private var paceMax: Double = 31.0
     private var colorMin: String = "green"
     private var colorMax: String = "red"
 
@@ -306,6 +306,9 @@ class LocationService : Service() {
         intent.putExtra(C.LOCATION_UPDATE_ACTION_WPTEMPO, tempoWP)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_WPTIME, durationWP)
 
+        // Session information
+        intent.putExtra(C.CURRENT_SESSION_ID, currentDbSessionId)
+
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 
     }
@@ -391,8 +394,8 @@ class LocationService : Service() {
         val intentCp = Intent(C.NOTIFICATION_ACTION_CP)
         val intentWp = Intent(C.NOTIFICATION_ACTION_WP)
 
-        paceMin = intent!!.getIntExtra(C.PACE_MIN, 1)
-        paceMax = intent.getIntExtra(C.PACE_MAX, 31)
+        paceMin = intent!!.getDoubleExtra(C.PACE_MIN, 1.0)
+        paceMax = intent.getDoubleExtra(C.PACE_MAX, 31.0)
         colorMin = intent.getStringExtra(C.COLOR_MIN)!!
         colorMax = intent.getStringExtra(C.COLOR_MAX)!!
 
@@ -515,6 +518,7 @@ class LocationService : Service() {
             0.0, 0.0, 0.0, 0.0, currentDbUserId
         )
         currentDbSessionId = gpsSessionRepository.add(currentDbSession)
+
     }
 
     private fun updateDbGpsLocation(location: Location, locationType: String) {

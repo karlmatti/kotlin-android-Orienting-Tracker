@@ -81,4 +81,12 @@ class GpsLocationRepository(val context: Context) {
         return gpsLocations
     }
 
+    /**
+     * Remove a location from database by gpsSessionId
+     *
+     * @param sessionId to remove
+     */
+    fun removeLocationsById(sessionId: Int) {
+        db.execSQL("DELETE FROM " + DbHandler.GPS_LOCATION_TABLE_NAME + " WHERE gpsSessionId= '" + sessionId + "'")
+    }
 }
