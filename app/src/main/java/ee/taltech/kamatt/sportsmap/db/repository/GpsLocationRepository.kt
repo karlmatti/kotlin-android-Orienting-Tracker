@@ -5,6 +5,7 @@ import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import ee.taltech.kamatt.sportsmap.db.DbHandler
 import ee.taltech.kamatt.sportsmap.db.model.GpsLocation
+import ee.taltech.kamatt.sportsmap.db.model.GpsSession
 
 class GpsLocationRepository(val context: Context) {
     // todo: UD methods
@@ -88,5 +89,30 @@ class GpsLocationRepository(val context: Context) {
      */
     fun removeLocationsById(sessionId: Int) {
         db.execSQL("DELETE FROM " + DbHandler.GPS_LOCATION_TABLE_NAME + " WHERE gpsSessionId= '" + sessionId + "'")
+    }
+
+    fun getLocationsBySessionId(sessionId: Int): List<GpsLocation> {
+        val sqlQuery: String =
+            "select * from " + DbHandler.GPS_LOCATION_TABLE_NAME + " where gpsSessionId='" + sessionId.toString() + "' ORDER BY _id"
+        val cursor = db.rawQuery(sqlQuery, null)
+        val gpsLocations = ArrayList<GpsLocation>()
+        while (cursor.moveToNext()) {
+            gpsLocations.add(
+                GpsLocation(
+                    cursor.getInt(cursor.getColumnIndex("_id")),
+                    cursor.getString(cursor.getColumnIndex("recordedAt")),
+                    cursor.getDouble(cursor.getColumnIndex("latitude")),
+                    cursor.getDouble(cursor.getColumnIndex("longitude")),
+                    cursor.getDouble(cursor.getColumnIndex("accuracy")),
+                    cursor.getDouble(cursor.getColumnIndex("altitude")),
+                    cursor.getDouble(cursor.getColumnIndex("verticalAccuracy")),
+                    cursor.getLong(cursor.getColumnIndex("gpsSessionId")),
+                    cursor.getString(cursor.getColumnIndex("gpsLocationTypeId")),
+                    cursor.getInt(cursor.getColumnIndex("appUserId"))
+                )
+            )
+        }
+        cursor.close()
+        return gpsLocations
     }
 }

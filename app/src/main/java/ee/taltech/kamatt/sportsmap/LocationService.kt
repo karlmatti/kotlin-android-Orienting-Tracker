@@ -36,6 +36,7 @@ import java.io.Serializable
 class LocationService : Service() {
     companion object {
         private val TAG = this::class.java.declaringClass!!.simpleName
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault())
     }
 
 
@@ -81,7 +82,7 @@ class LocationService : Service() {
     private var jwt: String? = null
     private var trackingSessionId: String? = null
 
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault())
+
     private lateinit var locationTypeRepository: LocationTypeRepository
     private lateinit var gpsSessionRepository: GpsSessionRepository
     private lateinit var gpsLocationRepository: GpsLocationRepository
@@ -315,7 +316,7 @@ class LocationService : Service() {
 
         showNotification()
 
-        Utils.addToMapPolylineOptions(location.latitude, location.longitude)
+        // Utils.addToMapPolylineOptions(location.latitude, location.longitude)
         // broadcast new location to UI
         val intent = Intent(C.LOCATION_UPDATE_ACTION)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, location.latitude)

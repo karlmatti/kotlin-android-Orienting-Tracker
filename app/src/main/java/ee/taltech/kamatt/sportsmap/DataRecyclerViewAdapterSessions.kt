@@ -47,12 +47,19 @@ class DataRecyclerViewAdapterSessions(
             notifyItemRemoved(position) // notify the adapter about the removed item
         }
         holder.itemView.buttonEditSession.setOnClickListener {
-            val theEditedItem: GpsSession = dataSet.get(position)
+            val theEditedItem: GpsSession = dataSet[position]
 
             if (context is MainActivity) {
                 context.startEditingSession(theEditedItem)
             }
 
+        }
+
+        holder.itemView.buttonLoadSession.setOnClickListener {
+            val theLoadedItem: GpsSession = dataSet[position]
+            if (context is MainActivity) {
+                context.loadSession(theLoadedItem.id)
+            }
         }
 
     }
