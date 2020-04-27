@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.location.Location
+import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
@@ -22,12 +23,16 @@ import java.util.*
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.PolylineOptions
 import ee.taltech.kamatt.sportsmap.db.model.GpsLocation
 import ee.taltech.kamatt.sportsmap.db.model.GpsSession
 import ee.taltech.kamatt.sportsmap.db.repository.AppUserRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsLocationRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
 import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
+import java.io.Serializable
+import kotlin.collections.ArrayList
 
 
 class LocationService : Service() {
@@ -88,6 +93,11 @@ class LocationService : Service() {
     private var currentDbSessionId: Long = -1
     private lateinit var currentDbSession: GpsSession
 
+    private var polylineOptionsList: MutableList<PolylineOptions>? = null
+    private var paceMin: Double = 120.0
+    private var paceMax: Double = 480.0
+    private var colorMin: String = "blue"
+    private var colorMax: String = "red"
 
     override fun onCreate() {
         Log.d(TAG, "onCreate")
@@ -272,6 +282,31 @@ class LocationService : Service() {
             distanceWPTotal += location.distanceTo(currentLocation)
             tempoWP = Utils.getPaceString(durationWP, distanceWPTotal)
             durationWP += (location.time - currentLocation!!.time)
+
+            val distanceFromLastPoint: Float = currentLocation!!.distanceTo(location)
+            val newTimeDifference = currentLocation!!.time - location.time
+            val tempo: Int = Utils.getPaceInteger(newTimeDifference, distanceFromLastPoint)
+            val newColor = Utils.calculateMapPolyLineColor(
+                paceMin.toInt(),
+                paceMax.toInt(),
+                colorMin,
+                colorMax,
+                tempo
+            )
+            if (polylineOptionsList == null) {
+                polylineOptionsList = mutableListOf(
+                    PolylineOptions()
+                        .color(newColor)
+                        .add(LatLng(location.latitude, location.longitude))
+                )
+            } else {
+                polylineOptionsList!!.add(
+                    PolylineOptions()
+                        .color(newColor)
+                        .add(LatLng(currentLocation!!.latitude, currentLocation!!.longitude))
+                        .add(LatLng(location.latitude, location.longitude))
+                )
+            }
         }
         // save the location for calculations
         currentLocation = location
@@ -305,6 +340,13 @@ class LocationService : Service() {
 
         // Session information
         intent.putExtra(C.CURRENT_SESSION_ID, currentDbSessionId)
+        if (polylineOptionsList != null) {
+            intent.putExtra(
+                C.LOCATION_UPDATE_POLYLINE_OPTIONS,
+                polylineOptionsList!! as Serializable
+            )
+        }
+
 
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 
@@ -391,10 +433,10 @@ class LocationService : Service() {
         val intentCp = Intent(C.NOTIFICATION_ACTION_CP)
         val intentWp = Intent(C.NOTIFICATION_ACTION_WP)
 
-        val paceMin = intent!!.getDoubleExtra(C.PACE_MIN, 120.0)
-        val paceMax = intent.getDoubleExtra(C.PACE_MAX, 480.0)
-        val colorMin = intent.getStringExtra(C.COLOR_MIN)!!
-        val colorMax = intent.getStringExtra(C.COLOR_MAX)!!
+        paceMin = intent!!.getDoubleExtra(C.PACE_MIN, 120.0)
+        paceMax = intent.getDoubleExtra(C.PACE_MAX, 480.0)
+        colorMin = intent.getStringExtra(C.COLOR_MIN)!!
+        colorMax = intent.getStringExtra(C.COLOR_MAX)!!
 
         startDbTrackingSession(
             dateFormat.format(Date(startTimeOverall)), paceMin,

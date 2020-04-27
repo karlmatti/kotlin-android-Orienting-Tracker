@@ -23,6 +23,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.provider.SyncStateContract
 import android.util.Log
 import android.view.View
 import android.view.animation.Animation.RELATIVE_TO_SELF
@@ -60,7 +61,7 @@ import java.lang.Math.toDegrees
 
 //  TODO: users old sessions are loadable - shows session polyline, statistics
 
-//  TODO: bug. polyline only draws when app is open, should show full polyline when user opens app again
+//  TODO: IN PROGRESS: not workin in landscape
 //  TODO: bug. end session last point goes to LatLng(0, 0)
 //  TODO: bug. polyline disappears when orientation changes
 
@@ -126,7 +127,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     private var polylineOptionsList: MutableList<PolylineOptions>? = null
     private var currentDbSessionId: Int = -1
-
 
     private var distanceOverallDirect = 0f
     private var distanceOverallTotal = 0f
@@ -242,6 +242,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         Log.d(TAG, "onResume")
         super.onResume()
         //  TODO: draw polyline again because app was opened
+        reDrawPolyline()
 
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(broadcastReceiver, broadcastReceiverIntentFilter)
@@ -405,15 +406,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         if (locationServiceActive) {
             mMap.isMyLocationEnabled = false
             // stopping the service
-            Log.d("stopSession", "starting to stop session: $currentDbSessionId")
-            Log.d("stopSession", "distanceOverallDirect: $distanceOverallDirect")
-            Log.d("stopSession", "distanceOverallTotal: $distanceOverallTotal")
-            Log.d("stopSession", "tempoOverall: $tempoOverall")
-            Log.d("stopSession", "paceMax: $paceMax")
-            Log.d("stopSession", "paceMin: $paceMin")
-            Log.d("stopSession", "colorMin: $colorMin")
-            Log.d("stopSession", "colorMax: $colorMax")
-
             val currentlyActiveSession: GpsSession =
                 gpsSessionRepository.getSessionById(currentDbSessionId)
             currentlyActiveSession.distance = distanceOverallTotal.toDouble()
@@ -622,6 +614,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                             .toString()
                     textViewWPTempo.text =
                         intent.getStringExtra(C.LOCATION_UPDATE_ACTION_WPTEMPO)
+                    polylineOptionsList =
+                        intent.getSerializableExtra(C.LOCATION_UPDATE_POLYLINE_OPTIONS) as?
+                                MutableList<PolylineOptions>
 
                     updateMap(
                         intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0),
@@ -630,6 +625,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     lastTimestamp = Utils.getCurrentDateTime()
                     currentDbSessionId = intent.getLongExtra(C.CURRENT_SESSION_ID, -1).toInt()
 
+
                 }
                 C.LOCATION_UPDATE_STOP -> {
 
@@ -637,6 +633,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             }
         }
     }
+
 
     // ============================================== HANDLE MAP =============================================
     override fun onMapReady(googleMap: GoogleMap) {
@@ -655,7 +652,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             mapPolyline!!.remove()
         }
 
-
+/*
         val oldLocation: Location = Location(LocationManager.GPS_PROVIDER).apply {
             latitude = lastLatitude
             longitude = lastLongitude
@@ -684,6 +681,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     .color(newColor)
                     .add(LatLng(newLocation.latitude, newLocation.longitude))
             )
+
+
         } else {
             polylineOptionsList!!.add(
                 PolylineOptions()
@@ -697,11 +696,24 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         }
 
         polylineLastSegment = newColor
+
+ */
+
+        reDrawPolyline()
+
         lastLatitude = lat
         lastLongitude = lng
 
     }
 
+    private fun reDrawPolyline() {
+        if (polylineOptionsList != null) {
+            for (polylineOptions in polylineOptionsList!!) {
+                mapPolyline = mMap.addPolyline(polylineOptions)
+            }
+        }
+
+    }
     // ============================================== COMPASS =============================================
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
