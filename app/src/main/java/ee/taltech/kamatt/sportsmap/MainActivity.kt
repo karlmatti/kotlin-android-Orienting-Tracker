@@ -12,8 +12,6 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.drawable.Drawable
 import android.hardware.Sensor
 import android.hardware.Sensor.TYPE_ACCELEROMETER
 import android.hardware.Sensor.TYPE_MAGNETIC_FIELD
@@ -33,7 +31,6 @@ import android.view.animation.Animation.RELATIVE_TO_SELF
 import android.view.animation.RotateAnimation
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -59,12 +56,10 @@ import kotlinx.android.synthetic.main.edit_session.*
 import kotlinx.android.synthetic.main.options.*
 import kotlinx.android.synthetic.main.track_control.*
 import java.lang.Math.toDegrees
-import java.text.SimpleDateFormat
-import java.util.*
 
-//  TODO: IN PROGRESS users old sessions are loadable - shows session polyline
+//  TODO: bug. should show only last WP
 //  TODO: bug. end session last point goes to LatLng(0, 0)
-//  TPDP: bug. should load new sessions to "old sessions" right after stopping session
+//  TODO: bug. should load new sessions to "old sessions" right after stopping session
 
 //  TODO: LOW. current user for session is not dynamical
 //  TODO: LOW. pace should be double and in seconds everywhere but UI
@@ -599,14 +594,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     if (!intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO)
                             .isNullOrEmpty()
                     ) {
-                        tempoOverall = intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO)
+                        tempoOverall =
+                            intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO)!!
                         textViewOverallTempo.text =
                             intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO)
                     }
                     if (!intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME).isNullOrEmpty()
                     ) {
                         durationOverall =
-                            intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME)
+                            intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME)!!
                     }
 
                     textViewOverallDirect.text =
@@ -687,7 +683,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private fun reDrawPolyline() {
         if (isOldSessionLoaded) {
             if (this::mMap.isInitialized) {
-                Log.d(TAG, "mMap initialized")
                 mMap!!.clear()
                 val loadedMinPace = loadedSession!!.paceMin
                 val loadedMaxPace = loadedSession!!.paceMax
@@ -706,7 +701,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                                 )
                             )
                                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_play_arrow_black_24))
-                            mMap!!.addMarker(startPointMarker)
+                            mMap.addMarker(startPointMarker)
                             isStarted = true
 
                             oldLocation = Location(LocationManager.GPS_PROVIDER).apply {
@@ -727,6 +722,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                             val newTimeDifference = newLocation.time - oldLocation.time
                             val tempo: Int =
                                 Utils.getPaceInteger(newTimeDifference, distanceFromLastPoint)
+                            Log.d(TAG, "current tempo $tempo")
                             val newColor = Utils.calculateMapPolyLineColor(
                                 loadedMinPace.toInt(),
                                 loadedMaxPace.toInt(),
@@ -736,7 +732,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                             )
 
 
-                            mMap!!.addPolyline(
+                            mMap.addPolyline(
                                 PolylineOptions()
                                     .color(newColor)
                                     .add(LatLng(oldLocation!!.latitude, oldLocation!!.longitude))
@@ -755,20 +751,20 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                                     R.drawable.baseline_add_location_24
                                 )
                             )
-                        mMap!!.addMarker(cpMarkerOptions)
+                        mMap.addMarker(cpMarkerOptions)
                     }
                 }
 
             } else {
                 if (polylineOptionsList != null) {
-                    mMap!!.clear()
+                    mMap.clear()
                     if (startPointMarker == null) {
                         startPointMarker =
                             MarkerOptions().position(LatLng(lastLatitude, lastLongitude))
                                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_play_arrow_black_24))
 
-                        mMap!!.addMarker(startPointMarker)
-                        mMap!!.animateCamera(
+                        mMap.addMarker(startPointMarker)
+                        mMap.animateCamera(
                             CameraUpdateFactory.newLatLngZoom(
                                 LatLng(
                                     lastLatitude,
@@ -777,10 +773,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                             )
                         )
                     } else {
-                        mMap!!.addMarker(startPointMarker)
+                        mMap.addMarker(startPointMarker)
                     }
                     if (listOfCPMarkerLatLngs != null) {
-                        Log.d("cpMarker count", listOfCPMarkerLatLngs!!.size.toString())
+
                         for (cpLatLng in listOfCPMarkerLatLngs!!) {
                             val cpMarkerOptions = MarkerOptions()
                                 .position(LatLng(cpLatLng.latitude, cpLatLng.longitude))
@@ -790,7 +786,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                                         R.drawable.baseline_add_location_24
                                     )
                                 )
-                            val cpMarker = mMap!!.addMarker(cpMarkerOptions)
+                            val cpMarker = mMap.addMarker(cpMarkerOptions)
                             if (markerList == null) {
                                 markerList = mutableListOf(cpMarker)
                             } else {
@@ -800,7 +796,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                         }
                     }
                     if (listOfWPMarkerLatLngs != null) {
-                        Log.d("cpMarker count", listOfWPMarkerLatLngs!!.size.toString())
+
                         for (wpLatLng in listOfWPMarkerLatLngs!!) {
                             val wpMarker = MarkerOptions()
                                 .position(LatLng(wpLatLng.latitude, wpLatLng.longitude))
@@ -810,12 +806,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                                         R.drawable.baseline_place_24
                                     )
                                 )
-                            mMap!!.addMarker(wpMarker)
+                            mMap.addMarker(wpMarker)
 
                         }
                     }
                     for (polylineOptions in polylineOptionsList!!) {
-                        mapPolyline = mMap!!.addPolyline(polylineOptions)
+                        mapPolyline = mMap.addPolyline(polylineOptions)
                     }
                 }
             }
@@ -831,7 +827,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             val bitmap =
                 Bitmap.createBitmap(intrinsicWidth, intrinsicHeight, Bitmap.Config.ARGB_8888)
 
-            val canvas: Canvas = Canvas(bitmap)
+            val canvas = Canvas(bitmap)
 
             draw(canvas)
             BitmapDescriptorFactory.fromBitmap(bitmap)

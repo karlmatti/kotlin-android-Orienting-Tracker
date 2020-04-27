@@ -102,13 +102,13 @@ class Utils {
         }
 
         fun getPaceInteger(millis: Long, distance: Float): Int {
-            Log.d(TAG, "$millis-$distance")
+
             val speed = millis / 60.0 / distance
             if (speed > 99) return 0
             val minutes = (speed).toInt()
             val seconds = ((speed - minutes) * 60).toInt()
-            //  TODO return seconds not minutes
-            return minutes
+
+            return (minutes * 60) + seconds
 
         }
     }
