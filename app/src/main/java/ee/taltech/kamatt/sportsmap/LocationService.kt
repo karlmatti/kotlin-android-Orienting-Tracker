@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.location.Location
-import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
@@ -32,7 +31,6 @@ import ee.taltech.kamatt.sportsmap.db.repository.GpsLocationRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
 import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
 import java.io.Serializable
-import kotlin.collections.ArrayList
 
 
 class LocationService : Service() {
@@ -98,6 +96,9 @@ class LocationService : Service() {
     private var paceMax: Double = 480.0
     private var colorMin: String = "blue"
     private var colorMax: String = "red"
+
+    private var listOfCPMarkerLatLngs: MutableList<LatLng>? = null
+    private var listOfWPMarkerLatLngs: MutableList<LatLng>? = null
 
     override fun onCreate() {
         Log.d(TAG, "onCreate")
@@ -346,7 +347,18 @@ class LocationService : Service() {
                 polylineOptionsList!! as Serializable
             )
         }
-
+        if (listOfCPMarkerLatLngs != null) {
+            intent.putExtra(
+                C.LOCATION_UPDATE_CP_LATLNGS,
+                listOfCPMarkerLatLngs!! as Serializable
+            )
+        }
+        if (listOfWPMarkerLatLngs != null) {
+            intent.putExtra(
+                C.LOCATION_UPDATE_WP_LATLNGS,
+                listOfWPMarkerLatLngs!! as Serializable
+            )
+        }
 
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 
@@ -520,6 +532,21 @@ class LocationService : Service() {
                     distanceWPDirect = 0f
                     distanceWPTotal = 0f
                     durationWP = 0
+                    if (listOfWPMarkerLatLngs == null) {
+                        listOfWPMarkerLatLngs = mutableListOf(
+                            LatLng(
+                                locationWP!!.latitude,
+                                locationWP!!.longitude
+                            )
+                        )
+                    } else {
+                        listOfWPMarkerLatLngs!!.add(
+                            LatLng(
+                                locationWP!!.latitude,
+                                locationWP!!.longitude
+                            )
+                        )
+                    }
                     //saveRestLocation(locationWP!!, C.REST_LOCATIONID_WP)
                     showNotification()
                 }
@@ -534,6 +561,21 @@ class LocationService : Service() {
                     distanceWPDirect = 0f
                     distanceWPTotal = 0f
                     durationWP = 0
+                    if (listOfCPMarkerLatLngs == null) {
+                        listOfCPMarkerLatLngs = mutableListOf(
+                            LatLng(
+                                locationWP!!.latitude,
+                                locationWP!!.longitude
+                            )
+                        )
+                    } else {
+                        listOfCPMarkerLatLngs!!.add(
+                            LatLng(
+                                locationCP!!.latitude,
+                                locationCP!!.longitude
+                            )
+                        )
+                    }
                     updateDbGpsLocation(locationWP!!, C.REST_LOCATIONID_WP)
 
                     //saveRestLocation(locationCP!!, C.REST_LOCATIONID_CP)

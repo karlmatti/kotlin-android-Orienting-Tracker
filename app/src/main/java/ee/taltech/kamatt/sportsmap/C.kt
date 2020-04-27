@@ -30,6 +30,8 @@ class C {
         const val LOCATION_UPDATE_ACTION_WPTIME = PREFIX + "location_update.wptime"
 
         const val LOCATION_UPDATE_POLYLINE_OPTIONS = PREFIX + "location_update.polylineoptions"
+        const val LOCATION_UPDATE_WP_LATLNGS = PREFIX + "location_update.wplatlngs"
+        const val LOCATION_UPDATE_CP_LATLNGS = PREFIX + "location_update.cplatlngs"
 
         const val CURRENT_SESSION_ID = PREFIX + "current_session_id"
         const val PACE_MIN = PREFIX + "pace_min"

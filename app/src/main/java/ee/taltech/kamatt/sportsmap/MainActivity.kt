@@ -10,6 +10,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.drawable.Drawable
 import android.hardware.Sensor
 import android.hardware.Sensor.TYPE_ACCELEROMETER
 import android.hardware.Sensor.TYPE_MAGNETIC_FIELD
@@ -17,21 +21,18 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.hardware.SensorManager.SENSOR_DELAY_GAME
-import android.location.Location
-import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
-import android.provider.SyncStateContract
 import android.util.Log
 import android.view.View
 import android.view.animation.Animation.RELATIVE_TO_SELF
 import android.view.animation.RotateAnimation
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -41,10 +42,7 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.Polyline
-import com.google.android.gms.maps.model.PolylineOptions
+import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
 import ee.taltech.kamatt.sportsmap.db.model.AppUser
 import ee.taltech.kamatt.sportsmap.db.model.GpsSession
@@ -119,7 +117,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var paceMax: Double = 480.0
     private var colorMin: String = "blue"
     private var colorMax: String = "red"
-    private var polylineLastSegment: Int = 0xff000000.toInt()
 
     private var lastLatitude: Double = 0.0
     private var lastLongitude: Double = 0.0
@@ -133,6 +130,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var tempoOverall: String = "0"
     private var durationOverall: String = "0"
 
+    private var startPointMarker: MarkerOptions? = null
+    private var listOfCPMarkerLatLngs: MutableList<LatLng>? = null
+    private var listOfWPMarkerLatLngs: MutableList<LatLng>? = null
+    private var markerList: MutableList<Marker>? = null
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
@@ -241,7 +242,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     override fun onResume() {
         Log.d(TAG, "onResume")
         super.onResume()
-        //  TODO: draw polyline again because app was opened
+
         reDrawPolyline()
 
         LocalBroadcastManager.getInstance(this)
@@ -404,7 +405,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private fun handleStartStopOnClick() {
         Log.d(TAG, "buttonStartStop. locationServiceActive: $locationServiceActive")
         if (locationServiceActive) {
-            mMap.isMyLocationEnabled = false
+
             // stopping the service
             val currentlyActiveSession: GpsSession =
                 gpsSessionRepository.getSessionById(currentDbSessionId)
@@ -428,7 +429,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
 
         } else {
-            mMap.isMyLocationEnabled = true
+
             // clear the track on map
             Utils.clearMapPolylineOptions()
 
@@ -617,7 +618,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     polylineOptionsList =
                         intent.getSerializableExtra(C.LOCATION_UPDATE_POLYLINE_OPTIONS) as?
                                 MutableList<PolylineOptions>
-
+                    listOfCPMarkerLatLngs = intent
+                        .getSerializableExtra(C.LOCATION_UPDATE_CP_LATLNGS) as? MutableList<LatLng>
+                    listOfWPMarkerLatLngs = intent
+                        .getSerializableExtra(C.LOCATION_UPDATE_WP_LATLNGS) as? MutableList<LatLng>
                     updateMap(
                         intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0),
                         intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
@@ -638,7 +642,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     // ============================================== HANDLE MAP =============================================
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-
+        mMap.isMyLocationEnabled = true
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.3927437, 24.6642), 17.0f))
 
     }
@@ -651,6 +655,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         if (mapPolyline != null) {
             mapPolyline!!.remove()
         }
+
 
 /*
         val oldLocation: Location = Location(LocationManager.GPS_PROVIDER).apply {
@@ -698,21 +703,78 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         polylineLastSegment = newColor
 
  */
-
-        reDrawPolyline()
-
         lastLatitude = lat
         lastLongitude = lng
+        reDrawPolyline()
+
 
     }
 
     private fun reDrawPolyline() {
+
+
         if (polylineOptionsList != null) {
+            mMap.clear()
+            if (startPointMarker == null) {
+                startPointMarker = MarkerOptions().position(LatLng(lastLatitude, lastLongitude))
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_play_arrow_black_24))
+
+                mMap.addMarker(startPointMarker)
+                mMap.animateCamera(
+                    CameraUpdateFactory.newLatLngZoom(
+                        LatLng(
+                            lastLatitude,
+                            lastLongitude
+                        ), 17.0f
+                    )
+                )
+            } else {
+                mMap.addMarker(startPointMarker)
+            }
+            if (listOfCPMarkerLatLngs != null) {
+                Log.d("cpMarker count", listOfCPMarkerLatLngs!!.size.toString())
+                for (cpLatLng in listOfCPMarkerLatLngs!!) {
+                    val cpMarkerOptions = MarkerOptions()
+                        .position(LatLng(cpLatLng.latitude, cpLatLng.longitude))
+                        .icon(bitmapDescriptorFromVector(this, R.drawable.baseline_add_location_24))
+                    val cpMarker = mMap.addMarker(cpMarkerOptions)
+                    if (markerList == null) {
+                        markerList = mutableListOf(cpMarker)
+                    } else {
+                        markerList!!.add(cpMarker)
+                    }
+
+                }
+            }
+            if (listOfWPMarkerLatLngs != null) {
+                Log.d("cpMarker count", listOfWPMarkerLatLngs!!.size.toString())
+                for (wpLatLng in listOfWPMarkerLatLngs!!) {
+                    val cpMarker = MarkerOptions()
+                        .position(LatLng(wpLatLng.latitude, wpLatLng.longitude))
+                        .icon(bitmapDescriptorFromVector(this, R.drawable.baseline_place_24))
+                    mMap.addMarker(cpMarker)
+
+                }
+            }
             for (polylineOptions in polylineOptionsList!!) {
                 mapPolyline = mMap.addPolyline(polylineOptions)
             }
         }
 
+    }
+
+    private fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
+
+        return ContextCompat.getDrawable(context, vectorResId)?.run {
+            setBounds(0, 0, intrinsicWidth, intrinsicHeight)
+            val bitmap =
+                Bitmap.createBitmap(intrinsicWidth, intrinsicHeight, Bitmap.Config.ARGB_8888)
+
+            val canvas: Canvas = Canvas(bitmap)
+
+            draw(canvas)
+            BitmapDescriptorFactory.fromBitmap(bitmap)
+        }
     }
     // ============================================== COMPASS =============================================
 
