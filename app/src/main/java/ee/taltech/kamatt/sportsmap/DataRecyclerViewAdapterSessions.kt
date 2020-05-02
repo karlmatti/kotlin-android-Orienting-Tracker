@@ -35,9 +35,9 @@ class DataRecyclerViewAdapterSessions(
         holder.itemView.textViewSessionName.text = session.name
         holder.itemView.textViewDescription.text = session.description
         holder.itemView.textViewRecordedAt.text = session.recordedAt
-        holder.itemView.textViewDurationOverall.text = session.duration.toString()
-        holder.itemView.textViewDistanceOverall.text = session.distance.toString()
-        holder.itemView.textViewTempoOverall.text = session.speed.toString()
+        holder.itemView.textViewDurationOverall.text = session.duration
+        holder.itemView.textViewDistanceOverall.text = session.distance.toInt().toString()
+        holder.itemView.textViewTempoOverall.text = session.speed
         holder.itemView.buttonDeleteSession.setOnClickListener {
             val theRemovedItem: GpsSession = dataSet.get(position)
             // remove your item from data base

@@ -57,8 +57,7 @@ import kotlinx.android.synthetic.main.options.*
 import kotlinx.android.synthetic.main.track_control.*
 import java.lang.Math.toDegrees
 
-//  TODO: bug. should show only last WP
-//  TODO: bug. end session last point goes to LatLng(0, 0)
+
 //  TODO: bug. should load new sessions to "old sessions" right after stopping session
 
 //  TODO: LOW. current user for session is not dynamical
@@ -130,7 +129,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     private var startPointMarker: MarkerOptions? = null
     private var listOfCPMarkerLatLngs: MutableList<LatLng>? = null
-    private var listOfWPMarkerLatLngs: MutableList<LatLng>? = null
+    private var lastWPMarkerLatLng: LatLng? = null
     private var markerList: MutableList<Marker>? = null
 
     private var loadedSession: GpsSession? = null
@@ -639,8 +638,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
                     listOfCPMarkerLatLngs = intent
                         .getSerializableExtra(C.LOCATION_UPDATE_CP_LATLNGS) as? MutableList<LatLng>
-                    listOfWPMarkerLatLngs = intent
-                        .getSerializableExtra(C.LOCATION_UPDATE_WP_LATLNGS) as? MutableList<LatLng>
+
+                    lastWPMarkerLatLng = intent.getParcelableExtra(C.LOCATION_UPDATE_WP_LATLNGS)
+
+
                     updateMap(
                         intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0),
                         intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
@@ -801,20 +802,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
                     }
                 }
-                if (listOfWPMarkerLatLngs != null) {
-
-                    for (wpLatLng in listOfWPMarkerLatLngs!!) {
-                        val wpMarker = MarkerOptions()
-                            .position(LatLng(wpLatLng.latitude, wpLatLng.longitude))
-                            .icon(
-                                bitmapDescriptorFromVector(
-                                    this,
-                                    R.drawable.baseline_place_24
-                                )
+                if (lastWPMarkerLatLng != null) {
+                    val wpMarker = MarkerOptions()
+                        .position(lastWPMarkerLatLng!!)
+                        .icon(
+                            bitmapDescriptorFromVector(
+                                this,
+                                R.drawable.baseline_place_24
                             )
-                        mMap.addMarker(wpMarker)
+                        )
+                    mMap.addMarker(wpMarker)
 
-                    }
                 }
 
                 for (polylineOptions in polylineOptionsList!!) {

@@ -10,6 +10,7 @@ import android.location.Location
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
+import android.os.Parcelable
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -99,7 +100,7 @@ class LocationService : Service() {
     private var colorMax: String = "red"
 
     private var listOfCPMarkerLatLngs: MutableList<LatLng>? = null
-    private var listOfWPMarkerLatLngs: MutableList<LatLng>? = null
+    private var lastWPMarkerLatLng: LatLng? = null
 
     override fun onCreate() {
         Log.d(TAG, "onCreate")
@@ -354,10 +355,10 @@ class LocationService : Service() {
                 listOfCPMarkerLatLngs!! as Serializable
             )
         }
-        if (listOfWPMarkerLatLngs != null) {
+        if (lastWPMarkerLatLng != null) {
             intent.putExtra(
                 C.LOCATION_UPDATE_WP_LATLNGS,
-                listOfWPMarkerLatLngs!! as Serializable
+                lastWPMarkerLatLng!! as Parcelable
             )
         }
 
@@ -533,21 +534,11 @@ class LocationService : Service() {
                     distanceWPDirect = 0f
                     distanceWPTotal = 0f
                     durationWP = 0
-                    if (listOfWPMarkerLatLngs == null) {
-                        listOfWPMarkerLatLngs = mutableListOf(
-                            LatLng(
-                                locationWP!!.latitude,
-                                locationWP!!.longitude
-                            )
-                        )
-                    } else {
-                        listOfWPMarkerLatLngs!!.add(
-                            LatLng(
-                                locationWP!!.latitude,
-                                locationWP!!.longitude
-                            )
-                        )
-                    }
+                    lastWPMarkerLatLng = LatLng(
+                        locationWP!!.latitude,
+                        locationWP!!.longitude
+                    )
+
                     //saveRestLocation(locationWP!!, C.REST_LOCATIONID_WP)
                     showNotification()
                 }
