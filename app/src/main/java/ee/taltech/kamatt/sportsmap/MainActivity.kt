@@ -636,6 +636,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     polylineOptionsList =
                         intent.getSerializableExtra(C.LOCATION_UPDATE_POLYLINE_OPTIONS) as?
                                 MutableList<PolylineOptions>
+
                     listOfCPMarkerLatLngs = intent
                         .getSerializableExtra(C.LOCATION_UPDATE_CP_LATLNGS) as? MutableList<LatLng>
                     listOfWPMarkerLatLngs = intent
@@ -675,12 +676,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         }
         lastLatitude = lat
         lastLongitude = lng
+
         reDrawPolyline()
 
 
     }
 
     private fun reDrawPolyline() {
+
         if (isOldSessionLoaded) {
             if (this::mMap.isInitialized) {
                 mMap!!.clear()
@@ -755,68 +758,69 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     }
                 }
 
-            } else {
-                if (polylineOptionsList != null) {
-                    mMap.clear()
-                    if (startPointMarker == null) {
-                        startPointMarker =
-                            MarkerOptions().position(LatLng(lastLatitude, lastLongitude))
-                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_play_arrow_black_24))
-
-                        mMap.addMarker(startPointMarker)
-                        mMap.animateCamera(
-                            CameraUpdateFactory.newLatLngZoom(
-                                LatLng(
-                                    lastLatitude,
-                                    lastLongitude
-                                ), 17.0f
-                            )
-                        )
-                    } else {
-                        mMap.addMarker(startPointMarker)
-                    }
-                    if (listOfCPMarkerLatLngs != null) {
-
-                        for (cpLatLng in listOfCPMarkerLatLngs!!) {
-                            val cpMarkerOptions = MarkerOptions()
-                                .position(LatLng(cpLatLng.latitude, cpLatLng.longitude))
-                                .icon(
-                                    bitmapDescriptorFromVector(
-                                        this,
-                                        R.drawable.baseline_add_location_24
-                                    )
-                                )
-                            val cpMarker = mMap.addMarker(cpMarkerOptions)
-                            if (markerList == null) {
-                                markerList = mutableListOf(cpMarker)
-                            } else {
-                                markerList!!.add(cpMarker)
-                            }
-
-                        }
-                    }
-                    if (listOfWPMarkerLatLngs != null) {
-
-                        for (wpLatLng in listOfWPMarkerLatLngs!!) {
-                            val wpMarker = MarkerOptions()
-                                .position(LatLng(wpLatLng.latitude, wpLatLng.longitude))
-                                .icon(
-                                    bitmapDescriptorFromVector(
-                                        this,
-                                        R.drawable.baseline_place_24
-                                    )
-                                )
-                            mMap.addMarker(wpMarker)
-
-                        }
-                    }
-                    for (polylineOptions in polylineOptionsList!!) {
-                        mapPolyline = mMap.addPolyline(polylineOptions)
-                    }
-                }
             }
 
+        } else {
+            if (!polylineOptionsList.isNullOrEmpty()) {
 
+                mMap.clear()
+                if (startPointMarker == null) {
+                    startPointMarker =
+                        MarkerOptions().position(LatLng(lastLatitude, lastLongitude))
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_play_arrow_black_24))
+
+                    mMap.addMarker(startPointMarker)
+                    mMap.animateCamera(
+                        CameraUpdateFactory.newLatLngZoom(
+                            LatLng(
+                                lastLatitude,
+                                lastLongitude
+                            ), 17.0f
+                        )
+                    )
+                } else {
+                    mMap.addMarker(startPointMarker)
+                }
+                if (listOfCPMarkerLatLngs != null) {
+
+                    for (cpLatLng in listOfCPMarkerLatLngs!!) {
+                        val cpMarkerOptions = MarkerOptions()
+                            .position(LatLng(cpLatLng.latitude, cpLatLng.longitude))
+                            .icon(
+                                bitmapDescriptorFromVector(
+                                    this,
+                                    R.drawable.baseline_add_location_24
+                                )
+                            )
+                        val cpMarker = mMap.addMarker(cpMarkerOptions)
+                        if (markerList == null) {
+                            markerList = mutableListOf(cpMarker)
+                        } else {
+                            markerList!!.add(cpMarker)
+                        }
+
+                    }
+                }
+                if (listOfWPMarkerLatLngs != null) {
+
+                    for (wpLatLng in listOfWPMarkerLatLngs!!) {
+                        val wpMarker = MarkerOptions()
+                            .position(LatLng(wpLatLng.latitude, wpLatLng.longitude))
+                            .icon(
+                                bitmapDescriptorFromVector(
+                                    this,
+                                    R.drawable.baseline_place_24
+                                )
+                            )
+                        mMap.addMarker(wpMarker)
+
+                    }
+                }
+
+                for (polylineOptions in polylineOptionsList!!) {
+                    mapPolyline = mMap.addPolyline(polylineOptions)
+                }
+            }
         }
     }
 
