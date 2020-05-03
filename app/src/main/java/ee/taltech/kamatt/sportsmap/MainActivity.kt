@@ -59,6 +59,7 @@ import java.lang.Math.toDegrees
 
 
 //  TODO: bug. should load new sessions to "old sessions" right after stopping session
+//  TODO: bug. when session ends then should leave old values
 
 //  TODO: LOW. current user for session is not dynamical
 //  TODO: LOW. pace should be double and in seconds everywhere but UI
@@ -217,6 +218,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     R.drawable.baseline_stop_24
                 )
             )
+            startPointMarker = null
         } else {
 
             buttonStartStop.setImageDrawable(
@@ -225,6 +227,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     R.drawable.baseline_play_arrow_24
                 )
             )
+
             currentDbSessionId = -1
         }
 
@@ -692,12 +695,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                 val loadedMaxPace = loadedSession!!.paceMax
                 val loadedMinColor = loadedSession!!.colorMin
                 val loadedMaxColor = loadedSession!!.colorMax
-                var isStarted = false
+
                 var oldLocation: Location? = null
                 for (loadedLocation in loadedLocations!!) {
                     if (loadedLocation.gpsLocationTypeId == C.REST_LOCATIONID_LOC) {
 
-                        if (!isStarted) {
+                        if (startPointMarker == null) {
                             startPointMarker = MarkerOptions().position(
                                 LatLng(
                                     loadedLocation.latitude,
@@ -706,7 +709,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                             )
                                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.baseline_play_arrow_black_24))
                             mMap.addMarker(startPointMarker)
-                            isStarted = true
+
 
                             oldLocation = Location(LocationManager.GPS_PROVIDER).apply {
                                 latitude = loadedLocation.latitude
@@ -724,8 +727,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                             }
                             val distanceFromLastPoint: Float = oldLocation!!.distanceTo(newLocation)
                             val newTimeDifference = newLocation.time - oldLocation.time
-                            val tempo: Int =
-                                Utils.getPaceInteger(newTimeDifference, distanceFromLastPoint)
+                            val tempo: Float =
+                                Utils.getPaceMinutesFloat(newTimeDifference, distanceFromLastPoint)
+                            //val testTempo: Float = Utils.getPaceMinutesFloat(newTimeDifference, distanceFromLastPoint)
                             Log.d(TAG, "current tempo $tempo")
                             val newColor = Utils.calculateMapPolyLineColor(
                                 loadedMinPace.toInt(),

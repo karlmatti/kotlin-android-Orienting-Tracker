@@ -287,8 +287,10 @@ class LocationService : Service() {
             durationWP += (location.time - currentLocation!!.time)
 
             val distanceFromLastPoint: Float = currentLocation!!.distanceTo(location)
-            val newTimeDifference = currentLocation!!.time - location.time
-            val tempo: Int = Utils.getPaceInteger(newTimeDifference, distanceFromLastPoint)
+            val newTimeDifference = location.time - currentLocation!!.time
+            val tempo: Float = Utils.getPaceMinutesFloat(newTimeDifference, distanceFromLastPoint)
+
+            updateCurrentSession()
             val newColor = Utils.calculateMapPolyLineColor(
                 paceMin.toInt(),
                 paceMax.toInt(),
@@ -364,6 +366,14 @@ class LocationService : Service() {
 
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent)
 
+    }
+
+    private fun updateCurrentSession() {
+        currentDbSession = gpsSessionRepository.getSessionById(currentDbSessionId.toInt())
+        paceMax = currentDbSession.paceMax
+        paceMin = currentDbSession.paceMin
+        colorMax = currentDbSession.colorMax
+        colorMin = currentDbSession.colorMin
     }
 
 

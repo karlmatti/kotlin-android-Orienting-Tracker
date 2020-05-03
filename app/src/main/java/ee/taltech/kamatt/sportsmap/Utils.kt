@@ -31,9 +31,8 @@ class Utils {
             maxSpeed: Int,
             minColor: String,
             maxColor: String,
-            currentTempo: Int
+            currentTempo: Float
         ): Int {
-
             val resultColor: Int
             resultColor = when {
                 currentTempo >= maxSpeed -> getAndroidColor(maxColor)
@@ -41,16 +40,14 @@ class Utils {
                 else -> {
                     //  colorPercent = 0% -> minColor ... colorPercent = 100% -> maxColor
                     val colorPercent: Float =
-                        (((currentTempo - minSpeed) * 100) / maxSpeed - minSpeed) / 100F
+                        (((currentTempo - minSpeed) * 100) / (maxSpeed - minSpeed)) / 100F
                     ArgbEvaluator().evaluate(
                         colorPercent,
                         getAndroidColor(maxColor),
                         getAndroidColor(minColor)
                     ) as Int
-                    //Log.d("calcMapPolyLineColor", "colorPercent: $colorPercent")
                 }
             }
-            //Log.d("calcMapPolyLineColor", "resultColor: $resultColor")
 
             return resultColor
         }
@@ -102,7 +99,7 @@ class Utils {
         }
 
         fun getPaceInteger(millis: Long, distance: Float): Int {
-
+            Log.d("utils123", "millis> " + millis.toString())
             val speed = millis / 60.0 / distance
             if (speed > 99) return 0
             val minutes = (speed).toInt()
@@ -110,6 +107,15 @@ class Utils {
 
             return (minutes * 60) + seconds
 
+        }
+
+        fun getPaceMinutesFloat(millis: Long, distance: Float): Float {
+
+
+            if (millis < 0) {
+                return 0f
+            }
+            return millis / 60.0f / distance
         }
     }
 }
