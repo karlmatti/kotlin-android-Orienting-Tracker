@@ -700,7 +700,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                 for (loadedLocation in loadedLocations!!) {
                     if (loadedLocation.gpsLocationTypeId == C.REST_LOCATIONID_LOC) {
 
-                        if (startPointMarker == null) {
+                        if (startPointMarker == null || oldLocation == null) {
                             startPointMarker = MarkerOptions().position(
                                 LatLng(
                                     loadedLocation.latitude,
@@ -729,11 +729,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                             val newTimeDifference = newLocation.time - oldLocation.time
                             val tempo: Float =
                                 Utils.getPaceMinutesFloat(newTimeDifference, distanceFromLastPoint)
+
                             //val testTempo: Float = Utils.getPaceMinutesFloat(newTimeDifference, distanceFromLastPoint)
-                            Log.d(TAG, "current tempo $tempo")
+
                             val newColor = Utils.calculateMapPolyLineColor(
-                                loadedMinPace.toInt(),
-                                loadedMaxPace.toInt(),
+                                loadedMinPace.toInt() / 60,
+                                loadedMaxPace.toInt() / 60,
                                 loadedMinColor,
                                 loadedMaxColor,
                                 tempo
