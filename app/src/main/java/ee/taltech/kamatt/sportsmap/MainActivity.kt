@@ -3,6 +3,7 @@ package ee.taltech.kamatt.sportsmap
 // do not import this! never! If this get inserted automatically when pasting java code, remove it
 //import android.R
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
@@ -37,12 +38,16 @@ import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android.volley.BuildConfig
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.JsonObjectRequest
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
+import ee.taltech.kamatt.sportsmap.db.DbHandler
 import ee.taltech.kamatt.sportsmap.db.model.AppUser
 import ee.taltech.kamatt.sportsmap.db.model.GpsLocation
 import ee.taltech.kamatt.sportsmap.db.model.GpsSession
@@ -53,10 +58,17 @@ import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.buttons_top.*
 import kotlinx.android.synthetic.main.edit_session.*
+import kotlinx.android.synthetic.main.login.*
 import kotlinx.android.synthetic.main.options.*
+import kotlinx.android.synthetic.main.register.*
 import kotlinx.android.synthetic.main.track_control.*
+import kotlinx.android.synthetic.main.welcome_screen.*
+import org.json.JSONObject
 import java.lang.Math.toDegrees
+import java.util.regex.Pattern
 
+//  TODO: deadline. user can create account/ log in and sync its data to backend
+//  TODO: login and register view should be responsive for orientation change
 
 //  TODO: bug. should load new sessions to "old sessions" right after stopping session
 //  TODO: bug. when session ends then should leave old values
@@ -137,6 +149,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var loadedLocations: List<GpsLocation>? = null
     private var isOldSessionLoaded = false
 
+    private var jwt: String? = null
+
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
@@ -177,6 +191,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         buttonCloseRecyclerView.setOnClickListener { handleCloseOldSessionsOnClick() }
         buttonUpdateSession.setOnClickListener { handleUpdateSessionOnClick() }
         buttonUpdatePolylineParams.setOnClickListener { handleUpdatePolylineParamsOnClick() }
+        buttonLogin.setOnClickListener { handleLoginOnClick() }
+        buttonShowWelcome1.setOnClickListener { handleShowWelcomeOnClick() }
+        buttonShowWelcome2.setOnClickListener { handleShowWelcomeOnClick() }
+        buttonShowLogin.setOnClickListener { handleShowLoginOnClick() }
+        buttonShowRegister.setOnClickListener { handleShowRegisterOnClick() }
+        buttonRegister.setOnClickListener { handleRegisterOnClick() }
         // safe to call every time
         createNotificationChannel()
 
@@ -460,6 +480,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                 intent.putExtra(C.PACE_MIN, paceMin)
                 intent.putExtra(C.COLOR_MAX, colorMax)
                 intent.putExtra(C.COLOR_MIN, colorMin)
+
                 startForegroundService(intent)
             } else {
                 val intent: Intent = Intent(this, LocationService::class.java)
@@ -467,7 +488,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                 intent.putExtra(C.PACE_MIN, paceMin)
                 intent.putExtra(C.COLOR_MAX, colorMax)
                 intent.putExtra(C.COLOR_MIN, colorMin)
-                startService(Intent(this, LocationService::class.java))
+                startService(intent)
             }
             buttonStartStop.setImageDrawable(
                 ContextCompat.getDrawable(
@@ -950,5 +971,142 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         }
     }
 
+    // ============================================== LOGIN AND REGISTER =============================================
+    private fun handleLoginOnClick() {// api/v1.0/Account/Login
+        val email: String = editTextEmailLogin.text.toString()
+        val password: String = editTextPasswordLogin.text.toString()
+        Log.d(TAG, "Login: E-mail: $email, Password: $password")
+        loginUser(email, password)
 
+    }
+
+    private fun handleRegisterOnClick() { // /api/v1.0/Account/Register
+        val firstName: String = editTextFirstName.text.toString()
+        val lastName: String = editTextLastName.text.toString()
+        val email: String = editTextEmailRegister.text.toString()
+        val password: String = editTextPasswordRegister.text.toString()
+        Log.d(
+            TAG,
+            "Register: First name: $firstName, Last name: $lastName, E-mail: $email, Password: $password"
+        )
+        registerUser(firstName, lastName, email, password)
+        /*{
+          "email": "user@example.com",
+          "password": "string",
+          "firstName": "string",
+          "lastName": "string"
+        } */
+    }
+
+    private fun handleShowLoginOnClick() {
+        includeWelcome.visibility = View.INVISIBLE
+        includeLogin.visibility = View.VISIBLE
+    }
+
+    private fun handleShowRegisterOnClick() {
+        includeWelcome.visibility = View.INVISIBLE
+        includeRegister.visibility = View.VISIBLE
+    }
+
+    private fun handleShowWelcomeOnClick() {
+        includeRegister.visibility = View.INVISIBLE
+        includeLogin.visibility = View.INVISIBLE
+        includeWelcome.visibility = View.VISIBLE
+
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun registerUser(firstName: String, lastName: String, email: String, password: String) {
+        textViewEmailRegister.setTextColor(Utils.getAndroidColor("black"))
+        textViewEmailRegister.setText("E-mail")
+        textViewPasswordRegister.setTextColor(Utils.getAndroidColor("black"))
+        textViewPasswordRegister.setText("Password")
+        if (email.isEmailValid() && password.isAlphaNumeric()) {
+            val handler = WebApiSingletonHandler.getInstance(applicationContext)
+            val requestJsonParameters = JSONObject()
+            requestJsonParameters.put("firstName", firstName)
+            requestJsonParameters.put("lastName", lastName)
+            requestJsonParameters.put("email", email)
+            requestJsonParameters.put("password", password)
+
+            val httpRequest = JsonObjectRequest(
+                Request.Method.POST,
+                C.REST_BASE_URL + "account/register",
+                requestJsonParameters,
+                Response.Listener { response ->
+                    Log.d(TAG, response.toString())
+                    jwt = response.getString("token")
+                    includeRegister.visibility = View.INVISIBLE
+                    includeLogin.visibility = View.INVISIBLE
+                    includeWelcome.visibility = View.INVISIBLE
+                },
+                Response.ErrorListener { error ->
+                    Log.d(TAG, error.toString())
+                }
+            )
+
+            handler.addToRequestQueue(httpRequest)
+
+        } else {
+            if (!email.isEmailValid()) {
+                textViewEmailRegister.setTextColor(Utils.getAndroidColor("red"))
+
+            }
+            if (!password.isAlphaNumeric()) {
+                textViewPasswordRegister.text = "Password (a-z|A-Z|0-9|.,;'?! ...)"
+                textViewPasswordRegister.setTextColor(Utils.getAndroidColor("red"))
+
+            }
+        }
+
+    }
+
+    private fun loginUser(email: String, password: String) {
+        Log.d("TAG", "is email valid: " + email.isEmailValid())
+        Log.d("TAG", "is password valid: " + password.isAlphaNumeric())
+
+        if (email.isEmailValid() && password.isAlphaNumeric()) {
+            val handler = WebApiSingletonHandler.getInstance(applicationContext)
+            val requestJsonParameters = JSONObject()
+            requestJsonParameters.put("email", email)
+            requestJsonParameters.put("password", password)
+
+            val httpRequest = JsonObjectRequest(
+                Request.Method.POST,
+                C.REST_BASE_URL + "account/login",
+                requestJsonParameters,
+                Response.Listener { response ->
+                    Log.d(TAG, response.toString())
+                    jwt = response.getString("token")
+                    includeRegister.visibility = View.INVISIBLE
+                    includeLogin.visibility = View.INVISIBLE
+                    includeWelcome.visibility = View.INVISIBLE
+                },
+                Response.ErrorListener { error ->
+                    Log.d(TAG, error.toString())
+                }
+            )
+
+            handler.addToRequestQueue(httpRequest)
+        }
+    }
+
+    private fun String.isEmailValid() =
+        Pattern.compile(
+            "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
+                    "\\@" +
+                    "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
+                    "(" +
+                    "\\." +
+                    "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
+                    ")+"
+        ).matcher(this).matches()
+
+    private fun String.isAlphaNumeric() =
+        Pattern.compile("^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[\\W])[\\w\\W]+$").matcher(this)
+            .find()
+    /*
+    fun isAlphaNumeric(s: String?): Boolean {
+        return p.matcher(s).find()
+    }*/
 }

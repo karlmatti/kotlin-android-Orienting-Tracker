@@ -52,7 +52,7 @@ class Utils {
             return resultColor
         }
 
-        private fun getAndroidColor(colorName: String): Int {
+        fun getAndroidColor(colorName: String): Int {
             return when (colorName) {
                 "green" -> 0xff00ff00.toInt()
                 "red" -> 0xffff0000.toInt()
@@ -98,18 +98,7 @@ class Utils {
 
         }
 
-        fun getPaceInteger(millis: Long, distance: Float): Int {
-            val speed = millis / 60.0 / distance
-            if (speed > 99) return 0
-            val minutes = (speed).toInt()
-            val seconds = ((speed - minutes) * 60).toInt()
-
-            return (minutes * 60) + seconds
-
-        }
-
         fun getPaceMinutesFloat(millis: Long, distance: Float): Float {
-
             if (millis < 0) {
                 return 0f
             }
