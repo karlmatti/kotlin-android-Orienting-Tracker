@@ -1062,9 +1062,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     }
 
     private fun loginUser(email: String, password: String) {
-        Log.d("TAG", "is email valid: " + email.isEmailValid())
-        Log.d("TAG", "is password valid: " + password.isAlphaNumeric())
-
+        textViewEmailRegister.setTextColor(Utils.getAndroidColor("black"))
+        textViewPasswordRegister.setTextColor(Utils.getAndroidColor("black"))
         if (email.isEmailValid() && password.isAlphaNumeric()) {
             val handler = WebApiSingletonHandler.getInstance(applicationContext)
             val requestJsonParameters = JSONObject()
@@ -1084,10 +1083,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                 },
                 Response.ErrorListener { error ->
                     Log.d(TAG, error.toString())
+                    textViewEmailLogin.setTextColor(Utils.getAndroidColor("red"))
+                    textViewPasswordLogin.setTextColor(Utils.getAndroidColor("red"))
                 }
             )
 
             handler.addToRequestQueue(httpRequest)
+        } else {
+
+            textViewEmailLogin.setTextColor(Utils.getAndroidColor("red"))
+            textViewPasswordLogin.setTextColor(Utils.getAndroidColor("red"))
+
+
         }
     }
 
