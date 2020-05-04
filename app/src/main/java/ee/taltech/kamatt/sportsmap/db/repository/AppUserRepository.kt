@@ -10,7 +10,7 @@ import ee.taltech.kamatt.sportsmap.db.model.LocationType
 
 
 class AppUserRepository(val context: Context) {
-    // todo: UD methods
+
     private lateinit var dbHandler: DbHandler
     private lateinit var db: SQLiteDatabase
 
@@ -35,7 +35,9 @@ class AppUserRepository(val context: Context) {
         val columns = arrayOf(
             "_id",
             "email",
-            "password"
+            "password",
+            "firstName",
+            "lastName"
         )
         val orderBy =
             "_id"
@@ -59,7 +61,9 @@ class AppUserRepository(val context: Context) {
                 AppUser(
                     cursor.getInt(cursor.getColumnIndex("_id")),
                     cursor.getString(cursor.getColumnIndex("email")),
-                    cursor.getString(cursor.getColumnIndex("password"))
+                    cursor.getString(cursor.getColumnIndex("password")),
+                    cursor.getString(cursor.getColumnIndex("firstName")),
+                    cursor.getString(cursor.getColumnIndex("lastName"))
                 )
             )
         }
@@ -76,7 +80,6 @@ class AppUserRepository(val context: Context) {
             return cursor.getInt(cursor.getColumnIndex("_id"))
         }
 
-        Log.d("@getUserIdByEmail", "Cannot find user with specified email")
         return 0
     }
 
