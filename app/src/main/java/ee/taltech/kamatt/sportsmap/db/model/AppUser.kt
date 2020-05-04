@@ -6,8 +6,8 @@ class AppUser () {
     var id: Int = 0
     lateinit var email: String
     lateinit var password: String
-    lateinit var firstName: String
-    lateinit var lastName: String
+    var firstName: String = ""
+    var lastName: String = ""
 
     constructor(id: Int, email: String, password: String) : this() {
         this.id = id

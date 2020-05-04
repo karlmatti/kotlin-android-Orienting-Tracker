@@ -124,7 +124,7 @@ class DbHandler(context: Context) :
                     "$EMAIL TEXT UNIQUE NOT NULL, " +
                     "$PASSWORD TEXT NOT NULL," +
                     "$FIRSTNAME TEXT NOT NULL," +
-                    "$LASTNAME TEXT NOT NULL," +
+                    "$LASTNAME TEXT NOT NULL" +
                     ");"
         }
     }

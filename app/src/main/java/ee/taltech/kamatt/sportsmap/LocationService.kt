@@ -289,6 +289,7 @@ class LocationService : Service() {
             val distanceFromLastPoint: Float = currentLocation!!.distanceTo(location)
             val newTimeDifference = location.time - currentLocation!!.time
             val tempo: Float = Utils.getPaceMinutesFloat(newTimeDifference, distanceFromLastPoint)
+            Log.d("tempo123", tempo.toString())
             updateCurrentSession()
             val newColor = Utils.calculateMapPolyLineColor(
                 paceMin.toInt() / 60,

@@ -69,6 +69,9 @@ import java.util.regex.Pattern
 
 //  TODO: deadline. user can create account/ log in and sync its data to backend
 //  TODO: login and register view should be responsive for orientation change
+//  TODO: when logged in/registered then it should send current jwt to locationService
+//  TODO: when registered then should save user to local db
+//  TODO: when logged in then should get users local db id, if not exists then register user to local db
 
 //  TODO: bug. should load new sessions to "old sessions" right after stopping session
 //  TODO: bug. when session ends then should leave old values
@@ -686,7 +689,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     // ============================================== HANDLE MAP =============================================
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        mMap!!.isMyLocationEnabled = true
+        //mMap!!.isMyLocationEnabled = true
         mMap!!.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.3927437, 24.6642), 17.0f))
         reDrawPolyline()
     }
