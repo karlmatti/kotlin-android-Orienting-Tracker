@@ -25,9 +25,8 @@ class AppUserRepository(val context: Context) {
     }
 
 
-
-    fun add(appUser: AppUser){
-        db.insert(DbHandler.APP_USER_TABLE_NAME, null, appUser.getContentValues())
+    fun add(appUser: AppUser): Int {
+        return db.insert(DbHandler.APP_USER_TABLE_NAME, null, appUser.getContentValues()).toInt()
     }
 
     private fun fetch() : Cursor {
@@ -80,7 +79,7 @@ class AppUserRepository(val context: Context) {
             return cursor.getInt(cursor.getColumnIndex("_id"))
         }
 
-        return 0
+        return -1
     }
 
 

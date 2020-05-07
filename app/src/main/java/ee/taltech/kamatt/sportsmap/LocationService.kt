@@ -81,7 +81,7 @@ class LocationService : Service() {
     private var durationWP: Long = 0
 
     private var jwt: String? = null
-    private var trackingSessionId: String? = null
+    private var currentRestSessionId: String? = null
 
 
     private lateinit var locationTypeRepository: LocationTypeRepository
@@ -151,7 +151,7 @@ class LocationService : Service() {
             Response.Listener { response ->
                 Log.d(TAG, response.toString())
                 jwt = response.getString("token")
-                startRestTrackingSession()
+                startRestTrackingSession(currentDbSession)
             },
             Response.ErrorListener { error ->
                 Log.d(TAG, error.toString())
@@ -162,14 +162,22 @@ class LocationService : Service() {
 
     }
 
-    private fun startRestTrackingSession() {
+    private fun startRestTrackingSession(currSession: GpsSession) {
         val handler = WebApiSingletonHandler.getInstance(applicationContext)
         val requestJsonParameters = JSONObject()
-        requestJsonParameters.put("name", Date().toString())
-        requestJsonParameters.put("description", Date().toString())
-        requestJsonParameters.put("paceMin", 6 * 60)
-        requestJsonParameters.put("paceMax", 18 * 60)
-
+        requestJsonParameters.put("name", currSession.name)
+        requestJsonParameters.put("description", currSession.description)
+        requestJsonParameters.put("recordedAt", currSession.recordedAt)
+        requestJsonParameters.put(
+            "duration",
+            Utils.convertDurationStringToDouble(currSession.duration)
+        )
+        requestJsonParameters.put("speed", Utils.convertSpeedStringToDouble(currSession.speed))
+        requestJsonParameters.put("distance", currSession.distance)
+        requestJsonParameters.put("climb", currSession.climb)
+        requestJsonParameters.put("descent", currSession.descent)
+        requestJsonParameters.put("paceMin", currSession.paceMin)
+        requestJsonParameters.put("paceMax", currSession.paceMax)
 
         val httpRequest = object : JsonObjectRequest(
             Request.Method.POST,
@@ -177,7 +185,7 @@ class LocationService : Service() {
             requestJsonParameters,
             Response.Listener { response ->
                 Log.d(TAG, response.toString())
-                trackingSessionId = response.getString("id")
+                currentRestSessionId = response.getString("id")
             },
             Response.ErrorListener { error ->
                 Log.d(TAG, error.toString())
@@ -198,7 +206,7 @@ class LocationService : Service() {
     }
 
     private fun saveRestLocation(location: Location, location_type: String) {
-        if (jwt == null || trackingSessionId == null) {
+        if (jwt == null || currentRestSessionId == null) {
             return
         }
 
@@ -214,7 +222,7 @@ class LocationService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             requestJsonParameters.put("verticalAccuracy", location.verticalAccuracyMeters)
         }
-        requestJsonParameters.put("gpsSessionId", trackingSessionId)
+        requestJsonParameters.put("gpsSessionId", currentRestSessionId)
         requestJsonParameters.put("gpsLocationTypeId", location_type)
 
 
@@ -315,8 +323,9 @@ class LocationService : Service() {
         }
         // save the location for calculations
         currentLocation = location
-        updateDbGpsLocation(location, C.REST_LOCATIONID_LOC)
 
+        updateDbGpsLocation(location, C.REST_LOCATIONID_LOC)
+        saveRestLocation(location, C.REST_LOCATIONID_LOC)
         showNotification()
 
         // Utils.addToMapPolylineOptions(location.latitude, location.longitude)
@@ -345,6 +354,7 @@ class LocationService : Service() {
 
         // Session information
         intent.putExtra(C.CURRENT_SESSION_ID, currentDbSessionId)
+        intent.putExtra(C.CURRENT_SESSION_REST_ID, currentRestSessionId)
         if (polylineOptionsList != null) {
             intent.putExtra(
                 C.LOCATION_UPDATE_POLYLINE_OPTIONS,
@@ -461,6 +471,10 @@ class LocationService : Service() {
         paceMax = intent.getDoubleExtra(C.PACE_MAX, 480.0)
         colorMin = intent.getStringExtra(C.COLOR_MIN)!!
         colorMax = intent.getStringExtra(C.COLOR_MAX)!!
+        jwt = intent.getStringExtra(C.CURRENT_USER_JWT)
+        currentDbUserId = intent.getIntExtra(C.CURRENT_USER_DB_ID, 0)
+
+
 
         startDbTrackingSession(
             dateFormat.format(Date(startTimeOverall)), paceMin,
@@ -549,7 +563,7 @@ class LocationService : Service() {
                         locationWP!!.longitude
                     )
 
-                    //saveRestLocation(locationWP!!, C.REST_LOCATIONID_WP)
+                    saveRestLocation(locationWP!!, C.REST_LOCATIONID_WP)
                     showNotification()
                 }
                 C.NOTIFICATION_ACTION_CP -> {
@@ -580,7 +594,7 @@ class LocationService : Service() {
                     }
                     updateDbGpsLocation(locationWP!!, C.REST_LOCATIONID_WP)
 
-                    //saveRestLocation(locationCP!!, C.REST_LOCATIONID_CP)
+                    saveRestLocation(locationCP!!, C.REST_LOCATIONID_CP)
                     showNotification()
                 }
             }
@@ -601,6 +615,7 @@ class LocationService : Service() {
             "--:--", 0.0, 0.0, 0.0, currentDbUserId
         )
         currentDbSessionId = gpsSessionRepository.add(currentDbSession)
+        startRestTrackingSession(currentDbSession)
 
     }
 

@@ -34,6 +34,9 @@ class C {
         const val LOCATION_UPDATE_CP_LATLNGS = PREFIX + "location_update.cplatlngs"
 
         const val CURRENT_SESSION_ID = PREFIX + "current_session_id"
+        const val CURRENT_USER_DB_ID = PREFIX + "current_user_db_id"
+        const val CURRENT_SESSION_REST_ID = PREFIX + "current_session_rest_id"
+        const val CURRENT_USER_JWT = PREFIX + "current_user_jwt"
         const val PACE_MIN = PREFIX + "pace_min"
         const val PACE_MAX = PREFIX + "pace_max"
         const val COLOR_MIN = PREFIX + "color_min"

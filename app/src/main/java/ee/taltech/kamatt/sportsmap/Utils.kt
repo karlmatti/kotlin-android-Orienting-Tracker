@@ -104,5 +104,29 @@ class Utils {
             }
             return millis / 60.0f / distance
         }
+
+        fun convertSpeedStringToDouble(speedString: String): Double {
+            if (speedString == "--:--") {
+                return 0.0
+            } else {
+                val speedStringArray = speedString.split(":")
+                val minutes: Double = speedStringArray[0].toDouble()
+                val seconds: Double = speedStringArray[1].toDouble()
+                return (minutes * 60) + seconds
+            }
+        }
+
+        fun convertDurationStringToDouble(durationString: String): Double {
+
+            if (durationString == "--:--:--") {
+                return 0.0
+            } else {
+                val durationStringArray = durationString.split(":")
+                val hours: Double = durationStringArray[0].toDouble()
+                val minutes: Double = durationStringArray[1].toDouble()
+                val seconds: Double = durationStringArray[2].toDouble()
+                return (hours * 3600) + (minutes * 60) + seconds
+            }
+        }
     }
 }

@@ -47,7 +47,6 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
-import ee.taltech.kamatt.sportsmap.db.DbHandler
 import ee.taltech.kamatt.sportsmap.db.model.AppUser
 import ee.taltech.kamatt.sportsmap.db.model.GpsLocation
 import ee.taltech.kamatt.sportsmap.db.model.GpsSession
@@ -65,6 +64,7 @@ import kotlinx.android.synthetic.main.track_control.*
 import kotlinx.android.synthetic.main.welcome_screen.*
 import org.json.JSONObject
 import java.lang.Math.toDegrees
+import java.util.*
 import java.util.regex.Pattern
 
 //  TODO: deadline. user can create account/ log in and sync its data to backend
@@ -125,6 +125,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var isCompassVisible = false
     private var isOptionsVisible = false
     private var isOldSessionsVisible = false
+    private var isWelcomeVisible = true
+    private var isLoginVisible = false
+    private var isRegisterVisible = false
+
 
     private var paceMin: Double = 120.0
     private var paceMax: Double = 480.0
@@ -137,6 +141,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     private var polylineOptionsList: MutableList<PolylineOptions>? = null
     private var currentDbSessionId: Int = -1
+    private var currentRestSessionId: String? = null
 
     private var distanceOverallDirect = 0f
     private var distanceOverallTotal = 0f
@@ -153,6 +158,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var isOldSessionLoaded = false
 
     private var jwt: String? = null
+    private var currentDbUserId: Int = -1
 
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -200,6 +206,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         buttonShowLogin.setOnClickListener { handleShowLoginOnClick() }
         buttonShowRegister.setOnClickListener { handleShowRegisterOnClick() }
         buttonRegister.setOnClickListener { handleRegisterOnClick() }
+        buttonLogOut.setOnClickListener { handleLogOutOnClick() }
         // safe to call every time
         createNotificationChannel()
 
@@ -224,6 +231,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             isCompassVisible = savedInstanceState.getBoolean("isCompassVisible", false)
             isOptionsVisible = savedInstanceState.getBoolean("isOptionsVisible", false)
             isOldSessionsVisible = savedInstanceState.getBoolean("isOldSessionsVisible", false)
+            isWelcomeVisible = savedInstanceState.getBoolean("isWelcomeVisible", true)
+            isLoginVisible = savedInstanceState.getBoolean("isLoginVisible", true)
+            isRegisterVisible = savedInstanceState.getBoolean("isRegisterVisible", true)
+            Log.d(
+                TAG,
+                "isWelcomeVisible: $isWelcomeVisible, isLoginVisible: $isLoginVisible, isRegisterVisible: $isRegisterVisible"
+            )
             if (savedInstanceState.getBoolean("isOldSessionLoaded", false)) {
                 val loadedSessionId = savedInstanceState.getInt("loadedSessionId", 0)
                 loadSession(loadedSessionId)
@@ -233,6 +247,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             restoreCompassState()
             restoreOptionsState()
             restoreOldSessionsState()
+            restoreLoginState()
         }
         if (locationServiceActive) {
             buttonStartStop.setImageDrawable(
@@ -269,6 +284,12 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         outState.putBoolean("isOptionsVisible", isOptionsVisible)
         outState.putBoolean("isOldSessionsVisible", isOldSessionsVisible)
         outState.putBoolean("isOldSessionLoaded", isOldSessionLoaded)
+        outState.putBoolean("isWelcomeVisible", isWelcomeVisible)
+        outState.putBoolean("isLoginVisible", isLoginVisible)
+        outState.putBoolean("isRegisterVisible", isRegisterVisible)
+
+
+
         if (isOldSessionLoaded) {
             outState.putInt("loadedSessionId", loadedSession!!.id)
         }
@@ -444,7 +465,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     }
 
     private fun handleStartStopOnClick() {
-        Log.d(TAG, "buttonStartStop. locationServiceActive: $locationServiceActive")
         isOldSessionLoaded = false
         if (locationServiceActive) {
 
@@ -459,7 +479,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             currentlyActiveSession.paceMin = paceMin
             currentlyActiveSession.paceMax = paceMax
             gpsSessionRepository.updateSession(currentlyActiveSession)
-
+            updateRestTrackingSession(currentlyActiveSession)
             // stopping the service
             stopService(Intent(this, LocationService::class.java))
             buttonStartStop.setImageDrawable(
@@ -483,7 +503,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                 intent.putExtra(C.PACE_MIN, paceMin)
                 intent.putExtra(C.COLOR_MAX, colorMax)
                 intent.putExtra(C.COLOR_MIN, colorMin)
-
+                intent.putExtra(C.CURRENT_USER_DB_ID, currentDbUserId)
+                intent.putExtra(C.CURRENT_USER_JWT, jwt)
                 startForegroundService(intent)
             } else {
                 val intent: Intent = Intent(this, LocationService::class.java)
@@ -491,6 +512,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                 intent.putExtra(C.PACE_MIN, paceMin)
                 intent.putExtra(C.COLOR_MAX, colorMax)
                 intent.putExtra(C.COLOR_MIN, colorMin)
+                intent.putExtra(C.CURRENT_USER_DB_ID, currentDbUserId)
+                intent.putExtra(C.CURRENT_USER_JWT, jwt)
                 startService(intent)
             }
             buttonStartStop.setImageDrawable(
@@ -525,9 +548,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         } else {
             if (currentDbSessionId != -1) {
                 val currentSession = gpsSessionRepository.getSessionById(currentDbSessionId)
-                Log.d("currentDbSessionId", currentSession.id.toString())
-                Log.d("currentDbSess pacemin", (currentSession.paceMin).toInt().toString())
-                Log.d("currentDbSess colmin", currentSession.colorMin)
                 editTextMinSpeed.setText((currentSession.paceMin / 60).toInt().toString())
                 editTextMaxSpeed.setText((currentSession.paceMax / 60).toInt().toString())
                 editTextMinColor.setText(currentSession.colorMin)
@@ -605,6 +625,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         }
     }
 
+    private fun handleLogOutOnClick() {
+        includeWelcome.visibility = View.VISIBLE
+        isWelcomeVisible = true
+        if (locationServiceActive) {
+            handleStartStopOnClick()
+        }
+        currentDbUserId = -1
+        currentRestSessionId = "-1"
+        currentDbSessionId = -1
+        jwt = "-1"
+        mMap.clear()
+    }
+
     // ============================================== BROADCAST RECEIVER =============================================
     private inner class InnerBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -675,7 +708,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     )
                     lastTimestamp = Utils.getCurrentDateTime()
                     currentDbSessionId = intent.getLongExtra(C.CURRENT_SESSION_ID, -1).toInt()
-
+                    currentRestSessionId = intent.getStringExtra(C.CURRENT_SESSION_REST_ID)
 
                 }
                 C.LOCATION_UPDATE_STOP -> {
@@ -918,7 +951,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         }
     }
 
-    // ============================================== OPTIONS =============================================
+    // ============================================== RESTORE =============================================
     private fun restoreOptionsState() {
         if (isOptionsVisible) {
             includeOptions.visibility = View.VISIBLE
@@ -936,6 +969,26 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             buttonCloseRecyclerView.visibility = View.INVISIBLE
         }
     }
+
+    private fun restoreLoginState() {
+        if (isRegisterVisible) {
+            includeRegister.visibility = View.VISIBLE
+        } else {
+            includeRegister.visibility = View.INVISIBLE
+        }
+        if (isLoginVisible) {
+            includeLogin.visibility = View.VISIBLE
+        } else {
+            includeLogin.visibility = View.INVISIBLE
+        }
+        if (isWelcomeVisible) {
+            includeWelcome.visibility = View.VISIBLE
+        } else {
+            includeWelcome.visibility = View.INVISIBLE
+        }
+
+    }
+
 
 
     // ============================================== DATABASE CONTROLLER =============================================
@@ -1004,17 +1057,25 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private fun handleShowLoginOnClick() {
         includeWelcome.visibility = View.INVISIBLE
         includeLogin.visibility = View.VISIBLE
+        isWelcomeVisible = false
+        isLoginVisible = true
+
     }
 
     private fun handleShowRegisterOnClick() {
         includeWelcome.visibility = View.INVISIBLE
         includeRegister.visibility = View.VISIBLE
+        isWelcomeVisible = false
+        isRegisterVisible = true
     }
 
     private fun handleShowWelcomeOnClick() {
         includeRegister.visibility = View.INVISIBLE
         includeLogin.visibility = View.INVISIBLE
         includeWelcome.visibility = View.VISIBLE
+        isWelcomeVisible = true
+        isLoginVisible = false
+        isRegisterVisible = false
 
     }
 
@@ -1042,6 +1103,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     includeRegister.visibility = View.INVISIBLE
                     includeLogin.visibility = View.INVISIBLE
                     includeWelcome.visibility = View.INVISIBLE
+                    isRegisterVisible = false
+                    isLoginVisible = false
+                    isWelcomeVisible = false
+                    currentDbUserId =
+                        appUserRepository.add(AppUser(email, password, firstName, lastName))
                 },
                 Response.ErrorListener { error ->
                     Log.d(TAG, error.toString())
@@ -1080,9 +1146,21 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                 Response.Listener { response ->
                     Log.d(TAG, response.toString())
                     jwt = response.getString("token")
+                    currentDbUserId = appUserRepository.getUserIdByEmail(email)
+                    if (currentDbUserId == -1) {
+                        currentDbUserId = appUserRepository.add(
+                            AppUser(
+                                email, password,
+                                response.getString("firstName"), response.getString("lastName")
+                            )
+                        )
+                    }
                     includeRegister.visibility = View.INVISIBLE
                     includeLogin.visibility = View.INVISIBLE
                     includeWelcome.visibility = View.INVISIBLE
+                    isRegisterVisible = false
+                    isLoginVisible = false
+                    isWelcomeVisible = false
                 },
                 Response.ErrorListener { error ->
                     Log.d(TAG, error.toString())
@@ -1101,6 +1179,57 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         }
     }
 
+    private fun updateRestTrackingSession(newSession: GpsSession) {
+        Log.d("put path", C.REST_BASE_URL + "GpsSessions/" + currentRestSessionId)
+        val handler = WebApiSingletonHandler.getInstance(applicationContext)
+        val requestJsonParameters = JSONObject()
+        requestJsonParameters.put("id", currentRestSessionId)
+        requestJsonParameters.put("name", newSession.name)
+        requestJsonParameters.put("description", newSession.description)
+        requestJsonParameters.put("recordedAt", newSession.recordedAt)
+        requestJsonParameters.put(
+            "duration",
+            Utils.convertDurationStringToDouble(newSession.duration)
+        )
+        requestJsonParameters.put("speed", Utils.convertSpeedStringToDouble(newSession.speed))
+        requestJsonParameters.put("distance", newSession.distance)
+        requestJsonParameters.put("climb", newSession.climb)
+        requestJsonParameters.put("descent", newSession.descent)
+        requestJsonParameters.put("paceMin", newSession.paceMin)
+        requestJsonParameters.put("paceMax", newSession.paceMax)
+        requestJsonParameters.put("gpsSessionTypeId", "00000000-0000-0000-0000-000000000001")
+
+
+        val httpRequest = object : JsonObjectRequest(
+            Request.Method.PUT,
+            C.REST_BASE_URL + "GpsSessions/" + currentRestSessionId,
+            requestJsonParameters,
+            Response.Listener { response ->
+                Log.d(TAG, response.toString())
+            },
+            Response.ErrorListener { error ->
+                Log.d(TAG, error.toString())
+            }
+        ) {
+            override fun getHeaders(): MutableMap<String, String> {
+                val headers = HashMap<String, String>()
+                for ((key, value) in super.getHeaders()) {
+                    headers[key] = value
+                }
+                headers["Authorization"] = "Bearer " + jwt!!
+                return headers
+            }
+        }
+
+
+        handler.addToRequestQueue(httpRequest)
+    }
+
+
+
+
+
+
     private fun String.isEmailValid() =
         Pattern.compile(
             "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
@@ -1115,8 +1244,5 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private fun String.isAlphaNumeric() =
         Pattern.compile("^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[\\W])[\\w\\W]+$").matcher(this)
             .find()
-    /*
-    fun isAlphaNumeric(s: String?): Boolean {
-        return p.matcher(s).find()
-    }*/
+
 }
