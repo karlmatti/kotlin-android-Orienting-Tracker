@@ -2,29 +2,13 @@ package ee.taltech.kamatt.sportsmap
 
 import android.animation.ArgbEvaluator
 import android.util.Log
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.PolylineOptions
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 
 class Utils {
     companion object {
         private val TAG = this::class.java.declaringClass!!.simpleName
-
-        private var mapPolylineOptions: PolylineOptions? = null
-
-        @Synchronized
-        fun getMapPolylineOptions(): PolylineOptions {
-            if (mapPolylineOptions == null) {
-                mapPolylineOptions = PolylineOptions()
-            }
-
-            return mapPolylineOptions!!
-        }
-
-        fun clearMapPolylineOptions() {
-            mapPolylineOptions = PolylineOptions()
-        }
 
         fun calculateMapPolyLineColor(
             minSpeed: Int,
@@ -61,30 +45,23 @@ class Utils {
             }
         }
 
-        fun addToMapPolylineOptions(lat: Double, lon: Double) {
 
-            getMapPolylineOptions().add(LatLng(lat, lon))
-        }
 
         fun getCurrentDateTime(): Long {
             return Calendar.getInstance().timeInMillis
         }
 
-        fun longToDateString(milliseconds: Long): String {
-            return if (milliseconds > 0) {
-                val hours = milliseconds / 1000 / 60 / 60
-                val minutes = milliseconds / 1000 / 60
-                val seconds = milliseconds / 1000 % 60
-
-                if (seconds > 99) {
-                    "$hours:$minutes:" + seconds.toString()[0] + seconds.toString()[1]
-                } else {
-                    "$hours:$minutes:$seconds"
-                }
-
-            } else {
-                "00:00:00"
-            }
+        fun longToDateString(millis: Long): String {
+            return String.format(
+                "%02d:%02d:%02d",
+                TimeUnit.MILLISECONDS.toHours(millis),
+                TimeUnit.MILLISECONDS.toMinutes(millis) - TimeUnit.HOURS.toMinutes(
+                    TimeUnit.MILLISECONDS.toHours(millis)
+                ),
+                TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(
+                    TimeUnit.MILLISECONDS.toMinutes(millis)
+                )
+            )
         }
 
         fun getPaceString(millis: Long, distance: Float): String {

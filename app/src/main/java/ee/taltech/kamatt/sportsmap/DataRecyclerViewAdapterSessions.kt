@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import ee.taltech.kamatt.sportsmap.db.model.GpsSession
 import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.recycler_row_session.view.*
 
 class DataRecyclerViewAdapterSessions(
@@ -48,7 +49,6 @@ class DataRecyclerViewAdapterSessions(
         }
         holder.itemView.buttonEditSession.setOnClickListener {
             val theEditedItem: GpsSession = dataSet[position]
-
             if (context is MainActivity) {
                 context.startEditingSession(theEditedItem)
             }

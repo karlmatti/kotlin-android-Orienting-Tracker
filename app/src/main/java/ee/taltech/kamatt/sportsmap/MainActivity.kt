@@ -67,11 +67,7 @@ import java.lang.Math.toDegrees
 import java.util.*
 import java.util.regex.Pattern
 
-//  TODO: deadline. user can create account/ log in and sync its data to backend
-//  TODO: login and register view should be responsive for orientation change
-//  TODO: when logged in/registered then it should send current jwt to locationService
-//  TODO: when registered then should save user to local db
-//  TODO: when logged in then should get users local db id, if not exists then register user to local db
+
 
 //  TODO: bug. should load new sessions to "old sessions" right after stopping session
 //  TODO: bug. when session ends then should leave old values
@@ -492,8 +488,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
         } else {
 
-            // clear the track on map
-            Utils.clearMapPolylineOptions()
 
             if (Build.VERSION.SDK_INT >= 26) {
                 // starting the FOREGROUND service
@@ -564,6 +558,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         includeOptions.visibility = View.INVISIBLE
         recyclerViewSessions.visibility = View.VISIBLE
         buttonCloseRecyclerView.visibility = View.VISIBLE
+        recyclerViewSessions.adapter!!.notifyDataSetChanged()
         isOptionsVisible = false
         isOldSessionsVisible = true
 
@@ -722,7 +717,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     // ============================================== HANDLE MAP =============================================
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        //mMap!!.isMyLocationEnabled = true
+        mMap!!.isMyLocationEnabled = true
         mMap!!.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.3927437, 24.6642), 17.0f))
         reDrawPolyline()
     }
@@ -1057,6 +1052,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private fun handleShowLoginOnClick() {
         includeWelcome.visibility = View.INVISIBLE
         includeLogin.visibility = View.VISIBLE
+        editTextEmailLogin.setText(C.REST_USERNAME)
+        editTextPasswordLogin.setText(C.REST_PASSWORD)
         isWelcomeVisible = false
         isLoginVisible = true
 
@@ -1147,6 +1144,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     Log.d(TAG, response.toString())
                     jwt = response.getString("token")
                     currentDbUserId = appUserRepository.getUserIdByEmail(email)
+
                     if (currentDbUserId == -1) {
                         currentDbUserId = appUserRepository.add(
                             AppUser(
@@ -1155,6 +1153,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                             )
                         )
                     }
+
                     includeRegister.visibility = View.INVISIBLE
                     includeLogin.visibility = View.INVISIBLE
                     includeWelcome.visibility = View.INVISIBLE

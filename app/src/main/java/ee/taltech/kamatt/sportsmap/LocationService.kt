@@ -270,14 +270,22 @@ class LocationService : Service() {
         Log.i(TAG, "New location: $location")
 
         if (location.accuracy > 100) {
+            Log.d(TAG, "location.accuracy is ${location.accuracy}")
             return
         }
+
 
         if (currentLocation == null) {
             locationStart = location
             locationCP = location
             locationWP = location
         } else {
+            if (currentLocation!!.distanceTo(location) > 100.0f) {
+                Log.d("pv kaugused:", "lappes")
+                return
+            }
+            Log.d("pv kaugused:", currentLocation!!.distanceTo(location).toString())
+
             distanceOverallDirect = location.distanceTo(locationStart)
             distanceOverallTotal += location.distanceTo(currentLocation)
             tempoOverall = Utils.getPaceString(durationOverall, distanceOverallTotal)
@@ -297,7 +305,6 @@ class LocationService : Service() {
             val distanceFromLastPoint: Float = currentLocation!!.distanceTo(location)
             val newTimeDifference = location.time - currentLocation!!.time
             val tempo: Float = Utils.getPaceMinutesFloat(newTimeDifference, distanceFromLastPoint)
-            Log.d("tempo123", tempo.toString())
             updateCurrentSession()
             val newColor = Utils.calculateMapPolyLineColor(
                 paceMin.toInt() / 60,
