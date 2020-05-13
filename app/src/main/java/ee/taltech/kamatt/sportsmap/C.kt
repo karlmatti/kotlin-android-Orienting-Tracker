@@ -57,5 +57,9 @@ class C {
         const val REST_LOCATIONID_CP = "00000000-0000-0000-0000-000000000003"
 
 
+        const val UPDATE_OPTIONS_ACTION = PREFIX + "options_update"
+        const val GPS_UPDATE_FREQUENCY = PREFIX + "options_update.gpsfrequency"
+        const val SYNC_UPDATE_FREQUENCY = PREFIX + "options_update.syncfrequency"
+
     }
 }

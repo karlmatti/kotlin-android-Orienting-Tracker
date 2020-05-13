@@ -31,6 +31,7 @@ import android.view.View
 import android.view.animation.Animation.RELATIVE_TO_SELF
 import android.view.animation.RotateAnimation
 import android.widget.ImageView
+import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -79,7 +80,8 @@ import java.util.regex.Pattern
 //  TODO: LOW. save climb and other less important values as well in session when session ends
 
 
-class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListener {
+class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListener,
+    SeekBar.OnSeekBarChangeListener {
     companion object {
         private val TAG = this::class.java.declaringClass!!.simpleName
 
@@ -97,6 +99,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     }
 
+    // The desired intervals for location updates. Inexact. Updates may be more or less frequent.
+    private var UPDATE_INTERVAL_IN_MILLISECONDS: Long = 2000
     //  Compass
     private lateinit var sensorManager: SensorManager
     private lateinit var compassImage: ImageView
@@ -195,7 +199,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         buttonGoToOldSessions.setOnClickListener { handleOpenOldSessionsOnClick() }
         buttonCloseRecyclerView.setOnClickListener { handleCloseOldSessionsOnClick() }
         buttonUpdateSession.setOnClickListener { handleUpdateSessionOnClick() }
-        buttonUpdatePolylineParams.setOnClickListener { handleUpdatePolylineParamsOnClick() }
+        buttonUpdatePolylineParams.setOnClickListener { handleUpdateActiveSessionOnClick() }
         buttonLogin.setOnClickListener { handleLoginOnClick() }
         buttonShowWelcome1.setOnClickListener { handleShowWelcomeOnClick() }
         buttonShowWelcome2.setOnClickListener { handleShowWelcomeOnClick() }
@@ -203,6 +207,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         buttonShowRegister.setOnClickListener { handleShowRegisterOnClick() }
         buttonRegister.setOnClickListener { handleRegisterOnClick() }
         buttonLogOut.setOnClickListener { handleLogOutOnClick() }
+        seekBarGpsFreq.setOnSeekBarChangeListener(this)
+        seekBarSyncFreq.setOnSeekBarChangeListener(this)
         // safe to call every time
         createNotificationChannel()
 
@@ -593,8 +599,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     }
 
-    private fun handleUpdatePolylineParamsOnClick() {
+    private fun handleUpdateActiveSessionOnClick() {
         if (locationServiceActive) {
+            val intent = Intent(C.UPDATE_OPTIONS_ACTION)
+            Log.d(TAG, "Seekbar gpsfreq ${seekBarGpsFreq.progress * 1000L}")
+            intent.putExtra(C.GPS_UPDATE_FREQUENCY, seekBarGpsFreq.progress * 1000L)
+            intent.putExtra(C.SYNC_UPDATE_FREQUENCY, seekBarSyncFreq.progress * 1000L)
+            //intent.flags = Intent.FLAG_INCLUDE_STOPPED_PACKAGES
+            sendBroadcast(intent)
+
             val currentSession = gpsSessionRepository.getSessionById(currentDbSessionId)
             // update db and adapter
             paceMin = editTextMinSpeed.text.toString().toDouble() * 60.0
@@ -617,6 +630,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
             includeOptions.visibility = View.INVISIBLE
             isOptionsVisible = false
+
+
         }
     }
 
@@ -1243,5 +1258,27 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private fun String.isAlphaNumeric() =
         Pattern.compile("^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[\\W])[\\w\\W]+$").matcher(this)
             .find()
+
+
+    // ============================================== SEEKBAR LISTENER =============================================
+    @SuppressLint("SetTextI18n")
+    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+        if (seekBar != null) {
+            if (seekBar.id == seekBarGpsFreq.id) {
+                textViewGpsUpdateFreq.setText("GPS freq: $progress seconds")
+                Log.d("seekbar", "GpsFreq id is ${seekBar.id}, new value is $progress")
+            } else if (seekBar.id == seekBarSyncFreq.id) {
+                textViewSyncFrequency.setText("Sync freq: $progress seconds")
+                Log.d("seekbar", "SyncFreq id is ${seekBar.id}, new value is $progress")
+            }
+
+        }
+    }
+
+    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+    }
+
+    override fun onStopTrackingTouch(seekBar: SeekBar?) {
+    }
 
 }

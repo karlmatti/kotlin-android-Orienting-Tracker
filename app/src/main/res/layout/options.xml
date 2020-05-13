@@ -10,7 +10,7 @@
     <EditText
         android:id="@+id/editTextMinSpeed"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:ems="10"
         android:inputType="textPersonName"
@@ -31,6 +31,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"
         app:layout_constraintVertical_chainStyle="packed" />
 
     <EditText
@@ -114,40 +115,96 @@
         android:backgroundTint="#388E3C"
         android:text="update"
         android:textColor="@color/design_default_color_background"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/buttonGoToOldSessions"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editTextMaxColor"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/button"
+        app:layout_constraintTop_toBottomOf="@+id/seekBarGpsFreq" />
 
     <Button
         android:id="@+id/buttonGoToOldSessions"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:backgroundTint="#388E3C"
+        android:backgroundTint="#E6388E3C"
         android:text="Old sessions"
         android:textColor="@color/design_default_color_background"
-        app:layout_constraintBottom_toTopOf="@+id/buttonLogOut"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonUpdatePolylineParams"
-        app:layout_constraintVertical_bias="0.0"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/buttonUpdatePolylineParams"
+        app:layout_constraintStart_toStartOf="@+id/buttonUpdatePolylineParams"
+        app:layout_constraintTop_toBottomOf="@+id/buttonUpdatePolylineParams" />
 
     <Button
         android:id="@+id/buttonLogOut"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:backgroundTint="#388E3C"
-        android:text="Log out"
+        android:backgroundTint="#E6388E3C"
+        android:text="Change user"
         android:textColor="@color/design_default_color_background"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/buttonGoToOldSessions"
-        app:layout_constraintStart_toStartOf="@+id/buttonGoToOldSessions"
-        app:layout_constraintTop_toBottomOf="@+id/buttonGoToOldSessions"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintEnd_toEndOf="@+id/button"
+        app:layout_constraintStart_toStartOf="@+id/button"
+        app:layout_constraintTop_toBottomOf="@+id/button" />
+
+    <SeekBar
+        android:id="@+id/seekBarGpsFreq"
+        style="@style/Widget.AppCompat.SeekBar.Discrete"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:max="10"
+        android:progress="2"
+        app:layout_constraintBottom_toBottomOf="@+id/seekBarSyncFreq"
+        app:layout_constraintEnd_toEndOf="@+id/editTextMaxColor"
+        app:layout_constraintStart_toStartOf="@+id/editTextMaxColor"
+        app:layout_constraintTop_toTopOf="@+id/seekBarSyncFreq" />
+
+    <TextView
+        android:id="@+id/textViewSyncFrequency"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Sync freq: 1 seconds"
+        app:layout_constraintEnd_toEndOf="@+id/seekBarSyncFreq"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/seekBarSyncFreq"
+        app:layout_constraintTop_toBottomOf="@+id/editTextMinColor" />
+
+    <TextView
+        android:id="@+id/textViewGpsUpdateFreq"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="GPS freq: 2 seconds"
+        app:layout_constraintEnd_toEndOf="@+id/seekBarGpsFreq"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/seekBarGpsFreq"
+        app:layout_constraintTop_toBottomOf="@+id/editTextMaxColor" />
+
+    <SeekBar
+        android:id="@+id/seekBarSyncFreq"
+        style="@style/Widget.AppCompat.SeekBar.Discrete"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:max="10"
+        android:progress="1"
+        app:layout_constraintEnd_toEndOf="@+id/editTextMinColor"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textViewSyncFrequency" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:backgroundTint="#388E3C"
+        android:text="Center map"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toTopOf="@+id/buttonLogOut"
+        app:layout_constraintEnd_toStartOf="@+id/buttonUpdatePolylineParams"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/seekBarSyncFreq" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -43,13 +43,13 @@ class LocationService : Service() {
 
 
     // The desired intervals for location updates. Inexact. Updates may be more or less frequent.
-    private val UPDATE_INTERVAL_IN_MILLISECONDS: Long = 2000
-    private val FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 2
+    private var GPS_UPDATE_FREQ_IN_MILLISECONDS: Long = 2000
+    private var FASTEST_GPS_UPDATE_FREQ_IN_MILLISECONDS = GPS_UPDATE_FREQ_IN_MILLISECONDS / 2
 
     private val broadcastReceiver = InnerBroadcastReceiver()
     private val broadcastReceiverIntentFilter: IntentFilter = IntentFilter()
 
-    private val mLocationRequest: LocationRequest = LocationRequest()
+    private var mLocationRequest: LocationRequest = LocationRequest()
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
     private var mLocationCallback: LocationCallback? = null
 
@@ -109,6 +109,7 @@ class LocationService : Service() {
         broadcastReceiverIntentFilter.addAction(C.NOTIFICATION_ACTION_CP)
         broadcastReceiverIntentFilter.addAction(C.NOTIFICATION_ACTION_WP)
         broadcastReceiverIntentFilter.addAction(C.LOCATION_UPDATE_ACTION)
+        broadcastReceiverIntentFilter.addAction(C.UPDATE_OPTIONS_ACTION)
 
         registerReceiver(broadcastReceiver, broadcastReceiverIntentFilter)
 
@@ -149,7 +150,7 @@ class LocationService : Service() {
             C.REST_BASE_URL + "account/login",
             requestJsonParameters,
             Response.Listener { response ->
-                Log.d(TAG, response.toString())
+                //Log.d(TAG, response.toString())
                 jwt = response.getString("token")
                 startRestTrackingSession(currentDbSession)
             },
@@ -184,7 +185,7 @@ class LocationService : Service() {
             C.REST_BASE_URL + "GpsSessions",
             requestJsonParameters,
             Response.Listener { response ->
-                Log.d(TAG, response.toString())
+                //Log.d(TAG, response.toString())
                 currentRestSessionId = response.getString("id")
             },
             Response.ErrorListener { error ->
@@ -249,7 +250,17 @@ class LocationService : Service() {
         handler.addToRequestQueue(httpRequest)
     }
 
+    private fun updateRequestLocationUpdates() {
+        //remove location updates so that it resets
+        createLocationRequest()
+        //LocationServices.FusedLocationApi.removeLocationUpdates(mFusedLocationClient, this);
 
+        //change the time of location updates
+
+
+        //restart location updates with the new interval
+        //LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this)
+    }
     private fun requestLocationUpdates() {
         Log.i(TAG, "Requesting location updates")
 
@@ -270,7 +281,7 @@ class LocationService : Service() {
         Log.i(TAG, "New location: $location")
 
         if (location.accuracy > 100) {
-            Log.d(TAG, "location.accuracy is ${location.accuracy}")
+            //Log.d(TAG, "location.accuracy is ${location.accuracy}")
             return
         }
 
@@ -281,10 +292,10 @@ class LocationService : Service() {
             locationWP = location
         } else {
             if (currentLocation!!.distanceTo(location) > 100.0f) {
-                Log.d("pv kaugused:", "lappes")
+                //Log.d("pv kaugused:", "lappes")
                 return
             }
-            Log.d("pv kaugused:", currentLocation!!.distanceTo(location).toString())
+            //Log.d("pv kaugused:", currentLocation!!.distanceTo(location).toString())
 
             distanceOverallDirect = location.distanceTo(locationStart)
             distanceOverallTotal += location.distanceTo(currentLocation)
@@ -395,10 +406,10 @@ class LocationService : Service() {
 
 
     private fun createLocationRequest() {
-        mLocationRequest.interval = UPDATE_INTERVAL_IN_MILLISECONDS
-        mLocationRequest.fastestInterval = FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS
+        mLocationRequest.interval = GPS_UPDATE_FREQ_IN_MILLISECONDS
+        mLocationRequest.fastestInterval = FASTEST_GPS_UPDATE_FREQ_IN_MILLISECONDS
         mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        mLocationRequest.maxWaitTime = UPDATE_INTERVAL_IN_MILLISECONDS
+        mLocationRequest.maxWaitTime = GPS_UPDATE_FREQ_IN_MILLISECONDS
     }
 
 
@@ -558,7 +569,7 @@ class LocationService : Service() {
 
     private inner class InnerBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            //  Log.d(TAG, intent!!.action)
+            Log.d(TAG, intent!!.action)
             when (intent!!.action) {
                 C.NOTIFICATION_ACTION_WP -> {
                     locationWP = currentLocation
@@ -603,6 +614,18 @@ class LocationService : Service() {
 
                     saveRestLocation(locationCP!!, C.REST_LOCATIONID_CP)
                     showNotification()
+                }
+                C.UPDATE_OPTIONS_ACTION -> {
+
+                    GPS_UPDATE_FREQ_IN_MILLISECONDS =
+                        intent.getLongExtra(C.GPS_UPDATE_FREQUENCY, 2000L)
+                    FASTEST_GPS_UPDATE_FREQ_IN_MILLISECONDS = GPS_UPDATE_FREQ_IN_MILLISECONDS / 2
+                    //updateRequestLocationUpdates()
+                    createLocationRequest()
+                    mFusedLocationClient.requestLocationUpdates(
+                        mLocationRequest,
+                        mLocationCallback, Looper.myLooper()
+                    )
                 }
             }
         }
