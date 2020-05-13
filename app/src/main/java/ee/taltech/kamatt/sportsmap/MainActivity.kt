@@ -61,6 +61,7 @@ import kotlinx.android.synthetic.main.edit_session.*
 import kotlinx.android.synthetic.main.login.*
 import kotlinx.android.synthetic.main.options.*
 import kotlinx.android.synthetic.main.register.*
+import kotlinx.android.synthetic.main.stop_confirmation.*
 import kotlinx.android.synthetic.main.track_control.*
 import kotlinx.android.synthetic.main.welcome_screen.*
 import org.json.JSONObject
@@ -128,6 +129,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var isWelcomeVisible = true
     private var isLoginVisible = false
     private var isRegisterVisible = false
+    private var isStopConfirmationVisible = false
 
 
     private var paceMin: Double = 120.0
@@ -207,6 +209,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         buttonShowRegister.setOnClickListener { handleShowRegisterOnClick() }
         buttonRegister.setOnClickListener { handleRegisterOnClick() }
         buttonLogOut.setOnClickListener { handleLogOutOnClick() }
+        buttonConfirmationCancel.setOnClickListener { handleConfirmationCancelOnClick() }
+        buttonConfirmationOk.setOnClickListener { handleConfirmationOkOnClick() }
         seekBarGpsFreq.setOnSeekBarChangeListener(this)
         seekBarSyncFreq.setOnSeekBarChangeListener(this)
         // safe to call every time
@@ -236,10 +240,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             isWelcomeVisible = savedInstanceState.getBoolean("isWelcomeVisible", true)
             isLoginVisible = savedInstanceState.getBoolean("isLoginVisible", true)
             isRegisterVisible = savedInstanceState.getBoolean("isRegisterVisible", true)
-            Log.d(
-                TAG,
-                "isWelcomeVisible: $isWelcomeVisible, isLoginVisible: $isLoginVisible, isRegisterVisible: $isRegisterVisible"
-            )
+            isStopConfirmationVisible =
+                savedInstanceState.getBoolean("isStopConfirmationVisible", false)
+
             if (savedInstanceState.getBoolean("isOldSessionLoaded", false)) {
                 val loadedSessionId = savedInstanceState.getInt("loadedSessionId", 0)
                 loadSession(loadedSessionId)
@@ -250,6 +253,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             restoreOptionsState()
             restoreOldSessionsState()
             restoreLoginState()
+            restoreStopConfirmationState()
         }
         if (locationServiceActive) {
             buttonStartStop.setImageDrawable(
@@ -289,7 +293,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         outState.putBoolean("isWelcomeVisible", isWelcomeVisible)
         outState.putBoolean("isLoginVisible", isLoginVisible)
         outState.putBoolean("isRegisterVisible", isRegisterVisible)
-
+        outState.putBoolean("isStopConfirmationVisible", isStopConfirmationVisible)
 
 
         if (isOldSessionLoaded) {
@@ -466,30 +470,40 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         sendBroadcast(Intent(C.NOTIFICATION_ACTION_CP))
     }
 
+    private fun handleConfirmationOkOnClick() {
+        // stopping the service
+        val currentlyActiveSession: GpsSession =
+            gpsSessionRepository.getSessionById(currentDbSessionId)
+        currentlyActiveSession.distance = distanceOverallTotal.toDouble()
+        currentlyActiveSession.speed = tempoOverall
+        currentlyActiveSession.duration = durationOverall
+        currentlyActiveSession.colorMin = colorMin
+        currentlyActiveSession.colorMax = colorMax
+        currentlyActiveSession.paceMin = paceMin
+        currentlyActiveSession.paceMax = paceMax
+        gpsSessionRepository.updateSession(currentlyActiveSession)
+        updateRestTrackingSession(currentlyActiveSession)
+        // stopping the service
+        stopService(Intent(this, LocationService::class.java))
+        buttonStartStop.setImageDrawable(
+            ContextCompat.getDrawable(
+                this,
+                R.drawable.baseline_play_arrow_24
+            )
+        )
+        includeStopConfirmation.visibility = View.INVISIBLE
+        isStopConfirmationVisible = false
+    }
+
+    private fun handleConfirmationCancelOnClick() {
+        includeStopConfirmation.visibility = View.INVISIBLE
+        isStopConfirmationVisible = false
+    }
     private fun handleStartStopOnClick() {
         isOldSessionLoaded = false
         if (locationServiceActive) {
-
-            // stopping the service
-            val currentlyActiveSession: GpsSession =
-                gpsSessionRepository.getSessionById(currentDbSessionId)
-            currentlyActiveSession.distance = distanceOverallTotal.toDouble()
-            currentlyActiveSession.speed = tempoOverall
-            currentlyActiveSession.duration = durationOverall
-            currentlyActiveSession.colorMin = colorMin
-            currentlyActiveSession.colorMax = colorMax
-            currentlyActiveSession.paceMin = paceMin
-            currentlyActiveSession.paceMax = paceMax
-            gpsSessionRepository.updateSession(currentlyActiveSession)
-            updateRestTrackingSession(currentlyActiveSession)
-            // stopping the service
-            stopService(Intent(this, LocationService::class.java))
-            buttonStartStop.setImageDrawable(
-                ContextCompat.getDrawable(
-                    this,
-                    R.drawable.baseline_play_arrow_24
-                )
-            )
+            includeStopConfirmation.visibility = View.VISIBLE
+            isStopConfirmationVisible = true
 
 
         } else {
@@ -602,7 +616,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private fun handleUpdateActiveSessionOnClick() {
         if (locationServiceActive) {
             val intent = Intent(C.UPDATE_OPTIONS_ACTION)
-            Log.d(TAG, "Seekbar gpsfreq ${seekBarGpsFreq.progress * 1000L}")
+
             intent.putExtra(C.GPS_UPDATE_FREQUENCY, seekBarGpsFreq.progress * 1000L)
             intent.putExtra(C.SYNC_UPDATE_FREQUENCY, seekBarSyncFreq.progress * 1000L)
             //intent.flags = Intent.FLAG_INCLUDE_STOPPED_PACKAGES
@@ -970,6 +984,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         }
     }
 
+    private fun restoreStopConfirmationState() {
+        if (isStopConfirmationVisible) {
+            includeStopConfirmation.visibility = View.VISIBLE
+        } else {
+            includeStopConfirmation.visibility = View.INVISIBLE
+        }
+    }
     private fun restoreOldSessionsState() {
         if (isOldSessionsVisible) {
             recyclerViewSessions.visibility = View.VISIBLE
