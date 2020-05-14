@@ -71,7 +71,6 @@ import java.util.regex.Pattern
 
 
 
-//  TODO: bug. should load new sessions to "old sessions" right after stopping session
 //  TODO: bug. when session ends then should leave old values
 
 //  TODO: LOW. current user for session is not dynamical
@@ -161,6 +160,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     private var jwt: String? = null
     private var currentDbUserId: Int = -1
+
+    private lateinit var recyclerViewAdapter: DataRecyclerViewAdapterSessions
+
 
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -276,8 +278,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         }
 
         recyclerViewSessions.layoutManager = LinearLayoutManager(this)
-        recyclerViewSessions.adapter =
-            DataRecyclerViewAdapterSessions(this, gpsSessionRepository, 1)
+        recyclerViewAdapter = DataRecyclerViewAdapterSessions(this, gpsSessionRepository, 1)
+        recyclerViewSessions.adapter = recyclerViewAdapter
+
 
     }
 
@@ -482,6 +485,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         currentlyActiveSession.paceMin = paceMin
         currentlyActiveSession.paceMax = paceMax
         gpsSessionRepository.updateSession(currentlyActiveSession)
+        recyclerViewAdapter.addData(currentlyActiveSession)
         updateRestTrackingSession(currentlyActiveSession)
         // stopping the service
         stopService(Intent(this, LocationService::class.java))
@@ -493,6 +497,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         )
         includeStopConfirmation.visibility = View.INVISIBLE
         isStopConfirmationVisible = false
+
     }
 
     private fun handleConfirmationCancelOnClick() {

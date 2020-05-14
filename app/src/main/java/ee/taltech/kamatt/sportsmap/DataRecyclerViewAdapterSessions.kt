@@ -20,7 +20,10 @@ class DataRecyclerViewAdapterSessions(
         repo.getSessionsByUserId(userId) as MutableList<GpsSession>
 
     private val inflater: LayoutInflater = LayoutInflater.from(context)
-
+    fun addData(gpsSession: GpsSession) {
+        dataSet.add(gpsSession)
+        notifyDataSetChanged()
+    }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val rowView = inflater.inflate(R.layout.recycler_row_session, parent, false)
 
