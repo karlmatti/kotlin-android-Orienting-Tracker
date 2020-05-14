@@ -15,18 +15,18 @@ class C {
 
         const val LOCATION_UPDATE_ACTION_OVERALLDIRECT = PREFIX + "location_update.overalldirect"
         const val LOCATION_UPDATE_ACTION_OVERALLTOTAL = PREFIX + "location_update.overalltotal"
-        const val LOCATION_UPDATE_ACTION_OVERALLTEMPO = PREFIX + "location_update.overalltempo"
+        const val LOCATION_UPDATE_ACTION_OVERALLPACE = PREFIX + "location_update.overallpace"
         const val LOCATION_UPDATE_ACTION_OVERALLTIME = PREFIX + "location_update.overalltime"
 
 
         const val LOCATION_UPDATE_ACTION_CPDIRECT = PREFIX + "location_update.cpdirect"
         const val LOCATION_UPDATE_ACTION_CPTOTAL = PREFIX + "location_update.cptotal"
-        const val LOCATION_UPDATE_ACTION_CPTEMPO = PREFIX + "location_update.cptempo"
+        const val LOCATION_UPDATE_ACTION_CPPACE = PREFIX + "location_update.cppace"
         const val LOCATION_UPDATE_ACTION_CPTIME = PREFIX + "location_update.cptime"
 
         const val LOCATION_UPDATE_ACTION_WPDIRECT = PREFIX + "location_update.wpdirect"
         const val LOCATION_UPDATE_ACTION_WPTOTAL = PREFIX + "location_update.wptotal"
-        const val LOCATION_UPDATE_ACTION_WPTEMPO = PREFIX + "location_update.wptempo"
+        const val LOCATION_UPDATE_ACTION_WPPACE = PREFIX + "location_update.wppace"
         const val LOCATION_UPDATE_ACTION_WPTIME = PREFIX + "location_update.wptime"
 
         const val LOCATION_UPDATE_POLYLINE_OPTIONS = PREFIX + "location_update.polylineoptions"

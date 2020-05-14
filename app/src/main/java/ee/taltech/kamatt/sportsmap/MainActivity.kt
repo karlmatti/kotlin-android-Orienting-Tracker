@@ -70,14 +70,14 @@ import java.util.*
 import java.util.regex.Pattern
 
 
+//  TODO: Syncing interval can be changed - when received to 10 sec, add sync button, save backend
+//  TODO: Allow toggling of "keep map constantly centered", "keep north-up / direction up / user chosen-up".
+//  TODO: Save session points in gpx file.
 
 //  TODO: bug. when session ends then should leave old values
 
-//  TODO: LOW. current user for session is not dynamical
-//  TODO: LOW. pace should be double and in seconds everywhere but UI
 //  TODO: LOW. in old sessions - changes should also be updated in rest (pacemin, pacemax, colormin, colormax, name, description)
 //  TODO: LOW. time updates in real time not with location update
-//  TODO: LOW. save climb and other less important values as well in session when session ends
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListener,
@@ -146,7 +146,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     private var distanceOverallDirect = 0f
     private var distanceOverallTotal = 0f
-    private var tempoOverall: String = "0"
+    private var paceOverall: String = "0"
     private var durationOverall: String = "0"
 
     private var startPointMarker: MarkerOptions? = null
@@ -478,7 +478,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         val currentlyActiveSession: GpsSession =
             gpsSessionRepository.getSessionById(currentDbSessionId)
         currentlyActiveSession.distance = distanceOverallTotal.toDouble()
-        currentlyActiveSession.speed = tempoOverall
+        currentlyActiveSession.speed = paceOverall
         currentlyActiveSession.duration = durationOverall
         currentlyActiveSession.colorMin = colorMin
         currentlyActiveSession.colorMax = colorMax
@@ -620,12 +620,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     private fun handleUpdateActiveSessionOnClick() {
         if (locationServiceActive) {
-            val intent = Intent(C.UPDATE_OPTIONS_ACTION)
 
-            intent.putExtra(C.GPS_UPDATE_FREQUENCY, seekBarGpsFreq.progress * 1000L)
-            intent.putExtra(C.SYNC_UPDATE_FREQUENCY, seekBarSyncFreq.progress * 1000L)
-            //intent.flags = Intent.FLAG_INCLUDE_STOPPED_PACKAGES
-            sendBroadcast(intent)
 
             val currentSession = gpsSessionRepository.getSessionById(currentDbSessionId)
             // update db and adapter
@@ -641,12 +636,23 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
             currentSession.colorMin = colorMin
             currentSession.colorMax = colorMax
-            // update db and adapter
 
+            // update db and adapter
             gpsSessionRepository.updateSession(currentSession)
             recyclerViewSessions.adapter!!.notifyDataSetChanged()
-            // close session window
 
+            // send updates to locationService
+            val intent = Intent(C.UPDATE_OPTIONS_ACTION)
+            intent.putExtra(C.GPS_UPDATE_FREQUENCY, seekBarGpsFreq.progress * 1000L)
+            intent.putExtra(C.SYNC_UPDATE_FREQUENCY, seekBarSyncFreq.progress * 1000L)
+            intent.putExtra(C.PACE_MIN, paceMin)
+            intent.putExtra(C.PACE_MAX, paceMax)
+            intent.putExtra(C.COLOR_MIN, colorMin)
+            intent.putExtra(C.COLOR_MAX, colorMax)
+
+            sendBroadcast(intent)
+
+            // close session window
             includeOptions.visibility = View.INVISIBLE
             isOptionsVisible = false
 
@@ -679,13 +685,13 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, 0.0F)
 
 
-                    if (!intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO)
+                    if (!intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLPACE)
                             .isNullOrEmpty()
                     ) {
-                        tempoOverall =
-                            intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO)!!
+                        paceOverall =
+                            intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLPACE)!!
                         textViewOverallTempo.text =
-                            intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO)
+                            intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLPACE)
                     }
                     if (!intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME).isNullOrEmpty()
                     ) {
@@ -711,7 +717,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_CPDIRECT, 0.0F).toInt()
                             .toString()
                     textViewCPTempo.text =
-                        intent.getStringExtra(C.LOCATION_UPDATE_ACTION_CPTEMPO)
+                        intent.getStringExtra(C.LOCATION_UPDATE_ACTION_CPPACE)
 
                     textViewWPTotal.text =
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_WPTOTAL, 0.0F).toInt()
@@ -720,7 +726,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_WPDIRECT, 0.0F).toInt()
                             .toString()
                     textViewWPTempo.text =
-                        intent.getStringExtra(C.LOCATION_UPDATE_ACTION_WPTEMPO)
+                        intent.getStringExtra(C.LOCATION_UPDATE_ACTION_WPPACE)
                     polylineOptionsList =
                         intent.getSerializableExtra(C.LOCATION_UPDATE_POLYLINE_OPTIONS) as?
                                 MutableList<PolylineOptions>
@@ -813,17 +819,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                             }
                             val distanceFromLastPoint: Float = oldLocation!!.distanceTo(newLocation)
                             val newTimeDifference = newLocation.time - oldLocation.time
-                            val tempo: Float =
+                            val pace: Float =
                                 Utils.getPaceMinutesFloat(newTimeDifference, distanceFromLastPoint)
-
-                            //val testTempo: Float = Utils.getPaceMinutesFloat(newTimeDifference, distanceFromLastPoint)
 
                             val newColor = Utils.calculateMapPolyLineColor(
                                 loadedMinPace.toInt() / 60,
                                 loadedMaxPace.toInt() / 60,
                                 loadedMinColor,
                                 loadedMaxColor,
-                                tempo
+                                pace
                             )
 
 

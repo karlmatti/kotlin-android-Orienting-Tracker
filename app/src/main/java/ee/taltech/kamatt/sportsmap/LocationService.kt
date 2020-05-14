@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.location.Location
+import android.location.LocationManager
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
@@ -23,7 +24,9 @@ import java.util.*
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
 import ee.taltech.kamatt.sportsmap.db.model.GpsLocation
 import ee.taltech.kamatt.sportsmap.db.model.GpsSession
@@ -58,17 +61,17 @@ class LocationService : Service() {
 
     private var distanceOverallDirect = 0f
     private var distanceOverallTotal = 0f
-    private var tempoOverall: String = "--:--"
+    private var paceOverall: String = "--:--"
     private var locationStart: Location? = null
 
     private var distanceCPDirect = 0f
     private var distanceCPTotal = 0f
-    private var tempoCP: String = ""
+    private var paceCP: String = ""
     private var locationCP: Location? = null
 
     private var distanceWPDirect = 0f
     private var distanceWPTotal = 0f
-    private var tempoWP: String = ""
+    private var paceWP: String = ""
     private var locationWP: Location? = null
 
     private var startTimeOverall: Long = Utils.getCurrentDateTime()
@@ -299,30 +302,30 @@ class LocationService : Service() {
 
             distanceOverallDirect = location.distanceTo(locationStart)
             distanceOverallTotal += location.distanceTo(currentLocation)
-            tempoOverall = Utils.getPaceString(durationOverall, distanceOverallTotal)
+            paceOverall = Utils.getPaceString(durationOverall, distanceOverallTotal)
             durationOverall += (location.time - currentLocation!!.time)
 
             distanceCPDirect = location.distanceTo(locationCP)
             distanceCPTotal += location.distanceTo(currentLocation)
-            tempoCP = Utils.getPaceString(durationCP, distanceCPTotal)
+            paceCP = Utils.getPaceString(durationCP, distanceCPTotal)
             durationCP += (location.time - currentLocation!!.time)
 
 
             distanceWPDirect = location.distanceTo(locationWP)
             distanceWPTotal += location.distanceTo(currentLocation)
-            tempoWP = Utils.getPaceString(durationWP, distanceWPTotal)
+            paceWP = Utils.getPaceString(durationWP, distanceWPTotal)
             durationWP += (location.time - currentLocation!!.time)
 
             val distanceFromLastPoint: Float = currentLocation!!.distanceTo(location)
             val newTimeDifference = location.time - currentLocation!!.time
-            val tempo: Float = Utils.getPaceMinutesFloat(newTimeDifference, distanceFromLastPoint)
+            val pace: Float = Utils.getPaceMinutesFloat(newTimeDifference, distanceFromLastPoint)
             updateCurrentSession()
             val newColor = Utils.calculateMapPolyLineColor(
                 paceMin.toInt() / 60,
                 paceMax.toInt() / 60,
                 colorMin,
                 colorMax,
-                tempo
+                pace
             )
             if (polylineOptionsList == null) {
                 polylineOptionsList = mutableListOf(
@@ -354,7 +357,7 @@ class LocationService : Service() {
 
         intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLDIRECT, distanceOverallDirect)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, distanceOverallTotal)
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTEMPO, tempoOverall)
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLPACE, paceOverall)
         intent.putExtra(
             C.LOCATION_UPDATE_ACTION_OVERALLTIME,
             Utils.longToDateString(durationOverall)
@@ -362,12 +365,12 @@ class LocationService : Service() {
 
         intent.putExtra(C.LOCATION_UPDATE_ACTION_CPDIRECT, distanceCPDirect)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_CPTOTAL, distanceCPTotal)
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_CPTEMPO, tempoCP)
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_CPPACE, paceCP)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_CPTIME, durationCP)
 
         intent.putExtra(C.LOCATION_UPDATE_ACTION_WPDIRECT, distanceWPDirect)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_WPTOTAL, distanceWPTotal)
-        intent.putExtra(C.LOCATION_UPDATE_ACTION_WPTEMPO, tempoWP)
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_WPPACE, paceWP)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_WPTIME, durationWP)
 
         // Session information
@@ -541,15 +544,15 @@ class LocationService : Service() {
             "%.2f".format(distanceOverallDirect)
         )
         notificationsView.setTextViewText(R.id.textViewOverallTotal, durationStartString)
-        notificationsView.setTextViewText(R.id.textViewOverallTempo, tempoOverall)
+        notificationsView.setTextViewText(R.id.textViewOverallTempo, paceOverall)
 
         notificationsView.setTextViewText(R.id.textViewCPDirect, "%.2f".format(distanceCPDirect))
         notificationsView.setTextViewText(R.id.textViewCPTotal, "%.2f".format(distanceCPTotal))
-        notificationsView.setTextViewText(R.id.textViewCPTempo, tempoCP)
+        notificationsView.setTextViewText(R.id.textViewCPTempo, paceCP)
 
         notificationsView.setTextViewText(R.id.textViewWPDirect, "%.2f".format(distanceWPDirect))
         notificationsView.setTextViewText(R.id.textViewWPTotal, "%.2f".format(distanceWPTotal))
-        notificationsView.setTextViewText(R.id.textViewWPTempo, tempoWP)
+        notificationsView.setTextViewText(R.id.textViewWPTempo, paceWP)
 
         // construct and show notification
         val builder = NotificationCompat.Builder(applicationContext, C.NOTIFICATION_CHANNEL)
@@ -620,15 +623,76 @@ class LocationService : Service() {
                     GPS_UPDATE_FREQ_IN_MILLISECONDS =
                         intent.getLongExtra(C.GPS_UPDATE_FREQUENCY, 2000L)
                     FASTEST_GPS_UPDATE_FREQ_IN_MILLISECONDS = GPS_UPDATE_FREQ_IN_MILLISECONDS / 2
+                    paceMin = intent.getDoubleExtra(C.PACE_MIN, 120.0)
+                    paceMax = intent.getDoubleExtra(C.PACE_MAX, 480.0)
+                    colorMin = intent.getStringExtra(C.COLOR_MIN)
+                    colorMax = intent.getStringExtra(C.COLOR_MAX)
                     //updateRequestLocationUpdates()
                     createLocationRequest()
                     mFusedLocationClient.requestLocationUpdates(
                         mLocationRequest,
                         mLocationCallback, Looper.myLooper()
                     )
+                    updatePolyline(paceMin, paceMax, colorMin, colorMax)
                 }
             }
         }
+
+    }
+
+    private fun updatePolyline(
+        paceMin: Double,
+        paceMax: Double,
+        colorMin: String,
+        colorMax: String
+    ) {
+        var newPolylineOptionsList: MutableList<PolylineOptions> = mutableListOf<PolylineOptions>()
+        var currentSessionLocations: List<GpsLocation> =
+            gpsLocationRepository.getLocationsBySessionId(currentDbSessionId.toInt())
+        var oldLocation: Location? = null
+        for (loadedLocation in currentSessionLocations!!) {
+            if (loadedLocation.gpsLocationTypeId == C.REST_LOCATIONID_LOC) {
+
+                if (oldLocation == null) {
+                    oldLocation = Location(LocationManager.GPS_PROVIDER).apply {
+                        latitude = loadedLocation.latitude
+                        longitude = loadedLocation.longitude
+                        time = dateFormat.parse(loadedLocation.recordedAt)!!.time
+                    }
+
+                } else {
+                    val newLocation = Location(LocationManager.GPS_PROVIDER).apply {
+                        latitude = loadedLocation.latitude
+                        longitude = loadedLocation.longitude
+                        time = dateFormat.parse(loadedLocation.recordedAt)!!.time
+                    }
+                    val distanceFromLastPoint: Float = oldLocation!!.distanceTo(newLocation)
+                    val newTimeDifference = newLocation.time - oldLocation.time
+                    val pace: Float =
+                        Utils.getPaceMinutesFloat(newTimeDifference, distanceFromLastPoint)
+
+                    val newColor = Utils.calculateMapPolyLineColor(
+                        paceMin.toInt() / 60,
+                        paceMax.toInt() / 60,
+                        colorMin,
+                        colorMax,
+                        pace
+                    )
+
+
+                    newPolylineOptionsList.add(
+                        PolylineOptions()
+                            .color(newColor)
+                            .add(LatLng(oldLocation!!.latitude, oldLocation!!.longitude))
+                            .add(LatLng(newLocation.latitude, newLocation.longitude))
+                    )
+
+
+                    oldLocation = newLocation
+                }
+            }
+        }
+        polylineOptionsList = newPolylineOptionsList
 
     }
     // ============================================== DATABASE CONTROLLER =============================================
