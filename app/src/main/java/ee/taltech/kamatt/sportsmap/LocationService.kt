@@ -536,17 +536,17 @@ class LocationService : Service() {
 
         notificationsView.setTextViewText(
             R.id.textViewOverallDistance,
-            "%.2f".format(distanceOverallDirect)
+            "%.0f".format(distanceOverallTotal)
         )
         notificationsView.setTextViewText(R.id.textViewOverallDuration, durationStartString)
         notificationsView.setTextViewText(R.id.textViewOverallPace, paceOverall)
 
-        notificationsView.setTextViewText(R.id.textViewCPDirect, "%.2f".format(distanceCPDirect))
-        notificationsView.setTextViewText(R.id.textViewCPTotal, "%.2f".format(distanceCPTotal))
+        notificationsView.setTextViewText(R.id.textViewCPDirect, "%.0f".format(distanceCPDirect))
+        notificationsView.setTextViewText(R.id.textViewCPTotal, "%.0f".format(distanceCPTotal))
         notificationsView.setTextViewText(R.id.textViewCPPace, paceCP)
 
-        notificationsView.setTextViewText(R.id.textViewWPDirect, "%.2f".format(distanceWPDirect))
-        notificationsView.setTextViewText(R.id.textViewWPTotal, "%.2f".format(distanceWPTotal))
+        notificationsView.setTextViewText(R.id.textViewWPDirect, "%.0f".format(distanceWPDirect))
+        notificationsView.setTextViewText(R.id.textViewWPTotal, "%.0f".format(distanceWPTotal))
         notificationsView.setTextViewText(R.id.textViewWPPace, paceWP)
 
         // construct and show notification

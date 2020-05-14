@@ -244,18 +244,24 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             isRegisterVisible = savedInstanceState.getBoolean("isRegisterVisible", true)
             isStopConfirmationVisible =
                 savedInstanceState.getBoolean("isStopConfirmationVisible", false)
+            durationOverall = savedInstanceState.getLong(C.LOCATION_UPDATE_ACTION_OVERALLTIME, 0L)
+            distanceOverallTotal =
+                savedInstanceState.getFloat(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, 0F)
+            paceOverall =
+                savedInstanceState.getString(C.LOCATION_UPDATE_ACTION_OVERALLPACE).toString()
 
+
+            restoreOverallTextViews()
             if (savedInstanceState.getBoolean("isOldSessionLoaded", false)) {
                 val loadedSessionId = savedInstanceState.getInt("loadedSessionId", 0)
                 loadSession(loadedSessionId)
             }
-
-
             restoreCompassState()
             restoreOptionsState()
             restoreOldSessionsState()
             restoreLoginState()
             restoreStopConfirmationState()
+
         }
         if (locationServiceActive) {
             buttonStartStop.setImageDrawable(
@@ -297,7 +303,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         outState.putBoolean("isLoginVisible", isLoginVisible)
         outState.putBoolean("isRegisterVisible", isRegisterVisible)
         outState.putBoolean("isStopConfirmationVisible", isStopConfirmationVisible)
-
+        outState.putLong(C.LOCATION_UPDATE_ACTION_OVERALLTIME, durationOverall)
+        outState.putFloat(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, distanceOverallTotal)
+        outState.putString(C.LOCATION_UPDATE_ACTION_OVERALLPACE, paceOverall)
 
         if (isOldSessionLoaded) {
             outState.putInt("loadedSessionId", loadedSession!!.id)
@@ -488,13 +496,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         updateRestTrackingSession(currentlyActiveSession)
         val durationStartString = Utils.longToDateString(durationOverall)
 
-        val temporaryDistance = "%.2f".format(distanceOverallDirect)
+        val temporaryDistance = "%.0f".format(distanceOverallTotal)
         val temporaryDuration = durationStartString
         val temporaryPace = paceOverall
-        Log.d(
-            TAG,
-            "1distance: $temporaryDistance, duration: $temporaryDuration, pace: $temporaryPace"
-        )
         // stopping the service
         stopService(Intent(this, LocationService::class.java))
         buttonStartStop.setImageDrawable(
@@ -503,10 +507,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                 R.drawable.baseline_play_arrow_24
             )
         )
-        Log.d(
-            TAG,
-            "2distance: $temporaryDistance, duration: $temporaryDuration, pace: $temporaryPace"
-        )
+
         textViewOverallDistance.text = temporaryDistance
         textViewOverallDuration.text = temporaryDuration
         textViewOverallPace.text = temporaryPace
@@ -717,7 +718,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
                     val durationStartString = Utils.longToDateString(durationOverall)
                     if (distanceOverallDirect != 0.0f && durationOverall != 0L) {
-                        textViewOverallDistance.text = "%.2f".format(distanceOverallDirect)
+                        textViewOverallDistance.text = "%.0f".format(distanceOverallTotal)
                         textViewOverallDuration.text = durationStartString
 
                     }
@@ -1014,6 +1015,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         } else {
             includeStopConfirmation.visibility = View.INVISIBLE
         }
+    }
+
+    private fun restoreOverallTextViews() {
+        val durationStartString = Utils.longToDateString(durationOverall)
+
+        val temporaryDistance = "%.0f".format(distanceOverallTotal)
+        val temporaryDuration = durationStartString
+        val temporaryPace = paceOverall
+
+        textViewOverallDistance.text = temporaryDistance
+        textViewOverallDuration.text = temporaryDuration
+        textViewOverallPace.text = temporaryPace
     }
 
     private fun restoreOldSessionsState() {
