@@ -69,11 +69,11 @@
         app:layout_constraintTop_toTopOf="@+id/imageView5" />
 
     <TextView
-        android:id="@+id/textViewTempoOverall"
+        android:id="@+id/textViewSessionOverallPace"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:layout_marginStart="8dp"
-        android:text="-tempoOverall-"
+        android:text="-paceOverall-"
         android:textColor="#000000"
         app:layout_constraintBottom_toBottomOf="@+id/imageView4"
         app:layout_constraintStart_toEndOf="@+id/imageView4"
@@ -171,10 +171,10 @@
         android:background="#388E3C"
         android:text="DELETE"
         android:textColor="@color/cardview_light_background"
-        app:layout_constraintBottom_toBottomOf="@+id/textViewTempoOverall"
+        app:layout_constraintBottom_toBottomOf="@+id/textViewSessionOverallPace"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@+id/textViewTempoOverall"
-        app:layout_constraintTop_toTopOf="@+id/textViewTempoOverall" />
+        app:layout_constraintStart_toEndOf="@+id/textViewSessionOverallPace"
+        app:layout_constraintTop_toTopOf="@+id/textViewSessionOverallPace" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

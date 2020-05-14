@@ -18,7 +18,6 @@ class C {
         const val LOCATION_UPDATE_ACTION_OVERALLPACE = PREFIX + "location_update.overallpace"
         const val LOCATION_UPDATE_ACTION_OVERALLTIME = PREFIX + "location_update.overalltime"
 
-
         const val LOCATION_UPDATE_ACTION_CPDIRECT = PREFIX + "location_update.cpdirect"
         const val LOCATION_UPDATE_ACTION_CPTOTAL = PREFIX + "location_update.cptotal"
         const val LOCATION_UPDATE_ACTION_CPPACE = PREFIX + "location_update.cppace"

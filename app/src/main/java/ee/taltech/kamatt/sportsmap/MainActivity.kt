@@ -74,8 +74,6 @@ import java.util.regex.Pattern
 //  TODO: Allow toggling of "keep map constantly centered", "keep north-up / direction up / user chosen-up".
 //  TODO: Save session points in gpx file.
 
-//  TODO: bug. when session ends then should leave old values
-
 //  TODO: LOW. in old sessions - changes should also be updated in rest (pacemin, pacemax, colormin, colormax, name, description)
 //  TODO: LOW. time updates in real time not with location update
 
@@ -101,6 +99,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     // The desired intervals for location updates. Inexact. Updates may be more or less frequent.
     private var UPDATE_INTERVAL_IN_MILLISECONDS: Long = 2000
+
     //  Compass
     private lateinit var sensorManager: SensorManager
     private lateinit var compassImage: ImageView
@@ -144,10 +143,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var currentDbSessionId: Int = -1
     private var currentRestSessionId: String? = null
 
+
     private var distanceOverallDirect = 0f
     private var distanceOverallTotal = 0f
     private var paceOverall: String = "0"
-    private var durationOverall: String = "0"
+    private var durationOverall: Long = 0L
 
     private var startPointMarker: MarkerOptions? = null
     private var listOfCPMarkerLatLngs: MutableList<LatLng>? = null
@@ -171,28 +171,28 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
         // If we have a saved state then we can restore it now
         locationTypeRepository = LocationTypeRepository(this).open()
-        val locationTypes = locationTypeRepository.getAll()
+        /*val locationTypes = locationTypeRepository.getAll()
         for (locationType in locationTypes) {
             Log.d("locationType", locationType.toString())
-        }
+        }*/
         gpsSessionRepository = GpsSessionRepository(this).open()
 
-        val gpsSessions = gpsSessionRepository.getAll()
+        /*val gpsSessions = gpsSessionRepository.getAll()
         for (gpsSession in gpsSessions) {
             Log.d("gpsSession", gpsSession.toString())
-        }
+        }*/
         gpsLocationRepository = GpsLocationRepository(this).open()
-        val gpsLocations = gpsLocationRepository.getAll()
+        /*val gpsLocations = gpsLocationRepository.getAll()
         for (gpsLocation in gpsLocations) {
             Log.d("gpsLocation", gpsLocation.toString())
-        }
+        }*/
 
         appUserRepository = AppUserRepository(this).open()
-        appUserRepository.add(AppUser(C.REST_USERNAME, C.REST_PASSWORD))
-        val appUsers = appUserRepository.getAll()
-        for (appUser in appUsers) {
-            Log.d("appUser", appUser.toString())
-        }
+        /* appUserRepository.add(AppUser(C.REST_USERNAME, C.REST_PASSWORD))
+         val appUsers = appUserRepository.getAll()
+         for (appUser in appUsers) {
+             Log.d("appUser", appUser.toString())
+         }*/
 
         setContentView(R.layout.activity_main)
         imageButtonCP.setOnClickListener { handleCpOnClick() }
@@ -464,22 +464,21 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     // ============================================== CLICK HANDLERS =============================================
 
     private fun handleWpOnClick() {
-        Log.d(TAG, "buttonWPOnClick")
         sendBroadcast(Intent(C.NOTIFICATION_ACTION_WP))
     }
 
     private fun handleCpOnClick() {
-        Log.d(TAG, "buttonCPOnClick")
         sendBroadcast(Intent(C.NOTIFICATION_ACTION_CP))
     }
 
+    @SuppressLint("SetTextI18n")
     private fun handleConfirmationOkOnClick() {
         // stopping the service
         val currentlyActiveSession: GpsSession =
             gpsSessionRepository.getSessionById(currentDbSessionId)
         currentlyActiveSession.distance = distanceOverallTotal.toDouble()
         currentlyActiveSession.speed = paceOverall
-        currentlyActiveSession.duration = durationOverall
+        currentlyActiveSession.duration = Utils.longToDateString(durationOverall)
         currentlyActiveSession.colorMin = colorMin
         currentlyActiveSession.colorMax = colorMax
         currentlyActiveSession.paceMin = paceMin
@@ -487,6 +486,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         gpsSessionRepository.updateSession(currentlyActiveSession)
         recyclerViewAdapter.addData(currentlyActiveSession)
         updateRestTrackingSession(currentlyActiveSession)
+        val durationStartString = Utils.longToDateString(durationOverall)
+
+        val temporaryDistance = "%.2f".format(distanceOverallDirect)
+        val temporaryDuration = durationStartString
+        val temporaryPace = paceOverall
+        Log.d(
+            TAG,
+            "1distance: $temporaryDistance, duration: $temporaryDuration, pace: $temporaryPace"
+        )
         // stopping the service
         stopService(Intent(this, LocationService::class.java))
         buttonStartStop.setImageDrawable(
@@ -495,8 +503,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                 R.drawable.baseline_play_arrow_24
             )
         )
+        Log.d(
+            TAG,
+            "2distance: $temporaryDistance, duration: $temporaryDuration, pace: $temporaryPace"
+        )
+        textViewOverallDistance.text = temporaryDistance
+        textViewOverallDuration.text = temporaryDuration
+        textViewOverallPace.text = temporaryPace
+
+
         includeStopConfirmation.visibility = View.INVISIBLE
         isStopConfirmationVisible = false
+
 
     }
 
@@ -504,6 +522,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         includeStopConfirmation.visibility = View.INVISIBLE
         isStopConfirmationVisible = false
     }
+
     private fun handleStartStopOnClick() {
         isOldSessionLoaded = false
         if (locationServiceActive) {
@@ -675,38 +694,34 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     // ============================================== BROADCAST RECEIVER =============================================
     private inner class InnerBroadcastReceiver : BroadcastReceiver() {
+        @SuppressLint("SetTextI18n")
         override fun onReceive(context: Context?, intent: Intent?) {
             // Log.d(TAG, intent!!.action)
             when (intent!!.action) {
                 C.LOCATION_UPDATE_ACTION -> {
+
+
                     distanceOverallDirect =
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_OVERALLDIRECT, 0.0F)
                     distanceOverallTotal =
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, 0.0F)
-
 
                     if (!intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLPACE)
                             .isNullOrEmpty()
                     ) {
                         paceOverall =
                             intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLPACE)!!
-                        textViewOverallTempo.text =
-                            intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLPACE)
-                    }
-                    if (!intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME).isNullOrEmpty()
-                    ) {
-                        durationOverall =
-                            intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME)!!
                     }
 
-                    textViewOverallDirect.text =
-                        intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, 0.0F)
-                            .toInt().toString()
+                    durationOverall = intent.getLongExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME, 0L)
 
-                    textViewOverallTotal.text =
-                        intent.getStringExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME)
+                    val durationStartString = Utils.longToDateString(durationOverall)
+                    if (distanceOverallDirect != 0.0f && durationOverall != 0L) {
+                        textViewOverallDistance.text = "%.2f".format(distanceOverallDirect)
+                        textViewOverallDuration.text = durationStartString
 
-
+                    }
+                    textViewOverallPace.text = paceOverall
 
 
 
@@ -716,7 +731,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     textViewCPDirect.text =
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_CPDIRECT, 0.0F).toInt()
                             .toString()
-                    textViewCPTempo.text =
+                    textViewCPPace.text =
                         intent.getStringExtra(C.LOCATION_UPDATE_ACTION_CPPACE)
 
                     textViewWPTotal.text =
@@ -725,7 +740,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     textViewWPDirect.text =
                         intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_WPDIRECT, 0.0F).toInt()
                             .toString()
-                    textViewWPTempo.text =
+                    textViewWPPace.text =
                         intent.getStringExtra(C.LOCATION_UPDATE_ACTION_WPPACE)
                     polylineOptionsList =
                         intent.getSerializableExtra(C.LOCATION_UPDATE_POLYLINE_OPTIONS) as?
@@ -1000,6 +1015,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             includeStopConfirmation.visibility = View.INVISIBLE
         }
     }
+
     private fun restoreOldSessionsState() {
         if (isOldSessionsVisible) {
             recyclerViewSessions.visibility = View.VISIBLE
@@ -1028,7 +1044,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         }
 
     }
-
 
 
     // ============================================== DATABASE CONTROLLER =============================================
@@ -1061,9 +1076,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     private fun setSessionStatisticsIfLoaded() {
         if (isOldSessionLoaded) {
-            textViewOverallDirect.text = loadedSession!!.distance.toInt().toString()
-            textViewOverallTotal.text = loadedSession!!.duration
-            textViewOverallTempo.text = loadedSession!!.speed
+            textViewOverallDistance.text = loadedSession!!.distance.toInt().toString()
+            textViewOverallDuration.text = loadedSession!!.duration
+            textViewOverallPace.text = loadedSession!!.speed
         }
     }
 
@@ -1268,10 +1283,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
         handler.addToRequestQueue(httpRequest)
     }
-
-
-
-
 
 
     private fun String.isEmailValid() =

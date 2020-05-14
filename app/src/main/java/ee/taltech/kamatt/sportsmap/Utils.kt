@@ -15,16 +15,16 @@ class Utils {
             maxSpeed: Int,
             minColor: String,
             maxColor: String,
-            currentTempo: Float
+            currentPace: Float
         ): Int {
             val resultColor: Int
             resultColor = when {
-                currentTempo >= maxSpeed -> getAndroidColor(maxColor)
-                currentTempo <= minSpeed -> getAndroidColor(minColor)
+                currentPace >= maxSpeed -> getAndroidColor(maxColor)
+                currentPace <= minSpeed -> getAndroidColor(minColor)
                 else -> {
                     //  colorPercent = 0% -> minColor ... colorPercent = 100% -> maxColor
                     val colorPercent: Float =
-                        (((currentTempo - minSpeed) * 100) / (maxSpeed - minSpeed)) / 100F
+                        (((currentPace - minSpeed) * 100) / (maxSpeed - minSpeed)) / 100F
                     ArgbEvaluator().evaluate(
                         colorPercent,
                         getAndroidColor(maxColor),

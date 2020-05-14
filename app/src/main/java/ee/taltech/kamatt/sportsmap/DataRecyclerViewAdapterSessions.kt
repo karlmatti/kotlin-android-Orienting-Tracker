@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import ee.taltech.kamatt.sportsmap.db.model.GpsSession
 import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
-import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.recycler_row_session.view.*
 
 class DataRecyclerViewAdapterSessions(
@@ -41,7 +40,7 @@ class DataRecyclerViewAdapterSessions(
         holder.itemView.textViewRecordedAt.text = session.recordedAt
         holder.itemView.textViewDurationOverall.text = session.duration
         holder.itemView.textViewDistanceOverall.text = session.distance.toInt().toString()
-        holder.itemView.textViewTempoOverall.text = session.speed
+        holder.itemView.textViewSessionOverallPace.text = session.speed
         holder.itemView.buttonDeleteSession.setOnClickListener {
             val theRemovedItem: GpsSession = dataSet.get(position)
             // remove your item from data base

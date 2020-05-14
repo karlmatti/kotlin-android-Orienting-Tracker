@@ -24,9 +24,7 @@ import java.util.*
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
 import ee.taltech.kamatt.sportsmap.db.model.GpsLocation
 import ee.taltech.kamatt.sportsmap.db.model.GpsSession
@@ -358,10 +356,7 @@ class LocationService : Service() {
         intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLDIRECT, distanceOverallDirect)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, distanceOverallTotal)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLPACE, paceOverall)
-        intent.putExtra(
-            C.LOCATION_UPDATE_ACTION_OVERALLTIME,
-            Utils.longToDateString(durationOverall)
-        )
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTIME, durationOverall)
 
         intent.putExtra(C.LOCATION_UPDATE_ACTION_CPDIRECT, distanceCPDirect)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_CPTOTAL, distanceCPTotal)
@@ -540,19 +535,19 @@ class LocationService : Service() {
         notificationsView.setOnClickPendingIntent(R.id.imageButtonWP, pendingIntentWp)
 
         notificationsView.setTextViewText(
-            R.id.textViewOverallDirect,
+            R.id.textViewOverallDistance,
             "%.2f".format(distanceOverallDirect)
         )
-        notificationsView.setTextViewText(R.id.textViewOverallTotal, durationStartString)
-        notificationsView.setTextViewText(R.id.textViewOverallTempo, paceOverall)
+        notificationsView.setTextViewText(R.id.textViewOverallDuration, durationStartString)
+        notificationsView.setTextViewText(R.id.textViewOverallPace, paceOverall)
 
         notificationsView.setTextViewText(R.id.textViewCPDirect, "%.2f".format(distanceCPDirect))
         notificationsView.setTextViewText(R.id.textViewCPTotal, "%.2f".format(distanceCPTotal))
-        notificationsView.setTextViewText(R.id.textViewCPTempo, paceCP)
+        notificationsView.setTextViewText(R.id.textViewCPPace, paceCP)
 
         notificationsView.setTextViewText(R.id.textViewWPDirect, "%.2f".format(distanceWPDirect))
         notificationsView.setTextViewText(R.id.textViewWPTotal, "%.2f".format(distanceWPTotal))
-        notificationsView.setTextViewText(R.id.textViewWPTempo, paceWP)
+        notificationsView.setTextViewText(R.id.textViewWPPace, paceWP)
 
         // construct and show notification
         val builder = NotificationCompat.Builder(applicationContext, C.NOTIFICATION_CHANNEL)
@@ -646,8 +641,8 @@ class LocationService : Service() {
         colorMin: String,
         colorMax: String
     ) {
-        var newPolylineOptionsList: MutableList<PolylineOptions> = mutableListOf<PolylineOptions>()
-        var currentSessionLocations: List<GpsLocation> =
+        val newPolylineOptionsList: MutableList<PolylineOptions> = mutableListOf<PolylineOptions>()
+        val currentSessionLocations: List<GpsLocation> =
             gpsLocationRepository.getLocationsBySessionId(currentDbSessionId.toInt())
         var oldLocation: Location? = null
         for (loadedLocation in currentSessionLocations!!) {
