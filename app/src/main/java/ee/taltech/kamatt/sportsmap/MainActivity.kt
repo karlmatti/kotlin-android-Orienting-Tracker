@@ -33,6 +33,7 @@ import android.view.animation.RotateAnimation
 import android.widget.ImageView
 import android.widget.SeekBar
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -65,16 +66,17 @@ import kotlinx.android.synthetic.main.stop_confirmation.*
 import kotlinx.android.synthetic.main.track_control.*
 import kotlinx.android.synthetic.main.welcome_screen.*
 import org.json.JSONObject
+import java.io.File
+import java.io.FileWriter
 import java.lang.Math.toDegrees
 import java.util.*
 import java.util.regex.Pattern
 
-
+//  TODO: Save session points in gpx file.
 //  TODO: Syncing interval can be changed - when received to 10 sec, add sync button, save backend
 //  TODO: Allow toggling of "keep map constantly centered", "keep north-up / direction up / user chosen-up".
-//  TODO: Save session points in gpx file.
 
-//  TODO: LOW. in old sessions - changes should also be updated in rest (pacemin, pacemax, colormin, colormax, name, description)
+
 //  TODO: LOW. time updates in real time not with location update
 
 
@@ -165,6 +167,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
 
     // ============================================== MAIN ENTRY - ONCREATE =============================================
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         Log.d(TAG, "onCreate")
         super.onCreate(savedInstanceState)
@@ -177,10 +180,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         }*/
         gpsSessionRepository = GpsSessionRepository(this).open()
 
-        /*val gpsSessions = gpsSessionRepository.getAll()
+        val gpsSessions = gpsSessionRepository.getAll()
         for (gpsSession in gpsSessions) {
             Log.d("gpsSession", gpsSession.toString())
-        }*/
+        }
         gpsLocationRepository = GpsLocationRepository(this).open()
         /*val gpsLocations = gpsLocationRepository.getAll()
         for (gpsLocation in gpsLocations) {
@@ -215,6 +218,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         buttonConfirmationOk.setOnClickListener { handleConfirmationOkOnClick() }
         seekBarGpsFreq.setOnSeekBarChangeListener(this)
         seekBarSyncFreq.setOnSeekBarChangeListener(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            seekBarGpsFreq.min = 1
+            seekBarSyncFreq.min = 1
+        }
         // safe to call every time
         createNotificationChannel()
 
@@ -491,6 +498,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         currentlyActiveSession.colorMax = colorMax
         currentlyActiveSession.paceMin = paceMin
         currentlyActiveSession.paceMax = paceMax
+        Log.d("updateSession in", "handleConfirmationOkOnClick()")
         gpsSessionRepository.updateSession(currentlyActiveSession)
         recyclerViewAdapter.addData(currentlyActiveSession)
         updateRestTrackingSession(currentlyActiveSession)
@@ -658,13 +666,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             currentSession.colorMax = colorMax
 
             // update db and adapter
+            Log.d("updateSession in", "handleUpdateActiveSessionOnClick()")
             gpsSessionRepository.updateSession(currentSession)
             recyclerViewSessions.adapter!!.notifyDataSetChanged()
 
             // send updates to locationService
             val intent = Intent(C.UPDATE_OPTIONS_ACTION)
-            intent.putExtra(C.GPS_UPDATE_FREQUENCY, seekBarGpsFreq.progress * 1000L)
-            intent.putExtra(C.SYNC_UPDATE_FREQUENCY, seekBarSyncFreq.progress * 1000L)
+            intent.putExtra(C.GPS_UPDATE_FREQUENCY, (seekBarGpsFreq.progress) * 1000L)
+            intent.putExtra(C.SYNC_UPDATE_FREQUENCY, (seekBarSyncFreq.progress))
+
             intent.putExtra(C.PACE_MIN, paceMin)
             intent.putExtra(C.PACE_MAX, paceMax)
             intent.putExtra(C.COLOR_MIN, colorMin)
@@ -758,7 +768,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                         intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0)
                     )
                     lastTimestamp = Utils.getCurrentDateTime()
-                    currentDbSessionId = intent.getLongExtra(C.CURRENT_SESSION_ID, -1).toInt()
+                    currentDbSessionId = intent.getIntExtra(C.CURRENT_SESSION_ID, -1)
                     currentRestSessionId = intent.getStringExtra(C.CURRENT_SESSION_REST_ID)
 
                 }
@@ -1319,11 +1329,26 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
         if (seekBar != null) {
             if (seekBar.id == seekBarGpsFreq.id) {
-                textViewGpsUpdateFreq.setText("GPS freq: $progress seconds")
-                Log.d("seekbar", "GpsFreq id is ${seekBar.id}, new value is $progress")
+
+                if (progress != 0) {
+                    if (progress == 1) {
+                        textViewGpsUpdateFreq.setText("GPS frequency: ${progress} second")
+                    } else {
+                        textViewGpsUpdateFreq.setText("GPS frequency: ${progress} seconds")
+                    }
+                }
+                //Log.d("seekbar", "GpsFreq id is ${seekBar.id}, new value is ${progress}")
             } else if (seekBar.id == seekBarSyncFreq.id) {
-                textViewSyncFrequency.setText("Sync freq: $progress seconds")
-                Log.d("seekbar", "SyncFreq id is ${seekBar.id}, new value is $progress")
+
+                if (progress != 0) {
+                    if (progress == 1) {
+                        textViewSyncFrequency.setText("Sync after every location")
+                    } else {
+                        textViewSyncFrequency.setText("Sync after every ${progress} locations")
+                    }
+
+                }
+                //Log.d("seekbar", "SyncFreq id is ${seekBar.id}, new value is $progress")
             }
 
         }
@@ -1334,5 +1359,55 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     override fun onStopTrackingTouch(seekBar: SeekBar?) {
     }
+/*
+    fun exportDb() {
 
+            try {
+                val session = intent.getStringExtra(C.DISPLAY_SESSION_HASH)!!
+                val to = intent.getStringExtra(C.EXPORT_TO_EMAIL)!!
+                // session must be restid
+                if (to.isEmailValid()) {
+                    val content = Utils.generateGPX(
+                        session,
+                        gpsLocationRepository.getLocationsBySessionId(currentDbSessionId)
+                    )
+
+                    val tempFile = File.createTempFile(
+                        session,
+                        ".gpx",
+                        this.externalCacheDir
+                    )
+
+                    val fw = FileWriter(tempFile)
+
+                    fw.write(content)
+
+                    fw.flush()
+                    fw.close()
+
+                    val mailTo = "mailto:" + to +
+                            "?&subject=" + Uri.encode("GPX file") +
+                            "&body=" + Uri.encode("See attachments")
+                    val emailIntent = Intent(Intent.ACTION_VIEW)
+                    emailIntent.data = Uri.parse(mailTo)
+                    emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(tempFile))
+                    startActivityForResult(emailIntent, 69)
+
+                } else {
+                    makeToast("Given email is invalid!")
+                }
+
+            } catch (e: Exception) {
+                makeToast("No permissions!")
+            }
+        }
+    private fun makeToast(message: String) {
+        Toast.makeText(
+            this@MainActivity,
+            message,
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
+ */
 }

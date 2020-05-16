@@ -23,7 +23,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 import com.android.volley.Request
 import com.android.volley.Response
+import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.StringRequest
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
 import ee.taltech.kamatt.sportsmap.db.model.GpsLocation
@@ -32,6 +34,7 @@ import ee.taltech.kamatt.sportsmap.db.repository.AppUserRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsLocationRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
 import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
+import org.json.JSONArray
 import java.io.Serializable
 
 
@@ -46,6 +49,10 @@ class LocationService : Service() {
     // The desired intervals for location updates. Inexact. Updates may be more or less frequent.
     private var GPS_UPDATE_FREQ_IN_MILLISECONDS: Long = 2000
     private var FASTEST_GPS_UPDATE_FREQ_IN_MILLISECONDS = GPS_UPDATE_FREQ_IN_MILLISECONDS / 2
+
+    // The desired intervals for sync. Inexact. Updates to the rest can be after capturing 1 or more locations.
+    private var SYNC_REST_FREQ_IN_LOC_COUNTS: Int = 1
+    private var unsyncedLocations: MutableList<Location>? = null
 
     private val broadcastReceiver = InnerBroadcastReceiver()
     private val broadcastReceiverIntentFilter: IntentFilter = IntentFilter()
@@ -185,6 +192,69 @@ class LocationService : Service() {
         handler.addToRequestQueue(httpRequest)
     }
 
+    private fun saveRestLocationsInBulk(locations: MutableList<Location>) {
+        if (jwt == null || currentRestSessionId == null) {
+            return
+        }
+
+        val handler = WebApiSingletonHandler.getInstance(applicationContext)
+        val jsonArray = JSONArray()
+        for (location in locations) {
+            val jsonLocation = JSONObject()
+
+
+            jsonLocation.put("recordedAt", dateFormat.format(Date(location.time)))
+
+            jsonLocation.put("latitude", location.latitude)
+            jsonLocation.put("longitude", location.longitude)
+            jsonLocation.put("accuracy", location.accuracy)
+            jsonLocation.put("altitude", location.altitude)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                jsonLocation.put("verticalAccuracy", location.verticalAccuracyMeters)
+            }
+            jsonLocation.put("gpsLocationTypeId", C.REST_LOCATIONID_LOC)
+            jsonArray.put(jsonLocation)
+        }
+        Log.d(TAG, "bulkupload to $currentRestSessionId")
+        Log.d(TAG, "bulkupload with $jsonArray")
+
+        var httpRequest = object : StringRequest(
+            Request.Method.POST,
+            C.REST_BASE_URL + "GpsLocations/bulkupload/" + currentRestSessionId,
+
+            Response.Listener<String> { _ ->
+
+                //Log.d(TAG, response)
+                Log.d(TAG, "bulk upload successful")
+            },
+            Response.ErrorListener { error ->
+                Log.d(TAG, error.toString())
+                Log.d(TAG, "bulk upload unsuccessful")
+            }
+        ) {
+            override fun getHeaders(): MutableMap<String, String> {
+                val headers = HashMap<String, String>()
+                for ((key, value) in super.getHeaders()) {
+                    headers[key] = value
+                }
+                headers["Authorization"] = "Bearer " + jwt!!
+                return headers
+            }
+
+            override fun getBodyContentType(): String {
+                return "application/json"
+            }
+
+            override fun getBody(): ByteArray {
+                Log.d("getBody", jsonArray.toString())
+                return jsonArray.toString().toByteArray()
+            }
+        }
+
+        handler.addToRequestQueue(httpRequest)
+
+
+    }
     private fun saveRestLocation(location: Location, location_type: String) {
         if (jwt == null || currentRestSessionId == null) {
             return
@@ -322,7 +392,26 @@ class LocationService : Service() {
         currentLocation = location
 
         updateDbGpsLocation(location, C.REST_LOCATIONID_LOC)
-        saveRestLocation(location, C.REST_LOCATIONID_LOC)
+        if (unsyncedLocations == null) {
+            unsyncedLocations = mutableListOf(location)
+            if (SYNC_REST_FREQ_IN_LOC_COUNTS == 1) {
+                Log.d(TAG, "saved locations count:" + unsyncedLocations!!.size)
+                saveRestLocation(location, C.REST_LOCATIONID_LOC)
+                unsyncedLocations = null
+            }
+        } else {
+            unsyncedLocations!!.add(location)
+            Log.d(
+                TAG,
+                "saved unsyncedLocations!!.size == SYNC_REST_FREQ_IN_LOC_COUNTS ${unsyncedLocations!!.size == SYNC_REST_FREQ_IN_LOC_COUNTS}"
+            )
+            if (unsyncedLocations!!.size == SYNC_REST_FREQ_IN_LOC_COUNTS) {
+                Log.d(TAG, "saved locations count:" + unsyncedLocations!!.size)
+                saveRestLocationsInBulk(unsyncedLocations!!)
+                unsyncedLocations = null
+            }
+        }
+
         showNotification()
 
         // Utils.addToMapPolylineOptions(location.latitude, location.longitude)
@@ -596,10 +685,12 @@ class LocationService : Service() {
                     GPS_UPDATE_FREQ_IN_MILLISECONDS =
                         intent.getLongExtra(C.GPS_UPDATE_FREQUENCY, 2000L)
                     FASTEST_GPS_UPDATE_FREQ_IN_MILLISECONDS = GPS_UPDATE_FREQ_IN_MILLISECONDS / 2
+                    SYNC_REST_FREQ_IN_LOC_COUNTS = (intent.getIntExtra(C.SYNC_UPDATE_FREQUENCY, 1))
+                    Log.d(TAG, "new sync value: $SYNC_REST_FREQ_IN_LOC_COUNTS")
                     paceMin = intent.getDoubleExtra(C.PACE_MIN, 120.0)
                     paceMax = intent.getDoubleExtra(C.PACE_MAX, 480.0)
-                    colorMin = intent.getStringExtra(C.COLOR_MIN)
-                    colorMax = intent.getStringExtra(C.COLOR_MAX)
+                    colorMin = intent.getStringExtra(C.COLOR_MIN)!!
+                    colorMax = intent.getStringExtra(C.COLOR_MAX)!!
                     //updateRequestLocationUpdates()
                     createLocationRequest()
                     mFusedLocationClient.requestLocationUpdates(
