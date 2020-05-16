@@ -43,6 +43,7 @@ import com.android.volley.BuildConfig
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.StringRequest
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -639,6 +640,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         // update db and adapter
         gpsSessionRepository.updateSession(currentlyEditedSession)
         recyclerViewSessions.adapter!!.notifyDataSetChanged()
+        // update rest
+        updateRestTrackingSession(currentlyEditedSession)
+
         // close session window
         includeEditSession.visibility = View.INVISIBLE
         handleOpenOldSessionsOnClick()
@@ -1262,10 +1266,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     }
 
     private fun updateRestTrackingSession(newSession: GpsSession) {
-        Log.d("put path", C.REST_BASE_URL + "GpsSessions/" + currentRestSessionId)
+
+
         val handler = WebApiSingletonHandler.getInstance(applicationContext)
         val requestJsonParameters = JSONObject()
-        requestJsonParameters.put("id", currentRestSessionId)
+        requestJsonParameters.put("id", newSession.restId)
         requestJsonParameters.put("name", newSession.name)
         requestJsonParameters.put("description", newSession.description)
         requestJsonParameters.put("recordedAt", newSession.recordedAt)
@@ -1280,17 +1285,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         requestJsonParameters.put("paceMin", newSession.paceMin)
         requestJsonParameters.put("paceMax", newSession.paceMax)
         requestJsonParameters.put("gpsSessionTypeId", "00000000-0000-0000-0000-000000000001")
-
-
-        val httpRequest = object : JsonObjectRequest(
+        
+        val httpRequest = object : StringRequest(
             Request.Method.PUT,
-            C.REST_BASE_URL + "GpsSessions/" + currentRestSessionId,
-            requestJsonParameters,
-            Response.Listener { response ->
-                Log.d(TAG, response.toString())
+            C.REST_BASE_URL + "GpsSessions/" + newSession.restId,
+
+            Response.Listener<String> { _ ->
+
+                //Log.d(TAG, response)
+                Log.d(TAG, "update session successful")
             },
             Response.ErrorListener { error ->
                 Log.d(TAG, error.toString())
+                Log.d(TAG, "update session unsuccessful")
             }
         ) {
             override fun getHeaders(): MutableMap<String, String> {
@@ -1301,9 +1308,44 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                 headers["Authorization"] = "Bearer " + jwt!!
                 return headers
             }
+
+            override fun getBodyContentType(): String {
+                return "application/json"
+            }
+
+            override fun getBody(): ByteArray {
+                Log.d("getBody", requestJsonParameters.toString())
+                return requestJsonParameters.toString().toByteArray()
+            }
+        }
+/*
+
+        val httpRequest = object : JsonObjectRequest(
+            Request.Method.PUT,
+            C.REST_BASE_URL + "GpsSessions/" + newSession.restId,
+            requestJsonParameters,
+            Response.Listener { response ->
+                //val jsonObject: JSONObject = response
+                //Log.d(TAG, response.toString())
+                Log.d(TAG, "ERROR successful")
+            },
+            Response.ErrorListener { error ->
+                //Log.d(TAG, error.toString())
+                Log.d(TAG, "ERROR updateRestTrackingSession")
+            }
+        ) {
+            override fun getHeaders(): MutableMap<String, String> {
+                val headers = HashMap<String, String>()
+                for ((key, value) in super.getHeaders()) {
+                    headers[key] = value
+                }
+                headers["Authorization"] = "Bearer " + jwt!!
+                return headers
+            }
+
         }
 
-
+*/
         handler.addToRequestQueue(httpRequest)
     }
 
