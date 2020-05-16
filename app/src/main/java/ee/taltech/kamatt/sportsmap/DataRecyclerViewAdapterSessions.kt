@@ -46,7 +46,11 @@ class DataRecyclerViewAdapterSessions(
             // remove your item from data base
             MainActivity.deleteSessionFromDb(theRemovedItem)
             dataSet.removeAt(position) // remove the item from list
-
+            if (context is MainActivity) {
+                if (theRemovedItem.restId != null) {
+                    context.deleteRestGpsSession(theRemovedItem.restId!!)
+                }
+            }
             notifyItemRemoved(position) // notify the adapter about the removed item
         }
         holder.itemView.buttonEditSession.setOnClickListener {
