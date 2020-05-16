@@ -163,7 +163,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private var currentDbUserId: Int = -1
 
     private lateinit var recyclerViewAdapter: DataRecyclerViewAdapterSessions
-
+    private var isMapCentered = false
 
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     @RequiresApi(Build.VERSION_CODES.O)
@@ -215,6 +215,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         buttonLogOut.setOnClickListener { handleLogOutOnClick() }
         buttonConfirmationCancel.setOnClickListener { handleConfirmationCancelOnClick() }
         buttonConfirmationOk.setOnClickListener { handleConfirmationOkOnClick() }
+        imageViewKeepCentered.setOnClickListener { handleKeepCenteredOnClick() }
+
         seekBarGpsFreq.setOnSeekBarChangeListener(this)
         seekBarSyncFreq.setOnSeekBarChangeListener(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -250,6 +252,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             isRegisterVisible = savedInstanceState.getBoolean("isRegisterVisible", true)
             isStopConfirmationVisible =
                 savedInstanceState.getBoolean("isStopConfirmationVisible", false)
+            isMapCentered = savedInstanceState.getBoolean("isMapCentered", false)
             durationOverall = savedInstanceState.getLong(C.LOCATION_UPDATE_ACTION_OVERALLTIME, 0L)
             distanceOverallTotal =
                 savedInstanceState.getFloat(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, 0F)
@@ -261,6 +264,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             if (savedInstanceState.getBoolean("isOldSessionLoaded", false)) {
                 val loadedSessionId = savedInstanceState.getInt("loadedSessionId", 0)
                 loadSession(loadedSessionId)
+            }
+            if (isMapCentered) {
+                isMapCentered = false
+                handleKeepCenteredOnClick()
             }
             restoreCompassState()
             restoreOptionsState()
@@ -309,6 +316,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         outState.putBoolean("isLoginVisible", isLoginVisible)
         outState.putBoolean("isRegisterVisible", isRegisterVisible)
         outState.putBoolean("isStopConfirmationVisible", isStopConfirmationVisible)
+        outState.putBoolean("isMapCentered", isMapCentered)
         outState.putLong(C.LOCATION_UPDATE_ACTION_OVERALLTIME, durationOverall)
         outState.putFloat(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, distanceOverallTotal)
         outState.putString(C.LOCATION_UPDATE_ACTION_OVERALLPACE, paceOverall)
@@ -705,6 +713,17 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         mMap.clear()
     }
 
+    private fun handleKeepCenteredOnClick() {
+        if (isMapCentered) {
+            isMapCentered = false
+            imageViewKeepCentered.setColorFilter(Utils.getAndroidColor("white"))
+        } else {
+            isMapCentered = true
+            imageViewKeepCentered.setColorFilter(Utils.getAndroidColor("green"))
+        }
+        Log.d(TAG, isMapCentered.toString())
+    }
+
     // ============================================== BROADCAST RECEIVER =============================================
     private inner class InnerBroadcastReceiver : BroadcastReceiver() {
         @SuppressLint("SetTextI18n")
@@ -802,7 +821,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         lastLongitude = lng
 
         reDrawPolyline()
-
+        if (isMapCentered && lat != 0.0 && lng != 0.0) {
+            mMap.animateCamera(
+                CameraUpdateFactory.newLatLng(
+                    LatLng(
+                        lat,
+                        lng
+                    )
+                )
+            )
+        }
 
     }
 
@@ -1258,7 +1286,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
             textViewEmailLogin.setTextColor(Utils.getAndroidColor("red"))
             textViewPasswordLogin.setTextColor(Utils.getAndroidColor("red"))
-
 
         }
     }
