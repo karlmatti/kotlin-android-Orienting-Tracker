@@ -12,7 +12,7 @@ class GpsLocation {
     var accuracy: Double
     var altitude: Double
     var verticalAccuracy: Double
-    var gpsSessionId: Long
+    var gpsSessionId: Int
     var gpsLocationTypeId: String
     var appUserId: Int
 
@@ -24,7 +24,7 @@ class GpsLocation {
         accuracy: Double,
         altitude: Double,
         verticalAccuracy: Double,
-        gpsSessionId: Long,
+        gpsSessionId: Int,
         gpsLocationTypeId: String,
         appUserId: Int
     ) {
@@ -47,7 +47,7 @@ class GpsLocation {
         accuracy: Double,
         altitude: Double,
         verticalAccuracy: Double,
-        gpsSessionId: Long,
+        gpsSessionId: Int,
         gpsLocationTypeId: String,
         appUserId: Int
     ) {

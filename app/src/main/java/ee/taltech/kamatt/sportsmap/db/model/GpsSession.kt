@@ -1,13 +1,6 @@
 package ee.taltech.kamatt.sportsmap.db.model
 
-import android.content.ClipData
 import android.content.ContentValues
-import android.os.Parcel
-
-import android.os.Parcelable
-
-
-
 
 class GpsSession {
     var id: Int = 0
@@ -24,6 +17,7 @@ class GpsSession {
     var climb: Double = 0.0
     var descent: Double = 0.0
     var appUserId: Int = 0
+    var restId: String? = null
 
     constructor(name: String, description: String) {
         this.name = name
@@ -35,6 +29,7 @@ class GpsSession {
         this.name = name
         this.description = description
     }
+
 
     constructor(
         name: String,
@@ -106,6 +101,40 @@ class GpsSession {
         this.colorMax = colorMax
     }
 
+    constructor(
+        id: Int,
+        name: String,
+        description: String,
+        paceMin: Double,
+        paceMax: Double,
+        colorMin: String,
+        colorMax: String,
+        recordedAt: String,
+        duration: String,
+        speed: String,
+        distance: Double,
+        climb: Double,
+        descent: Double,
+        appUserId: Int,
+        restId: String?
+    ) {
+        this.id = id
+        this.name = name
+        this.description = description
+        this.paceMin = paceMin
+        this.paceMax = paceMax
+        this.colorMin = colorMin
+        this.colorMax = colorMax
+        this.recordedAt = recordedAt
+        this.duration = duration
+        this.speed = speed
+        this.distance = distance
+        this.climb = climb
+        this.descent = descent
+        this.appUserId = appUserId
+        this.restId = restId
+    }
+
     fun getContentValues(): ContentValues {
         val values = ContentValues()
         val NAME = "name"
@@ -121,6 +150,7 @@ class GpsSession {
         val CLIMB = "climb"
         val DESCENT = "descent"
         val APP_USER_ID = "appUserId"
+        val REST_ID = "restId"
 
         values.put(NAME, this.name)
         values.put(DESCRIPTION, this.description)
@@ -135,11 +165,17 @@ class GpsSession {
         values.put(CLIMB, this.climb)
         values.put(DESCENT, this.descent)
         values.put(APP_USER_ID, this.appUserId)
+        values.put(REST_ID, this.restId)
         return values
     }
 
     override fun toString(): String {
-        return "GpsSession(id=$id, name='$name', description='$description', paceMin=$paceMin, paceMax=$paceMax, colorMin='$colorMin', colorMax='$colorMax', recordedAt='$recordedAt', duration=$duration, speed=$speed, distance=$distance, climb=$climb, descent=$descent, appUserId=$appUserId)"
+        return "GpsSession(id=$id, name='$name', description='$description', " +
+                "paceMin=$paceMin, paceMax=$paceMax, colorMin='$colorMin', " +
+                "colorMax='$colorMax', recordedAt='$recordedAt', duration='$duration', " +
+                "speed='$speed', distance=$distance, climb=$climb, " +
+                "descent=$descent, appUserId=$appUserId, restId='$restId')"
     }
+
 
 }

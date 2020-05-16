@@ -4,6 +4,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
+import android.util.Log
+import androidx.core.database.getStringOrNull
 import ee.taltech.kamatt.sportsmap.db.DbHandler
 import ee.taltech.kamatt.sportsmap.db.model.GpsSession
 
@@ -24,8 +26,9 @@ class GpsSessionRepository(val context: Context) {
     }
 
 
-    fun add(gpsSession: GpsSession): Long {
+    fun add(gpsSession: GpsSession): Int {
         return db.insert(DbHandler.GPS_SESSION_TABLE_NAME, null, gpsSession.getContentValues())
+            .toInt()
     }
 
 
@@ -45,7 +48,8 @@ class GpsSessionRepository(val context: Context) {
             "distance",
             "climb",
             "descent",
-            "appUserId"
+            "appUserId",
+            "restId"
         )
         val orderBy =
             "_id"
@@ -80,7 +84,8 @@ class GpsSessionRepository(val context: Context) {
                     cursor.getDouble(cursor.getColumnIndex("distance")),
                     cursor.getDouble(cursor.getColumnIndex("climb")),
                     cursor.getDouble(cursor.getColumnIndex("descent")),
-                    cursor.getInt(cursor.getColumnIndex("appUserId"))
+                    cursor.getInt(cursor.getColumnIndex("appUserId")),
+                    cursor.getStringOrNull(cursor.getColumnIndex("restId"))
                 )
             )
         }
@@ -109,7 +114,8 @@ class GpsSessionRepository(val context: Context) {
                     cursor.getDouble(cursor.getColumnIndex("distance")),
                     cursor.getDouble(cursor.getColumnIndex("climb")),
                     cursor.getDouble(cursor.getColumnIndex("descent")),
-                    cursor.getInt(cursor.getColumnIndex("appUserId"))
+                    cursor.getInt(cursor.getColumnIndex("appUserId")),
+                    cursor.getStringOrNull(cursor.getColumnIndex("restId"))
                 )
             )
         }
@@ -128,12 +134,29 @@ class GpsSessionRepository(val context: Context) {
     }
 
     fun updateSession(gpsSession: GpsSession) {
+        //Log.d("updateSession", "updates session _id: ${gpsSession.id} ")
+        //Log.d("updateSession", "and restId: ${gpsSession.restId}")
+        Log.d("updateSession", "gpsSession: ${gpsSession.toString()}")
         db.update(
             DbHandler.GPS_SESSION_TABLE_NAME,
             gpsSession.getContentValues(),
             "_id=" + gpsSession.id,
             null
         )
+
+    }
+
+    fun updateSessionRestid(sessionId: Long, restId: String) {
+        db.execSQL("UPDATE " + DbHandler.GPS_SESSION_TABLE_NAME + " SET restId = '$restId' WHERE _id= " + sessionId + "")
+        /*ContentValues cv = new ContentValues();
+        var cv: ContentValues = ContentValues
+        cv.put("Field1","Bob"); //These Fields should be your String values of actual column names
+        cv.put("Field2","19");
+        cv.put("Field2","Male");
+
+        Then use the update method, it should work now:
+
+        myDB.update(TableName, cv, "_id="+id, null);*/
     }
 
     fun getSessionById(id: Int): GpsSession {
@@ -156,7 +179,8 @@ class GpsSessionRepository(val context: Context) {
                 cursor.getDouble(cursor.getColumnIndex("distance")),
                 cursor.getDouble(cursor.getColumnIndex("climb")),
                 cursor.getDouble(cursor.getColumnIndex("descent")),
-                cursor.getInt(cursor.getColumnIndex("appUserId"))
+                cursor.getInt(cursor.getColumnIndex("appUserId")),
+                cursor.getStringOrNull(cursor.getColumnIndex("restId"))
             )
 
 

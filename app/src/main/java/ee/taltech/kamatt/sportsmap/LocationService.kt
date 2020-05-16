@@ -91,7 +91,7 @@ class LocationService : Service() {
     private lateinit var appUserRepository: AppUserRepository
 
     private var currentDbUserId: Int = 0
-    private var currentDbSessionId: Long = -1
+    private var currentDbSessionId: Int = -1
     private lateinit var currentDbSession: GpsSession
 
     private var polylineOptionsList: MutableList<PolylineOptions>? = null
@@ -138,32 +138,6 @@ class LocationService : Service() {
 
     }
 
-    private fun getRestToken() {
-        val handler = WebApiSingletonHandler.getInstance(applicationContext)
-
-        val requestJsonParameters = JSONObject()
-        requestJsonParameters.put("email", C.REST_USERNAME)
-        requestJsonParameters.put("password", C.REST_PASSWORD)
-
-
-        val httpRequest = JsonObjectRequest(
-            Request.Method.POST,
-            C.REST_BASE_URL + "account/login",
-            requestJsonParameters,
-            Response.Listener { response ->
-                //Log.d(TAG, response.toString())
-                jwt = response.getString("token")
-                startRestTrackingSession(currentDbSession)
-            },
-            Response.ErrorListener { error ->
-                Log.d(TAG, error.toString())
-            }
-        )
-
-        handler.addToRequestQueue(httpRequest)
-
-    }
-
     private fun startRestTrackingSession(currSession: GpsSession) {
         val handler = WebApiSingletonHandler.getInstance(applicationContext)
         val requestJsonParameters = JSONObject()
@@ -188,6 +162,10 @@ class LocationService : Service() {
             Response.Listener { response ->
                 //Log.d(TAG, response.toString())
                 currentRestSessionId = response.getString("id")
+                currSession.restId = currentRestSessionId
+                //Log.d(TAG, "currentRestSessId: ${currSession.restId}")
+                //gpsSessionRepository.updateSessionRestid(currentDbSessionId, currentRestSessionId!!)
+                gpsSessionRepository.updateSession(currSession)
             },
             Response.ErrorListener { error ->
                 Log.d(TAG, error.toString())
@@ -703,7 +681,9 @@ class LocationService : Service() {
             paceMax, colorMin, colorMax, recordedAt, "--:--:--",
             "--:--", 0.0, 0.0, 0.0, currentDbUserId
         )
+        Log.d("currentDbSession", "currentDbSession: ${currentDbSession.toString()}")
         currentDbSessionId = gpsSessionRepository.add(currentDbSession)
+        currentDbSession.id = currentDbSessionId
         startRestTrackingSession(currentDbSession)
 
     }

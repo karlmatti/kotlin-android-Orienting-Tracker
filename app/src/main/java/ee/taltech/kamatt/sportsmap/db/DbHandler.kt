@@ -47,6 +47,7 @@ class DbHandler(context: Context) :
             val CLIMB = "climb"
             val DESCENT = "descent"
             val APP_USER_ID = "appUserId"
+            val REST_ID = "restId"
 
             return "create table $GPS_SESSION_TABLE_NAME(" +
                     "$ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -63,6 +64,7 @@ class DbHandler(context: Context) :
                     "$CLIMB DOUBLE," +
                     "$DESCENT DOUBLE," +
                     "$APP_USER_ID INT NOT NULL," +
+                    "$REST_ID TEXT UNIQUE," +
                     "FOREIGN KEY($APP_USER_ID) REFERENCES $APP_USER_TABLE_NAME(_id)" +
                     ");"
         }
