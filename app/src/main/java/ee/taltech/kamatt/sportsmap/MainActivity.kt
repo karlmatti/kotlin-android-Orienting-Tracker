@@ -63,7 +63,6 @@ import kotlinx.android.synthetic.main.edit_session.*
 import kotlinx.android.synthetic.main.export_session.*
 import kotlinx.android.synthetic.main.login.*
 import kotlinx.android.synthetic.main.options.*
-import kotlinx.android.synthetic.main.recycler_row_session.*
 import kotlinx.android.synthetic.main.register.*
 import kotlinx.android.synthetic.main.stop_confirmation.*
 import kotlinx.android.synthetic.main.track_control.*
@@ -858,6 +857,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     currentDbSessionId = intent.getIntExtra(C.CURRENT_SESSION_ID, -1)
                     currentRestSessionId = intent.getStringExtra(C.CURRENT_SESSION_REST_ID)
 
+                    updateCameraDirection(
+                        intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, 0.0),
+                        intent.getDoubleExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, 0.0),
+                        intent.getFloatExtra(C.LOCATION_UPDATE_ACTION_BEARING, 0f)
+                    )
                 }
 
             }
@@ -868,6 +872,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     // ============================================== HANDLE MAP =============================================
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        mMap.mapType = GoogleMap.MAP_TYPE_TERRAIN
         mMap!!.isMyLocationEnabled = true
         mMap!!.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(59.3927437, 24.6642), 17.0f))
         reDrawPolyline()
@@ -885,19 +890,51 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         lastLongitude = lng
 
         reDrawPolyline()
-        if (isMapCentered && lat != 0.0 && lng != 0.0) {
-            mMap.animateCamera(
-                CameraUpdateFactory.newLatLng(
-                    LatLng(
-                        lat,
-                        lng
-                    )
-                )
-            )
-        }
+
 
     }
 
+    private fun updateCameraDirection(lat: Double, lng: Double, bearing: Float) {
+        if (lat != 0.0 && lng != 0.0) {
+            if (isMapCentered) {
+                mMap.animateCamera(
+                    CameraUpdateFactory.newLatLng(
+                        LatLng(
+                            lat,
+                            lng
+                        )
+                    )
+                )
+                Log.d(TAG, "mapCentered: Yes")
+            }
+            if (isKeepNorthUp) {
+                updateCameraBearing(mMap, 0f)
+                Log.d(TAG, "direction: isKeepNorthUp")
+            } else if (isKeepDirectionUp) {
+                updateCameraBearing(mMap, if (bearing != 0f) bearing else null)
+                Log.d(TAG, "direction: isKeepDirectionUp")
+            } else if (isKeepUserChosenUp) {
+                //updateCameraBearing(mMap, null)
+                Log.d(TAG, "direction: isKeepUserChosenUp")
+            }
+        }
+    }
+
+    private fun updateCameraBearing(
+        googleMap: GoogleMap?,
+        bearing: Float?
+    ) {
+        if (googleMap == null) return
+        val camPos = bearing?.let {
+            CameraPosition
+                .builder(
+                    googleMap.cameraPosition // current Camera
+                )
+                .bearing(it)
+                .build()
+        }
+        googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(camPos))
+    }
     private fun reDrawPolyline() {
 
         if (isOldSessionLoaded) {

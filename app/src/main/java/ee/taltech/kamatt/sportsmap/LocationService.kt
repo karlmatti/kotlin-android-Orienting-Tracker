@@ -419,6 +419,7 @@ class LocationService : Service() {
         val intent = Intent(C.LOCATION_UPDATE_ACTION)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, location.latitude)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, location.longitude)
+        intent.putExtra(C.LOCATION_UPDATE_ACTION_BEARING, location.bearing)
 
         intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLDIRECT, distanceOverallDirect)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, distanceOverallTotal)

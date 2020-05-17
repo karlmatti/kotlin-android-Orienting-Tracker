@@ -12,6 +12,7 @@ class C {
 
         const val LOCATION_UPDATE_ACTION_LATITUDE = PREFIX + "location_update.latitude"
         const val LOCATION_UPDATE_ACTION_LONGITUDE = PREFIX + "location_update.longitude"
+        const val LOCATION_UPDATE_ACTION_BEARING = PREFIX + "location_update.bearing"
 
         const val LOCATION_UPDATE_ACTION_OVERALLDIRECT = PREFIX + "location_update.overalldirect"
         const val LOCATION_UPDATE_ACTION_OVERALLTOTAL = PREFIX + "location_update.overalltotal"
