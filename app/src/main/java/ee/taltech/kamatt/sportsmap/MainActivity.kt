@@ -22,6 +22,8 @@ import android.hardware.SensorManager
 import android.hardware.SensorManager.SENSOR_DELAY_GAME
 import android.location.Location
 import android.location.LocationManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -911,7 +913,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                 updateCameraBearing(mMap, 0f)
                 Log.d(TAG, "direction: isKeepNorthUp")
             } else if (isKeepDirectionUp) {
-                updateCameraBearing(mMap, if (bearing != 0f) bearing else null)
+                updateCameraBearing(mMap, if (bearing != 0f) bearing else 0f)
                 Log.d(TAG, "direction: isKeepDirectionUp")
             } else if (isKeepUserChosenUp) {
                 //updateCameraBearing(mMap, null)
@@ -1646,4 +1648,5 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     }
 
  */
+
 }

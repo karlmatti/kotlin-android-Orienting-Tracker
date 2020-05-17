@@ -8,12 +8,15 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.location.Location
 import android.location.LocationManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.IBinder
 import android.os.Looper
 import android.os.Parcelable
 import android.util.Log
 import android.widget.RemoteViews
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -53,6 +56,7 @@ class LocationService : Service() {
     // The desired intervals for sync. Inexact. Updates to the rest can be after capturing 1 or more locations.
     private var SYNC_REST_FREQ_IN_LOC_COUNTS: Int = 1
     private var unsyncedLocations: MutableList<Location>? = null
+    private var offlineLocations: MutableList<Location>? = null
 
     private val broadcastReceiver = InnerBroadcastReceiver()
     private val broadcastReceiverIntentFilter: IntentFilter = IntentFilter()
@@ -60,7 +64,6 @@ class LocationService : Service() {
     private var mLocationRequest: LocationRequest = LocationRequest()
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
     private var mLocationCallback: LocationCallback? = null
-
     // last received location
     private var currentLocation: Location? = null
 
@@ -215,8 +218,8 @@ class LocationService : Service() {
             jsonLocation.put("gpsLocationTypeId", C.REST_LOCATIONID_LOC)
             jsonArray.put(jsonLocation)
         }
-        Log.d(TAG, "bulkupload to $currentRestSessionId")
-        Log.d(TAG, "bulkupload with $jsonArray")
+        //Log.d(TAG, "bulkupload to $currentRestSessionId")
+        //Log.d(TAG, "bulkupload with $jsonArray")
 
         var httpRequest = object : StringRequest(
             Request.Method.POST,
@@ -326,8 +329,9 @@ class LocationService : Service() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun onNewLocation(location: Location) {
-        Log.i(TAG, "New location: $location")
+        //Log.i(TAG, "New location: $location")
 
         if (location.accuracy > 100) {
             //Log.d(TAG, "location.accuracy is ${location.accuracy}")
@@ -392,24 +396,33 @@ class LocationService : Service() {
         currentLocation = location
 
         updateDbGpsLocation(location, C.REST_LOCATIONID_LOC)
-        if (unsyncedLocations == null) {
-            unsyncedLocations = mutableListOf(location)
-            if (SYNC_REST_FREQ_IN_LOC_COUNTS == 1) {
-                Log.d(TAG, "saved locations count:" + unsyncedLocations!!.size)
-                saveRestLocation(location, C.REST_LOCATIONID_LOC)
-                unsyncedLocations = null
+        if (isOnline(this)) {
+            if (offlineLocations != null) {
+                saveRestLocationsInBulk(offlineLocations!!)
+            } else {
+                if (unsyncedLocations == null) {
+                    unsyncedLocations = mutableListOf(location)
+                    if (SYNC_REST_FREQ_IN_LOC_COUNTS == 1) {
+                        // Log.d(TAG, "saved locations count:" + unsyncedLocations!!.size)
+                        saveRestLocation(location, C.REST_LOCATIONID_LOC)
+                        unsyncedLocations = null
+                    }
+                } else {
+                    unsyncedLocations!!.add(location)
+
+                    if (unsyncedLocations!!.size == SYNC_REST_FREQ_IN_LOC_COUNTS) {
+                        saveRestLocationsInBulk(unsyncedLocations!!)
+                        unsyncedLocations = null
+                    }
+                }
             }
         } else {
-            unsyncedLocations!!.add(location)
-            Log.d(
-                TAG,
-                "saved unsyncedLocations!!.size == SYNC_REST_FREQ_IN_LOC_COUNTS ${unsyncedLocations!!.size == SYNC_REST_FREQ_IN_LOC_COUNTS}"
-            )
-            if (unsyncedLocations!!.size == SYNC_REST_FREQ_IN_LOC_COUNTS) {
-                Log.d(TAG, "saved locations count:" + unsyncedLocations!!.size)
-                saveRestLocationsInBulk(unsyncedLocations!!)
-                unsyncedLocations = null
+            if (offlineLocations == null) {
+                offlineLocations = mutableListOf(location)
+            } else {
+                unsyncedLocations!!.add(location)
             }
+
         }
 
         showNotification()
@@ -800,5 +813,27 @@ class LocationService : Service() {
         }
         gpsLocationRepository.add(gpsLocation)
 
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    fun isOnline(context: Context): Boolean {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val capabilities =
+            connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        if (capabilities != null) {
+            if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                Log.i("Internet", "NetworkCapabilities.TRANSPORT_CELLULAR")
+                return true
+            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                Log.i("Internet", "NetworkCapabilities.TRANSPORT_WIFI")
+                return true
+            } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+                Log.i("Internet", "NetworkCapabilities.TRANSPORT_ETHERNET")
+                return true
+            }
+        }
+        Log.i("Internet", "No CONNECTION")
+        return false
     }
 }
