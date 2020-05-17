@@ -1580,9 +1580,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
                 if (progress != 0) {
                     if (progress == 1) {
-                        textViewSyncFrequency.setText("Sync after every location")
+                        textViewSyncFrequency.setText("Sync every location")
                     } else {
-                        textViewSyncFrequency.setText("Sync after every ${progress} locations")
+                        textViewSyncFrequency.setText("Sync every ${progress} locations")
                     }
 
                 }
