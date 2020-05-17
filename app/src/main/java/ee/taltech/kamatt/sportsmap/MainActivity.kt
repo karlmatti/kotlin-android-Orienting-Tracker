@@ -60,13 +60,17 @@ import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.buttons_top.*
 import kotlinx.android.synthetic.main.edit_session.*
+import kotlinx.android.synthetic.main.export_session.*
 import kotlinx.android.synthetic.main.login.*
 import kotlinx.android.synthetic.main.options.*
+import kotlinx.android.synthetic.main.recycler_row_session.*
 import kotlinx.android.synthetic.main.register.*
 import kotlinx.android.synthetic.main.stop_confirmation.*
 import kotlinx.android.synthetic.main.track_control.*
 import kotlinx.android.synthetic.main.welcome_screen.*
 import org.json.JSONObject
+import java.io.File
+import java.io.FileWriter
 import java.lang.Math.toDegrees
 import java.util.*
 import java.util.regex.Pattern
@@ -164,6 +168,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
     private lateinit var recyclerViewAdapter: DataRecyclerViewAdapterSessions
     private var isMapCentered = false
+    private var isKeepUserChosenUp = true
+    private var isKeepNorthUp = false
+    private var isKeepDirectionUp = false
+
 
     // ============================================== MAIN ENTRY - ONCREATE =============================================
     @RequiresApi(Build.VERSION_CODES.O)
@@ -216,6 +224,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         buttonConfirmationCancel.setOnClickListener { handleConfirmationCancelOnClick() }
         buttonConfirmationOk.setOnClickListener { handleConfirmationOkOnClick() }
         imageViewKeepCentered.setOnClickListener { handleKeepCenteredOnClick() }
+        imageViewSwitchDirection.setOnClickListener { handleSwitchDirectionOnClick() }
+
 
         seekBarGpsFreq.setOnSeekBarChangeListener(this)
         seekBarSyncFreq.setOnSeekBarChangeListener(this)
@@ -250,6 +260,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             isWelcomeVisible = savedInstanceState.getBoolean("isWelcomeVisible", true)
             isLoginVisible = savedInstanceState.getBoolean("isLoginVisible", true)
             isRegisterVisible = savedInstanceState.getBoolean("isRegisterVisible", true)
+            isKeepDirectionUp = savedInstanceState.getBoolean("isKeepDirectionUp", false)
+            isKeepNorthUp = savedInstanceState.getBoolean("isKeepNorthUp", false)
+            isKeepUserChosenUp = savedInstanceState.getBoolean("isKeepUserChosenUp", true)
             isStopConfirmationVisible =
                 savedInstanceState.getBoolean("isStopConfirmationVisible", false)
             isMapCentered = savedInstanceState.getBoolean("isMapCentered", false)
@@ -274,7 +287,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             restoreOldSessionsState()
             restoreLoginState()
             restoreStopConfirmationState()
-
+            drawSwitchDirection()
         }
         if (locationServiceActive) {
             buttonStartStop.setImageDrawable(
@@ -317,6 +330,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         outState.putBoolean("isRegisterVisible", isRegisterVisible)
         outState.putBoolean("isStopConfirmationVisible", isStopConfirmationVisible)
         outState.putBoolean("isMapCentered", isMapCentered)
+        outState.putBoolean("isKeepUserChosenUp", isKeepUserChosenUp)
+        outState.putBoolean("isKeepNorthUp", isKeepNorthUp)
+        outState.putBoolean("isKeepDirectionUp", isKeepDirectionUp)
         outState.putLong(C.LOCATION_UPDATE_ACTION_OVERALLTIME, durationOverall)
         outState.putFloat(C.LOCATION_UPDATE_ACTION_OVERALLTOTAL, distanceOverallTotal)
         outState.putString(C.LOCATION_UPDATE_ACTION_OVERALLPACE, paceOverall)
@@ -724,6 +740,56 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         Log.d(TAG, isMapCentered.toString())
     }
 
+    private fun handleSwitchDirectionOnClick() {
+        if (isKeepNorthUp) {
+            isKeepUserChosenUp = true
+            isKeepNorthUp = false
+            isKeepDirectionUp = false
+            drawSwitchDirection()
+        } else if (isKeepUserChosenUp) {
+
+            isKeepUserChosenUp = false
+            isKeepNorthUp = false
+            isKeepDirectionUp = true
+            drawSwitchDirection()
+        } else if (isKeepDirectionUp) {
+
+            isKeepUserChosenUp = false
+            isKeepNorthUp = true
+            isKeepDirectionUp = false
+            drawSwitchDirection()
+        }
+
+    }
+
+    private fun drawSwitchDirection() {
+        if (isKeepDirectionUp) {
+            imageViewSwitchDirection.setImageDrawable(
+                ContextCompat.getDrawable(
+                    applicationContext,
+                    R.drawable.baseline_navigation_white_24
+                )
+            )
+            imageViewSwitchDirection.setColorFilter(Utils.getAndroidColor("white"))
+        } else if (isKeepNorthUp) {
+            imageViewSwitchDirection.setImageDrawable(
+                ContextCompat.getDrawable(
+                    applicationContext,
+                    R.drawable.baseline_navigation_white_24
+                )
+            )
+            imageViewSwitchDirection.setColorFilter(Utils.getAndroidColor("blue"))
+        } else {
+            imageViewSwitchDirection.setImageDrawable(
+                ContextCompat.getDrawable(
+                    applicationContext,
+                    R.drawable.baseline_emoji_people_white_24
+                )
+            )
+            imageViewSwitchDirection.setColorFilter(Utils.getAndroidColor("white"))
+        }
+    }
+
     // ============================================== BROADCAST RECEIVER =============================================
     private inner class InnerBroadcastReceiver : BroadcastReceiver() {
         @SuppressLint("SetTextI18n")
@@ -793,9 +859,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                     currentRestSessionId = intent.getStringExtra(C.CURRENT_SESSION_REST_ID)
 
                 }
-                C.LOCATION_UPDATE_STOP -> {
 
-                }
             }
         }
     }
@@ -1112,6 +1176,72 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         editTextSessionMaxColor.setText(gpsSession.colorMax)
 
 
+    }
+
+    fun startExportingSession(gpsSession: GpsSession) {
+        buttonSendGPX.setOnClickListener { handleSendGpxOnClick(gpsSession) }
+        buttonCancelExport.setOnClickListener { handleCancelExportOnClick() }
+        includeExport.visibility = View.VISIBLE
+        handleCloseOldSessionsOnClick()
+    }
+
+    private fun handleSendGpxOnClick(gpsSession: GpsSession) {
+
+        if (editTextEmailToExport.text.toString().isEmailValid()) {
+
+            try {
+                if (gpsSession.restId != null) {
+                    val content = Utils.generateGPX(
+                        gpsSession.restId!!,
+                        gpsLocationRepository.getLocationsBySessionId(gpsSession.id)
+                    )
+
+                    val tempFile = File.createTempFile(
+                        gpsSession.restId!!,
+                        ".gpx",
+                        this.externalCacheDir
+                    )
+
+                    val fw = FileWriter(tempFile)
+
+                    fw.write(content)
+
+                    fw.flush()
+                    fw.close()
+
+                    val mailTo = "mailto:" + editTextEmailToExport.text.toString() +
+                            "?&subject=" + Uri.encode("GPX file") +
+                            "&body=" + Uri.encode("See attachments")
+                    val emailIntent = Intent(Intent.ACTION_VIEW)
+                    emailIntent.data = Uri.parse(mailTo)
+                    emailIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(tempFile))
+                    startActivityForResult(emailIntent, 69)
+                    Log.d(TAG, "email is sent!")
+                } else {
+                    Log.d(TAG, "Sessions restid is null!")
+                }
+
+
+            } catch (e: Exception) {
+                Log.d(TAG, "No permissions!")
+            }
+
+
+
+            includeExport.visibility = View.INVISIBLE
+            buttonSendGPX.setOnClickListener(null)
+            buttonCancelExport.setOnClickListener(null)
+        } else {
+            textViewReceiverEmail.setTextColor(Utils.getAndroidColor("red"))
+        }
+
+    }
+
+    private fun handleCancelExportOnClick() {
+        Log.d(TAG, "handleCancelExportOnClick")
+        includeExport.visibility = View.INVISIBLE
+        buttonSendGPX.setOnClickListener(null)
+        buttonCancelExport.setOnClickListener(null)
     }
 
     // ============================================== LOAD SESSION =============================================

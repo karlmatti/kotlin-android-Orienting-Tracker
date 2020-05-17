@@ -60,5 +60,6 @@ class C {
         const val GPS_UPDATE_FREQUENCY = PREFIX + "options_update.gpsfrequency"
         const val SYNC_UPDATE_FREQUENCY = PREFIX + "options_update.syncfrequency"
 
+
     }
 }

@@ -1,6 +1,7 @@
 package ee.taltech.kamatt.sportsmap
 
 import android.content.Context
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -59,6 +60,13 @@ class DataRecyclerViewAdapterSessions(
                 context.startEditingSession(theEditedItem)
             }
 
+        }
+        holder.itemView.buttonExportSession.setOnClickListener {
+            val theExportedItem: GpsSession = dataSet[position]
+
+            if (context is MainActivity) {
+                context.startExportingSession(theExportedItem)
+            }
         }
 
         holder.itemView.buttonLoadSession.setOnClickListener {

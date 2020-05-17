@@ -7,4 +7,5 @@
     <string name="max_speed_min_per_km">Max speed (min per km)</string>
     <string name="color_of_max_speed_rgb">Color of max speed (rgb)</string>
     <string name="color_of_min_speed_rgb">Color of min speed (rgb)</string>
+    <string name="close">Close</string>
 </resources>

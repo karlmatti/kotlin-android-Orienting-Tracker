@@ -14,7 +14,7 @@
         android:layout_marginBottom="4dp"
         android:background="#FFFFFF"
         android:backgroundTint="#388E3C"
-        app:layout_constraintBottom_toTopOf="@+id/imageViewNorthUp"
+        app:layout_constraintBottom_toTopOf="@+id/imageViewSwitchDirection"
         app:layout_constraintDimensionRatio="h,1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -40,21 +40,21 @@
         tools:srcCompat="@drawable/baseline_explore_white_24" />
 
     <ImageView
-        android:id="@+id/imageViewNorthUp"
+        android:id="@+id/imageViewSwitchDirection"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginBottom="4dp"
         android:background="#FFFFFF"
         android:backgroundTint="#388E3C"
-        android:src="@drawable/baseline_navigation_white_24"
+        android:src="@drawable/baseline_emoji_people_white_24"
         android:tint="@color/common_google_signin_btn_text_dark_default"
         app:layout_constraintBottom_toTopOf="@+id/imageViewReset"
         app:layout_constraintDimensionRatio="h,1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageViewKeepCentered"
-        app:srcCompat="@drawable/baseline_navigation_white_24"
-        tools:srcCompat="@drawable/baseline_navigation_white_24" />
+        app:srcCompat="@drawable/baseline_emoji_people_white_24"
+        tools:srcCompat="@drawable/baseline_emoji_people_white_24" />
 
     <ImageView
         android:id="@+id/imageViewOptions"
@@ -86,7 +86,7 @@
         app:layout_constraintDimensionRatio="h,1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageViewNorthUp"
+        app:layout_constraintTop_toBottomOf="@+id/imageViewSwitchDirection"
         app:srcCompat="@drawable/baseline_clear_white_24"
         tools:srcCompat="@drawable/baseline_clear_white_24" />
 
