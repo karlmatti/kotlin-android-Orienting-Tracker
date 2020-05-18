@@ -6,8 +6,8 @@ DB: SQLite
 Current app version: 1.0
 
 | Track is drawn along with control and way points     | Change settings      |  Review old sessions      |  Edit old session     |  Compass      |  Export session as GPX      |  Notification on lock screen     |  
-|------------|-------------|-------------|-------------|-------------|-------------| 
-| Picture coming soon..| ![screenshot](screenshots/Options.jpg)| ![screenshot](screenshots/OldSessions.jpg)| ![screenshot](screenshots/EditOldSession.jpg)| ![screenshot](screenshots/Compass.jpg)| ![screenshot](screenshots/ExportGPX.jpg)| Picture coming soon..|
+|------------|-------------|-------------|-------------|-------------|-------------|-------------| 
+| ![Screenshot](screenshots/Track1.jpg) | ![Screenshot](screenshots/Options.jpg)| ![Screenshot](screenshots/OldSessions.jpg)| ![Screenshot](screenshots/EditOldSession.jpg)| ![screenshot](screenshots/Compass.jpg)| ![screenshot](screenshots/ExportGPX.jpg)| ![screenshot](screenshots/Notification.jpg)|
 
 v1.0 functionalities:
 * Draw gradient polyline between recorded locations
