@@ -20,15 +20,11 @@ import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.google.android.gms.location.*
-import org.json.JSONObject
-import java.text.SimpleDateFormat
-import java.util.*
 import com.android.volley.Request
 import com.android.volley.Response
-import com.android.volley.toolbox.JsonArrayRequest
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.StringRequest
+import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PolylineOptions
 import ee.taltech.kamatt.sportsmap.db.model.GpsLocation
@@ -38,7 +34,10 @@ import ee.taltech.kamatt.sportsmap.db.repository.GpsLocationRepository
 import ee.taltech.kamatt.sportsmap.db.repository.GpsSessionRepository
 import ee.taltech.kamatt.sportsmap.db.repository.LocationTypeRepository
 import org.json.JSONArray
+import org.json.JSONObject
 import java.io.Serializable
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 class LocationService : Service() {
@@ -46,7 +45,6 @@ class LocationService : Service() {
         private val TAG = this::class.java.declaringClass!!.simpleName
         val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault())
     }
-
 
 
     // The desired intervals for location updates. Inexact. Updates may be more or less frequent.
@@ -64,6 +62,7 @@ class LocationService : Service() {
     private var mLocationRequest: LocationRequest = LocationRequest()
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
     private var mLocationCallback: LocationCallback? = null
+
     // last received location
     private var currentLocation: Location? = null
 
@@ -258,6 +257,7 @@ class LocationService : Service() {
 
 
     }
+
     private fun saveRestLocation(location: Location, location_type: String) {
         if (jwt == null || currentRestSessionId == null) {
             return
@@ -313,6 +313,7 @@ class LocationService : Service() {
         //restart location updates with the new interval
         //LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this)
     }
+
     private fun requestLocationUpdates() {
         Log.i(TAG, "Requesting location updates")
 
@@ -427,8 +428,7 @@ class LocationService : Service() {
 
         showNotification()
 
-        // Utils.addToMapPolylineOptions(location.latitude, location.longitude)
-        // broadcast new location to UI
+
         val intent = Intent(C.LOCATION_UPDATE_ACTION)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_LATITUDE, location.latitude)
         intent.putExtra(C.LOCATION_UPDATE_ACTION_LONGITUDE, location.longitude)

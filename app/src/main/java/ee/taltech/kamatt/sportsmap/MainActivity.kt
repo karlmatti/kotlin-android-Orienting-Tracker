@@ -22,8 +22,6 @@ import android.hardware.SensorManager
 import android.hardware.SensorManager.SENSOR_DELAY_GAME
 import android.location.Location
 import android.location.LocationManager
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -75,7 +73,6 @@ import java.io.FileWriter
 import java.lang.Math.toDegrees
 import java.util.*
 import java.util.regex.Pattern
-
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListener,
@@ -941,6 +938,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         }
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(camPos))
     }
+
     private fun reDrawPolyline() {
 
         if (isOldSessionLoaded) {
@@ -980,7 +978,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                                 time =
                                     LocationService.dateFormat.parse(loadedLocation.recordedAt)!!.time
                             }
-                            val distanceFromLastPoint: Float = oldLocation!!.distanceTo(newLocation)
+                            val distanceFromLastPoint: Float = oldLocation.distanceTo(newLocation)
                             val newTimeDifference = newLocation.time - oldLocation.time
                             val pace: Float =
                                 Utils.getPaceMinutesFloat(newTimeDifference, distanceFromLastPoint)
@@ -1514,10 +1512,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         requestJsonParameters.put("gpsSessionTypeId", "00000000-0000-0000-0000-000000000001")
 
         val httpRequest = object : StringRequest(
-            Request.Method.PUT,
+            Method.PUT,
             C.REST_BASE_URL + "GpsSessions/" + gpsSession.restId,
 
-            Response.Listener<String> { _ ->
+            Response.Listener { _ ->
 
                 //Log.d(TAG, response)
                 Log.d(TAG, "update session successful")
@@ -1584,9 +1582,9 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
 
                 if (progress != 0) {
                     if (progress == 1) {
-                        textViewSyncFrequency.setText("Sync every location")
+                        textViewSyncFrequency.text = "Sync every location"
                     } else {
-                        textViewSyncFrequency.setText("Sync every ${progress} locations")
+                        textViewSyncFrequency.text = "Sync every $progress locations"
                     }
 
                 }
