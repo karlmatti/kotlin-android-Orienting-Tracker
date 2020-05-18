@@ -9,7 +9,7 @@ Current app version: 1.0<br />
 |------------|-------------|-------------|-------------|
 | ![Screenshot](screenshots/Track1.jpg) | ![Screenshot](screenshots/Options.jpg)| ![Screenshot](screenshots/OldSessions.jpg)| ![Screenshot](screenshots/EditOldSession.jpg)|
 |  Compass      |  Export session as GPX      |  Notification on lock screen     |   Control and way points can be added    | 
-| ![screenshot](screenshots/Compass.jpg)| ![screenshot](screenshots/ExportGPX.jpg)| ![screenshot](screenshots/Track2.jpg)|
+| ![screenshot](screenshots/Compass.jpg)| ![screenshot](screenshots/ExportGPX.jpg)| ![screenshot](screenshots/Notification.jpg)|![screenshot](screenshots/Track2.jpg)|
 
 
 <br/>
