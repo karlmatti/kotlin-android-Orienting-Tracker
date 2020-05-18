@@ -5,10 +5,10 @@ Language: Kotlin<br />
 DB: SQLite<br />
 Current app version: 1.0<br />
 
-| Track is drawn along with control and way points     | Change settings      |  Review old sessions      |  Edit old session     | 
+| Track is drawn     | Change settings      |  Review old sessions      |  Edit old session     | 
 |------------|-------------|-------------|-------------|
 | ![Screenshot](screenshots/Track1.jpg) | ![Screenshot](screenshots/Options.jpg)| ![Screenshot](screenshots/OldSessions.jpg)| ![Screenshot](screenshots/EditOldSession.jpg)|
-|  Compass      |  Export session as GPX      |  Notification on lock screen     | 
+|  Compass      |  Export session as GPX      |  Notification on lock screen     |   Control and way points can be added    | 
 | ![screenshot](screenshots/Compass.jpg)| ![screenshot](screenshots/ExportGPX.jpg)| ![screenshot](screenshots/Notification.jpg)|
 v1.0 functionalities:
 * Draw gradient polyline between recorded locations
