@@ -1,9 +1,9 @@
-Orienting application
-Platform Android
-Min SDK: 23
-Language: Kotlin
-DB: SQLite
-Current app version: 1.0
+# Orienting application<br />
+Platform Android<br />
+Min SDK: 23<br />
+Language: Kotlin<br />
+DB: SQLite<br />
+Current app version: 1.0<br />
 
 | Track is drawn along with control and way points     | Change settings      |  Review old sessions      |  Edit old session     |  Compass      |  Export session as GPX      |  Notification on lock screen     |  
 |------------|-------------|-------------|-------------|-------------|-------------|-------------| 
