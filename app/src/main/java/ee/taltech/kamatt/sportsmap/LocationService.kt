@@ -55,6 +55,7 @@ class LocationService : Service() {
     private var SYNC_REST_FREQ_IN_LOC_COUNTS: Int = 1
     private var unsyncedLocations: MutableList<Location>? = null
     private var offlineLocations: MutableList<Location>? = null
+    private var offlineCPs: MutableList<Location>? = null
 
     private val broadcastReceiver = InnerBroadcastReceiver()
     private val broadcastReceiverIntentFilter: IntentFilter = IntentFilter()
@@ -194,7 +195,7 @@ class LocationService : Service() {
         handler.addToRequestQueue(httpRequest)
     }
 
-    private fun saveRestLocationsInBulk(locations: MutableList<Location>) {
+    private fun saveRestLocationsInBulk(locations: MutableList<Location>, locationId: String) {
         if (jwt == null || currentRestSessionId == null) {
             return
         }
@@ -214,7 +215,7 @@ class LocationService : Service() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 jsonLocation.put("verticalAccuracy", location.verticalAccuracyMeters)
             }
-            jsonLocation.put("gpsLocationTypeId", C.REST_LOCATIONID_LOC)
+            jsonLocation.put("gpsLocationTypeId", locationId)
             jsonArray.put(jsonLocation)
         }
         //Log.d(TAG, "bulkupload to $currentRestSessionId")
@@ -399,7 +400,7 @@ class LocationService : Service() {
         updateDbGpsLocation(location, C.REST_LOCATIONID_LOC)
         if (isOnline(this)) {
             if (offlineLocations != null) {
-                saveRestLocationsInBulk(offlineLocations!!)
+                saveRestLocationsInBulk(offlineLocations!!, C.REST_LOCATIONID_LOC)
                 offlineLocations = null
             } else {
                 if (unsyncedLocations == null) {
@@ -413,7 +414,7 @@ class LocationService : Service() {
                     unsyncedLocations!!.add(location)
 
                     if (unsyncedLocations!!.size == SYNC_REST_FREQ_IN_LOC_COUNTS) {
-                        saveRestLocationsInBulk(unsyncedLocations!!)
+                        saveRestLocationsInBulk(unsyncedLocations!!, C.REST_LOCATIONID_LOC)
                         unsyncedLocations = null
                     }
                 }
@@ -661,7 +662,7 @@ class LocationService : Service() {
                         locationWP!!.longitude
                     )
 
-                    saveRestLocation(locationWP!!, C.REST_LOCATIONID_WP)
+                    //saveRestLocation(locationWP!!, C.REST_LOCATIONID_WP)
                     showNotification()
                 }
                 C.NOTIFICATION_ACTION_CP -> {
@@ -690,9 +691,27 @@ class LocationService : Service() {
                             )
                         )
                     }
+                    lastWPMarkerLatLng = null
                     updateDbGpsLocation(locationWP!!, C.REST_LOCATIONID_WP)
+                    if (isOnline(context!!)) {
 
-                    saveRestLocation(locationCP!!, C.REST_LOCATIONID_CP)
+
+                        if (offlineCPs != null) {
+                            saveRestLocationsInBulk(offlineCPs!!, C.REST_LOCATIONID_CP)
+                            offlineCPs = null
+                        } else {
+                            saveRestLocation(locationCP!!, C.REST_LOCATIONID_CP)
+                        }
+                    } else {
+
+                        if (offlineCPs == null) {
+                            offlineCPs = mutableListOf(locationCP!!)
+                        } else {
+                            offlineCPs!!.add(locationCP!!)
+                        }
+
+                    }
+
                     showNotification()
                 }
                 C.UPDATE_OPTIONS_ACTION -> {

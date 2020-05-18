@@ -900,7 +900,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
     private fun updateCameraDirection(lat: Double, lng: Double, bearing: Float) {
         if (lat != 0.0 && lng != 0.0) {
             if (isMapCentered) {
-                mMap.animateCamera(
+                mMap.moveCamera(
                     CameraUpdateFactory.newLatLng(
                         LatLng(
                             lat,
@@ -912,14 +912,10 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
             }
             if (isKeepNorthUp) {
                 updateCameraBearing(mMap, 0f)
-                Log.d(TAG, "direction: isKeepNorthUp")
             } else if (isKeepDirectionUp) {
-                updateCameraBearing(mMap, if (bearing != 0f) bearing else 0f)
-                Log.d(TAG, "direction: isKeepDirectionUp")
-            } else if (isKeepUserChosenUp) {
-                //updateCameraBearing(mMap, null)
-                Log.d(TAG, "direction: isKeepUserChosenUp")
+                updateCameraBearing(mMap, bearing)
             }
+
         }
     }
 
@@ -950,6 +946,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
                 val loadedMaxColor = loadedSession!!.colorMax
 
                 var oldLocation: Location? = null
+                startPointMarker = null
                 for (loadedLocation in loadedLocations!!) {
                     if (loadedLocation.gpsLocationTypeId == C.REST_LOCATIONID_LOC) {
 
