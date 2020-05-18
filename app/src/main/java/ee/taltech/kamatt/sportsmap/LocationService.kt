@@ -420,7 +420,7 @@ class LocationService : Service() {
             if (offlineLocations == null) {
                 offlineLocations = mutableListOf(location)
             } else {
-                unsyncedLocations!!.add(location)
+                offlineLocations!!.add(location)
             }
 
         }
