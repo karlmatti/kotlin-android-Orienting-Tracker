@@ -1,52 +1,24 @@
-# Using Fused Location in background
+Orienting application
+Platform Android
+Min SDK: 23
+Language: Kotlin
+DB: SQLite
+Current app version: 1.0
 
-Manifest permissions
-~~~~
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-~~~~
+| Track is drawn along with control and way points     | Change settings      |  Review old sessions      |  Edit old session     |  Compass      |  Export session as GPX      |  Notification on lock screen     |  
+|------------|-------------|-------------|-------------|-------------|-------------| 
+| Picture coming soon..| ![screenshot](screenshots/Options.jpg)| ![screenshot](screenshots/OldSessions.jpg)| ![screenshot](screenshots/EditOldSession.jpg)| ![screenshot](screenshots/Compass.jpg)| ![screenshot](screenshots/ExportGPX.jpg)| Picture coming soon..|
 
-Manifest service
-~~~~
-        <!-- This is critical: android:foregroundServiceType="location" -->
-        <service android:name=".LocationService"
-            android:foregroundServiceType="location"
-            android:enabled="true"
-            android:exported="true"
-            android:launchMode="singleTask" />
-~~~~
-
-
-Starting the foreground service from main activity (foreground - basicaly active app for android, just without main ui).
-To let user know of that - non-dismissable notification is mandatory.
-~~~~
-            if (Build.VERSION.SDK_INT >= 26) {
-                // starting the FOREGROUND service
-                // service has to display non-dismissable notification within 5 secs
-                startForegroundService(Intent(this, LocationService::class.java))
-            } else {
-                startService(Intent(this, LocationService::class.java))
-            }
-~~~~
-
-
-In service, show notification with startForeground
-~~~~
-        // construct and show notification
-        var builder = NotificationCompat.Builder(applicationContext, C.NOTIFICATION_CHANNEL)
-            .setSmallIcon(R.drawable.baseline_gps_fixed_24)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-
-        builder.setContent(notifyview)
-
-        // Super important, start as foreground service - ie android considers this as an active app. Need visual reminder - notification.
-        // must be called within 5 secs after service starts.
-        startForeground(C.NOTIFICATION_ID, builder.build())
-~~~~
-
-
-This should be it, rest is standard. Take care of permissions, use fused location, etc...
+v1.0 functionalities:
+* Draw gradient polyline between recorded locations
+* Change polyline colors between red, blue, green, black and white
+* Add a way point
+* Add control points, reset a way point when you do
+* Keep local database and remote database in sync
+* When offline, session will automatically sync when back online
+* Watch statistics and add control points and way points also when screen is locked
+* Load, edit and delete old sessions
+* Change synchronization interval between remote database
+* Change GPS location request frequency
+* Map can be toggled centered so you wont have to drag on the map when you are running
+* Map direction can be changed to User chosen up / Direction up / North up
