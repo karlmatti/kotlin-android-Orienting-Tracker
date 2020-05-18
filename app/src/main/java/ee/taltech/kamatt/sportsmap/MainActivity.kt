@@ -76,12 +76,6 @@ import java.lang.Math.toDegrees
 import java.util.*
 import java.util.regex.Pattern
 
-//  TODO: Save session points in gpx file.
-//  TODO: Syncing interval can be changed - when received to 10 sec, add sync button, save backend
-//  TODO: Allow toggling of "keep map constantly centered", "keep north-up / direction up / user chosen-up".
-
-
-//  TODO: LOW. time updates in real time not with location update
 
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListener,
@@ -226,6 +220,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         buttonConfirmationOk.setOnClickListener { handleConfirmationOkOnClick() }
         imageViewKeepCentered.setOnClickListener { handleKeepCenteredOnClick() }
         imageViewSwitchDirection.setOnClickListener { handleSwitchDirectionOnClick() }
+        imageViewReset.setOnClickListener { handleResetOnClick() }
 
 
         seekBarGpsFreq.setOnSeekBarChangeListener(this)
@@ -762,6 +757,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, SensorEventListene
         }
 
     }
+
+    private fun handleResetOnClick() {
+        isKeepUserChosenUp = true
+        isKeepNorthUp = false
+        isKeepDirectionUp = false
+        drawSwitchDirection()
+        isMapCentered = false
+    }
+
 
     private fun drawSwitchDirection() {
         if (isKeepDirectionUp) {
