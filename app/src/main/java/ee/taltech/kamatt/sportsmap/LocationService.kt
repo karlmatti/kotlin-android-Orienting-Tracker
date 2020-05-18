@@ -400,6 +400,7 @@ class LocationService : Service() {
         if (isOnline(this)) {
             if (offlineLocations != null) {
                 saveRestLocationsInBulk(offlineLocations!!)
+                offlineLocations = null
             } else {
                 if (unsyncedLocations == null) {
                     unsyncedLocations = mutableListOf(location)
