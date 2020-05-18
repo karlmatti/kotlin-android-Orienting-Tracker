@@ -10,6 +10,10 @@ Current app version: 1.0<br />
 | ![Screenshot](screenshots/Track1.jpg) | ![Screenshot](screenshots/Options.jpg)| ![Screenshot](screenshots/OldSessions.jpg)| ![Screenshot](screenshots/EditOldSession.jpg)|
 |  Compass      |  Export session as GPX      |  Notification on lock screen     |   Control and way points can be added    | 
 | ![screenshot](screenshots/Compass.jpg)| ![screenshot](screenshots/ExportGPX.jpg)| ![screenshot](screenshots/Track2.jpg)|
+
+
+<br/>
+
 v1.0 functionalities:
 * Draw gradient polyline between recorded locations
 * Change polyline colors between red, blue, green, black and white
