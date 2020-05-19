@@ -402,6 +402,10 @@ class LocationService : Service() {
             if (offlineLocations != null) {
                 saveRestLocationsInBulk(offlineLocations!!, C.REST_LOCATIONID_LOC)
                 offlineLocations = null
+                if (offlineCPs != null) {
+                    saveRestLocationsInBulk(offlineCPs!!, C.REST_LOCATIONID_CP)
+                    offlineCPs = null
+                }
             } else {
                 if (unsyncedLocations == null) {
                     unsyncedLocations = mutableListOf(location)
